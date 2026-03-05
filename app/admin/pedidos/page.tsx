@@ -16,64 +16,68 @@ import {
   Ruler,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Send,
+  Search,
+  Archive,
+  Inbox
 } from 'lucide-react';
+
+const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Otro'];
 
 export default function AdminPedidos() {
   const router = useRouter();
   const [ventas, setVentas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados para el sistema de filtrado y ordenamiento
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
-  const [filtroEstado, setFiltroEstado] = useState('APROBADO'); // Por defecto solo vemos lo pagado
+  const [filtroEstadoPago, setFiltroEstadoPago] = useState('APROBADO'); 
+  const [filtroLogistica, setFiltroLogistica] = useState('PENDIENTES'); // 'PENDIENTES' (Preparando/Enviado) o 'ENTREGADOS'
   const [ordenPrioridad, setOrdenPrioridad] = useState('Recientes');
 
+  const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
+  const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
+  const [procesandoAccion, setProcesandoAccion] = useState(false);
+
   useEffect(() => {
-    // Carga inicial de datos
-    obtenerVentasAdmin().then(data => {
-      const ventasOrdenadas = data ? data.sort((a: any, b: any) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()) : [];
-      setVentas(ventasOrdenadas);
-      setLoading(false);
-    });
-
-    const canalVentas = supabase
-      .channel('cambios-ventas-webhook')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ventas_realizadas'
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setVentas((prev) => [payload.new, ...prev]);
-            if (payload.new.estado_pago === 'APROBADO') {
-              toast.success('¡Venta aprobada recibida!');
-            }
-          }
-
-          if (payload.eventType === 'UPDATE') {
-            setVentas((prev) =>
-              prev.map(v => v.id === payload.new.id ? payload.new : v)
-            );
-            if (payload.new.estado_pago === 'APROBADO') {
-              toast.success('Un pedido ha sido pagado con éxito');
-            }
-          }
-
-          if (payload.eventType === 'DELETE') {
-            setVentas((prev) => prev.filter(v => v.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(canalVentas);
-    };
+    cargarVentas();
+    const canalVentas = supabase.channel('cambios-ventas-full').on('postgres_changes', { event: '*', schema: 'public', table: 'ventas_realizadas' }, () => cargarVentas()).subscribe();
+    return () => { supabase.removeChannel(canalVentas); };
   }, []);
+
+  const cargarVentas = async () => {
+    const data = await obtenerVentasAdmin();
+    setVentas(data || []);
+    setLoading(false);
+  };
+
+  const handleDespachar = async () => {
+    if (!guiaForm.numero) return toast.error("Escribe el número de guía");
+    setProcesandoAccion(true);
+    try {
+      const { error } = await supabase.from('ventas_realizadas').update({
+        numero_guia: guiaForm.numero,
+        empresa_envio: guiaForm.empresa,
+        estado_logistico: 'ENVIADO'
+      }).eq('id', pedidoADespachar.id);
+      if (error) throw error;
+      toast.success("Pedido enviado");
+      setPedidoADespachar(null);
+      setGuiaForm({ numero: '', empresa: 'Interrapidisimo' });
+      cargarVentas();
+    } catch (e) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
+  };
+
+  const handleMarcarEntregado = async (id: string) => {
+    if (!confirm("¿Confirmas que este pedido ya fue entregado al cliente?")) return;
+    setProcesandoAccion(true);
+    try {
+      const { error } = await supabase.from('ventas_realizadas').update({ estado_logistico: 'ENTREGADO' }).eq('id', id);
+      if (error) throw error;
+      toast.success("Venta finalizada con éxito");
+      cargarVentas();
+    } catch (e) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
+  };
 
   const ciudadesUnicas = useMemo(() => {
     const ciudades = ventas.map(v => v.ciudad).filter(Boolean);
@@ -82,32 +86,29 @@ export default function AdminPedidos() {
 
   const ventasFiltradas = useMemo(() => {
     let resultado = [...ventas];
-
-    if (filtroCiudad !== 'Todas') {
-      resultado = resultado.filter(v => v.ciudad === filtroCiudad);
+    
+    // 1. Filtro por Ciudad
+    if (filtroCiudad !== 'Todas') resultado = resultado.filter(v => v.ciudad === filtroCiudad);
+    
+    // 2. Filtro por Estado de Pago
+    if (filtroEstadoPago !== 'Todos') {
+      resultado = resultado.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
     }
 
-    if (filtroEstado !== 'Todos') {
-      resultado = resultado.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstado);
+    // 3. Filtro de Logística (Solo aplica para ventas pagadas)
+    if (filtroEstadoPago === 'APROBADO') {
+      if (filtroLogistica === 'PENDIENTES') {
+        resultado = resultado.filter(v => v.estado_logistico !== 'ENTREGADO');
+      } else {
+        resultado = resultado.filter(v => v.estado_logistico === 'ENTREGADO');
+      }
     }
 
-    resultado.sort((a, b) => {
-      if (ordenPrioridad === 'Recientes') return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
-      if (ordenPrioridad === 'Antiguos') return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
-      return 0;
-    });
-
+    resultado.sort((a, b) => ordenPrioridad === 'Recientes' ? new Date(b.fecha).getTime() - new Date(a.fecha).getTime() : new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
     return resultado;
-  }, [ventas, filtroCiudad, filtroEstado, ordenPrioridad]);
+  }, [ventas, filtroCiudad, filtroEstadoPago, filtroLogistica, ordenPrioridad]);
 
-  const obtenerEstiloBadge = (estado: string) => {
-    const status = (estado || '').toUpperCase();
-    if (status === 'APROBADO') return 'bg-green-100 text-green-700 border-green-200';
-    if (status === 'PENDIENTE') return 'bg-amber-50 text-amber-600 border-amber-100';
-    return 'bg-red-50 text-red-600 border-red-100';
-  };
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión de ventas...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión logística...</div>;
 
   return (
     <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-10 text-[#4a1d44]">
@@ -118,46 +119,37 @@ export default function AdminPedidos() {
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Volver al Panel</span>
         </button>
 
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6">
           <div>
-            <h1 className="text-4xl font-black font-playfair text-[#4a1d44]">Ventas & Pedidos</h1>
-            <p className="opacity-60 text-sm mt-1">Webhook de Wompi activo • Sincronización real</p>
+            <h1 className="text-4xl font-black font-playfair text-[#4a1d44]">Ventas & Logística</h1>
+            <p className="opacity-60 text-sm mt-1">Monitorea tus envíos en tiempo real</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => setFiltroEstado('APROBADO')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstado === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>
-              Pagados
-            </button>
-            <button onClick={() => setFiltroEstado('PENDIENTE')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstado === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>
-              Pendientes
-            </button>
-            <button onClick={() => setFiltroEstado('Todos')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstado === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>
-              Todos
-            </button>
+          
+          <div className="flex flex-col gap-3 w-full md:w-auto">
+            <div className="bg-white p-1 rounded-2xl flex border border-[#4a1d44]/5 shadow-sm">
+              <button onClick={() => setFiltroEstadoPago('APROBADO')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Ventas Reales</button>
+              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-md' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Pendientes</button>
+              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-md' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Historial</button>
+            </div>
+
+            {filtroEstadoPago === 'APROBADO' && (
+              <div className="flex gap-2">
+                <button onClick={() => setFiltroLogistica('PENDIENTES')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest border transition-all ${filtroLogistica === 'PENDIENTES' ? 'bg-white border-[#4a1d44] text-[#4a1d44] shadow-sm' : 'bg-transparent border-transparent text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
+                  <Inbox size={14} /> Por Despachar
+                </button>
+                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest border transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white border-[#4a1d44] text-[#4a1d44] shadow-sm' : 'bg-transparent border-transparent text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
+                  <Archive size={14} /> Ya Entregados
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
-        {/* Filtros Secundarios */}
-        <div className="bg-white p-4 rounded-3xl shadow-sm border border-[#4a1d44]/5 mb-8 flex flex-col md:flex-row gap-4">
-          <div className="flex-1 flex items-center gap-3 bg-[#fdf8f6] px-4 py-3 rounded-xl">
-            <Filter size={16} className="opacity-30" />
-            <select value={filtroCiudad} onChange={(e) => setFiltroCiudad(e.target.value)} className="bg-transparent text-sm font-bold outline-none w-full">
-              {ciudadesUnicas.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="flex-1 flex items-center gap-3 bg-[#fdf8f6] px-4 py-3 rounded-xl">
-            <ArrowDownUp size={16} className="opacity-30" />
-            <select value={ordenPrioridad} onChange={(e) => setOrdenPrioridad(e.target.value)} className="bg-transparent text-sm font-bold outline-none w-full">
-              <option value="Recientes">Más recientes</option>
-              <option value="Antiguos">Más antiguos</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Listado */}
-        <div className="grid gap-6">
+        {/* Listado de Pedidos */}
+        <div className="grid gap-6 mb-20">
           {ventasFiltradas.length === 0 ? (
             <div className="bg-white p-20 rounded-[2.5rem] text-center border-2 border-dashed border-[#4a1d44]/5">
-              <p className="opacity-30 font-bold italic">No hay pedidos en esta categoría.</p>
+              <p className="opacity-30 font-bold italic">No hay pedidos pendientes en esta sección.</p>
             </div>
           ) : (
             ventasFiltradas.map((venta) => (
@@ -166,11 +158,15 @@ export default function AdminPedidos() {
                   
                   <div className="flex-1 space-y-4">
                     <div className="flex items-center gap-3">
-                      <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${obtenerEstiloBadge(venta.estado_pago)}`}>
+                      <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                         {venta.estado_pago === 'APROBADO' ? <CheckCircle2 size={10} className="inline mr-1" /> : <Clock size={10} className="inline mr-1" />}
                         {venta.estado_pago || 'PENDIENTE'}
                       </span>
-                      <span className="text-[10px] opacity-40 font-bold uppercase">{new Date(venta.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                      {venta.estado_logistico && (
+                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_logistico === 'ENTREGADO' ? 'bg-blue-600 text-white border-blue-700' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                          {venta.estado_logistico}
+                        </span>
+                      )}
                     </div>
 
                     <div>
@@ -199,16 +195,38 @@ export default function AdminPedidos() {
                     </div>
                   </div>
 
-                  <div className="w-full md:w-48 flex flex-col justify-between items-start md:items-end">
+                  <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-4">
                     <div className="text-left md:text-right w-full">
-                      <p className="text-[9px] opacity-30 uppercase font-black mb-1">Monto Total</p>
+                      <p className="text-[9px] opacity-30 uppercase font-black mb-1">Monto Cobrado</p>
                       <p className="text-3xl font-black">${Number(venta.monto_total).toLocaleString('es-CO')}</p>
-                      <p className="text-[8px] opacity-30 mt-2 font-mono break-all">{venta.referencia_wompi}</p>
+                      
+                      {venta.numero_guia && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left">
+                          <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Guía de envío</p>
+                          <p className="text-xs font-bold text-blue-700">{venta.empresa_envio}: {venta.numero_guia}</p>
+                        </div>
+                      )}
                     </div>
                     
-                    <a href="https://comercios.wompi.co/" target="_blank" className="w-full bg-[#f2e1d9] text-[#4a1d44] py-3.5 rounded-2xl font-bold text-[10px] uppercase tracking-widest mt-6 flex items-center justify-center gap-2 hover:bg-[#4a1d44] hover:text-white transition-all">
-                      Wompi Panel <ExternalLink size={14} />
-                    </a>
+                    <div className="w-full flex flex-col gap-2">
+                      {venta.estado_pago === 'APROBADO' && venta.estado_logistico !== 'ENTREGADO' && (
+                        <>
+                          {!venta.numero_guia ? (
+                            <button onClick={() => setPedidoADespachar(venta)} className="w-full bg-[#4a1d44] text-white py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-md flex items-center justify-center gap-2">
+                              <Truck size={14} /> Registrar Guía
+                            </button>
+                          ) : (
+                            <button onClick={() => handleMarcarEntregado(venta.id)} className="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
+                              <CheckCircle2 size={14} /> Marcar como Entregado
+                            </button>
+                          )}
+                        </>
+                      )}
+                      
+                      <a href="https://comercios.wompi.co/" target="_blank" className="w-full bg-[#f2e1d9] text-[#4a1d44] py-3 rounded-xl font-bold text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#4a1d44] hover:text-white transition-all">
+                        Panel Wompi <ExternalLink size={12} />
+                      </a>
+                    </div>
                   </div>
 
                 </div>
@@ -217,6 +235,39 @@ export default function AdminPedidos() {
           )}
         </div>
       </div>
+
+      {/* MODAL PARA REGISTRAR GUÍA */}
+      {pedidoADespachar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative">
+            <button onClick={() => setPedidoADespachar(null)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition"><XCircle size={24} className="opacity-20" /></button>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-[#fdf8f6] rounded-full flex items-center justify-center mx-auto mb-4 text-[#4a1d44]"><Send size={32} /></div>
+              <h2 className="text-2xl font-black font-playfair">Despachar Pedido</h2>
+              <p className="text-xs opacity-50 mt-1 uppercase font-bold tracking-widest">Para: {pedidoADespachar.nombre_cliente}</p>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Transportadora</label>
+                <select value={guiaForm.empresa} onChange={(e) => setGuiaForm({...guiaForm, empresa: e.target.value})} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none font-bold text-sm border-2 border-transparent focus:border-[#4a1d44]/10 transition-all cursor-pointer">
+                  {EMPRESAS_ENVIO.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Número de Guía</label>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <input autoFocus placeholder="Ej: 1234567890" value={guiaForm.numero} onChange={(e) => setGuiaForm({...guiaForm, numero: e.target.value})} className="w-full p-4 pl-12 rounded-2xl bg-[#fdf8f6] outline-none font-bold text-sm border-2 border-transparent focus:border-[#4a1d44]/10 transition-all" />
+                </div>
+              </div>
+              <button disabled={procesandoAccion} onClick={handleDespachar} className="w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[#6b2b62] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
+                {procesandoAccion ? 'Guardando...' : 'Confirmar Envío'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

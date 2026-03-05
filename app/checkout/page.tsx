@@ -101,7 +101,7 @@ export default function CheckoutPage() {
     if (transaccion.status === 'APPROVED') {
       toast.success('¡Pago exitoso detectado!');
       clearCart();
-      router.push('/gracias');
+      router.push(`/gracias?ref=${referenciaUnica}`);
     }
   };
 

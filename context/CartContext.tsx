@@ -66,7 +66,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // --- FUNCIONES OPTIMIZADAS ---
 
-  const addToCart = async (product: any, talla?: any) => {
+  const addToCart = async (product: any, talla?: any, qty: number = 1) => {
     // Identificador único considerando la talla
     const tallaId = talla?.id || null;
 
@@ -76,11 +76,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return prev.map(item => 
           (item.id === product.id && item.talla_id === tallaId) 
-            ? { ...item, quantity: item.quantity + 1 } 
+            ? { ...item, quantity: item.quantity + qty } 
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1, talla, talla_id: tallaId }];
+      return [...prev, { ...product, quantity: qty, talla, talla_id: tallaId }];
     });
 
     // Sincronización en segundo plano si hay usuario
@@ -88,7 +88,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const existing = cart.find(item => item.id === product.id && item.talla_id === tallaId);
       if (existing) {
         await supabase.from('carrito')
-          .update({ cantidad: existing.quantity + 1 })
+          .update({ cantidad: existing.quantity + qty })
           .eq('user_id', user.id)
           .eq('producto_id', product.id)
           .eq('talla_id', tallaId);
@@ -96,7 +96,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await supabase.from('carrito').insert([{ 
           user_id: user.id, 
           producto_id: product.id, 
-          cantidad: 1,
+          cantidad: qty,
           talla_id: tallaId
         }]);
       }

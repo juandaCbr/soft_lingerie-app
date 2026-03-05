@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
-import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
@@ -18,6 +18,7 @@ export default function ProductoDetallePage() {
   const [varianteActiva, setVarianteActiva] = useState<any>(null);
   const [tallasDisponibles, setTallasDisponibles] = useState<any[]>([]);
   const [tallaSeleccionada, setTallaSeleccionada] = useState<any>(null);
+  const [cantidad, setCantidad] = useState(1);
   const [relacionados, setRelacionados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -94,7 +95,6 @@ export default function ProductoDetallePage() {
       .eq('producto_id', productoId);
     
     if (!errorTallas && tallasRel) {
-      // Guardamos la relación completa para tener acceso al stock_talla
       const tallasConStock = tallasRel.map(r => ({
         ...r.tallas,
         stock: r.stock_talla || 0
@@ -102,9 +102,9 @@ export default function ProductoDetallePage() {
       
       setTallasDisponibles(tallasConStock);
       
-      // Seleccionar la primera talla CON STOCK por defecto
       const primeraDisponible = tallasConStock.find(t => t.stock > 0);
       setTallaSeleccionada(primeraDisponible || null);
+      setCantidad(1);
     }
   };
 
@@ -112,6 +112,7 @@ export default function ProductoDetallePage() {
     setVarianteActiva(v);
     setCurrentImg(0);
     setTallaSeleccionada(null);
+    setCantidad(1);
     await fetchTallas(v.id);
   };
 
@@ -120,11 +121,11 @@ export default function ProductoDetallePage() {
       toast.error("Por favor selecciona una talla disponible");
       return;
     }
-    if (tallaSeleccionada && tallaSeleccionada.stock <= 0) {
-      toast.error("Esta talla está agotada");
+    if (tallaSeleccionada && (tallaSeleccionada.stock <= 0 || cantidad > tallaSeleccionada.stock)) {
+      toast.error("No hay suficiente stock para la cantidad seleccionada");
       return;
     }
-    addToCart(varianteActiva, tallaSeleccionada);
+    addToCart(varianteActiva, tallaSeleccionada, cantidad);
     toast.success('¡Añadido al carrito!');
   };
 
@@ -229,7 +230,7 @@ export default function ProductoDetallePage() {
                     <button
                       key={t.id}
                       disabled={agotado}
-                      onClick={() => setTallaSeleccionada(t)}
+                      onClick={() => { setTallaSeleccionada(t); setCantidad(1); }}
                       className={`min-w-[50px] px-3 py-2.5 rounded-xl text-xs font-black transition-all duration-300 border relative overflow-hidden ${
                         tallaSeleccionada?.id === t.id
                           ? 'bg-[#4a1d44] text-white border-[#4a1d44] shadow-lg scale-105 z-10'
@@ -255,6 +256,28 @@ export default function ProductoDetallePage() {
                     : 'Disponible en stock'}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Selector de Cantidad (NUEVO) */}
+          {tallaSeleccionada && tallaSeleccionada.stock > 0 && (
+            <div className="py-2 flex flex-col items-start">
+              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Cantidad</h3>
+              <div className="flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm">
+                <button 
+                  onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
+                  className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="w-12 text-center font-black text-sm">{cantidad}</span>
+                <button 
+                  onClick={() => setCantidad(prev => Math.min(tallaSeleccionada.stock, prev + 1))}
+                  className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
             </div>
           )}
 

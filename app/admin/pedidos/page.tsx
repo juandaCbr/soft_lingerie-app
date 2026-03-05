@@ -22,7 +22,8 @@ import {
   Archive,
   Inbox,
   Loader2,
-  Bike
+  Bike,
+  AlertTriangle
 } from 'lucide-react';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Domicilio Local', 'Otro'];
@@ -40,7 +41,11 @@ export default function AdminPedidos() {
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
   const [ordenPrioridad, setOrdenPrioridad] = useState('Recientes');
 
+  // Estados para Modals
   const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
+  const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
+  const [pedidoAFinalizar, setPedidoAFinalizar] = useState<any>(null);
+
   const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
@@ -65,70 +70,46 @@ export default function AdminPedidos() {
         empresa_envio: guiaForm.empresa,
         estado_logistico: 'ENVIADO'
       }).eq('id', pedidoADespachar.id);
-      
       if (error) throw error;
-      
-      toast.success("Pedido movido a 'En Camino'");
+      toast.success("Pedido enviado con guía");
       setPedidoADespachar(null);
-      // Forzamos actualización local inmediata
       setVentas(prev => prev.map(v => v.id === pedidoADespachar.id ? { ...v, estado_logistico: 'ENVIADO', numero_guia: guiaForm.numero, empresa_envio: guiaForm.empresa } : v));
-    } catch (e: any) {
-      toast.error("Error: " + e.message);
-    } finally {
-      setProcesandoAccion(false);
-    }
+    } catch (e: any) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
   };
 
-  const handleDespachoDomiciliario = async (id: string) => {
-    if (!confirm("¿Despachar este pedido con domiciliario local?")) return;
+  const handleConfirmarDomicilio = async () => {
     setProcesandoAccion(true);
     try {
       const { error } = await supabase.from('ventas_realizadas').update({
         estado_logistico: 'ENVIADO',
         empresa_envio: 'Domicilio Local',
         numero_guia: 'DOMICILIO-' + Date.now().toString().slice(-4)
-      }).eq('id', id);
-      
+      }).eq('id', pedidoADomicilio.id);
       if (error) throw error;
-      
-      toast.success("Pedido movido a 'En Camino'");
-      // Actualización local
-      setVentas(prev => prev.map(v => v.id === id ? { ...v, estado_logistico: 'ENVIADO', empresa_envio: 'Domicilio Local' } : v));
-    } catch (e: any) {
-      toast.error("Error: " + e.message);
-    } finally {
-      setProcesandoAccion(false);
-    }
+      toast.success("Despachado con domiciliario");
+      setVentas(prev => prev.map(v => v.id === pedidoADomicilio.id ? { ...v, estado_logistico: 'ENVIADO', empresa_envio: 'Domicilio Local' } : v));
+      setPedidoADomicilio(null);
+    } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
-  const handleMarcarEntregado = async (id: string) => {
-    if (!confirm("¿Confirmas que este pedido ya fue entregado?")) return;
+  const handleConfirmarFinalizar = async () => {
     setProcesandoAccion(true);
     try {
-      const { error } = await supabase.from('ventas_realizadas').update({ estado_logistico: 'ENTREGADO' }).eq('id', id);
+      const { error } = await supabase.from('ventas_realizadas').update({ estado_logistico: 'ENTREGADO' }).eq('id', pedidoAFinalizar.id);
       if (error) throw error;
-      toast.success("Venta movida a 'Finalizados'");
-      setVentas(prev => prev.map(v => v.id === id ? { ...v, estado_logistico: 'ENTREGADO' } : v));
-    } catch (e: any) {
-      toast.error("Error: " + e.message);
-    } finally {
-      setProcesandoAccion(false);
-    }
+      toast.success("Venta finalizada");
+      setVentas(prev => prev.map(v => v.id === pedidoAFinalizar.id ? { ...v, estado_logistico: 'ENTREGADO' } : v));
+      setPedidoAFinalizar(null);
+    } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
   const ventasSegunPagoYLogistica = useMemo(() => {
     let base = [...ventas];
-    if (filtroEstadoPago !== 'Todos') {
-      base = base.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
-    }
+    if (filtroEstadoPago !== 'Todos') base = base.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
     if (filtroEstadoPago === 'APROBADO') {
-      if (filtroLogistica === 'POR_DESPACHAR') {
-        base = base.filter(v => (v.estado_logistico || 'PREPARANDO') === 'PREPARANDO');
-      } else if (filtroLogistica === 'EN_CAMINO') {
-        base = base.filter(v => v.estado_logistico === 'ENVIADO');
-      } else if (filtroLogistica === 'ENTREGADOS') {
-        base = base.filter(v => v.estado_logistico === 'ENTREGADO');
-      }
+      if (filtroLogistica === 'POR_DESPACHAR') base = base.filter(v => (v.estado_logistico || 'PREPARANDO') === 'PREPARANDO');
+      else if (filtroLogistica === 'EN_CAMINO') base = base.filter(v => v.estado_logistico === 'ENVIADO');
+      else if (filtroLogistica === 'ENTREGADOS') base = base.filter(v => v.estado_logistico === 'ENTREGADO');
     }
     return base;
   }, [ventas, filtroEstadoPago, filtroLogistica]);
@@ -144,8 +125,6 @@ export default function AdminPedidos() {
     res.sort((a, b) => ordenPrioridad === 'Recientes' ? new Date(b.fecha).getTime() - new Date(a.fecha).getTime() : new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
     return res;
   }, [ventasSegunPagoYLogistica, filtroCiudad, ordenPrioridad]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión logística...</div>;
 
   return (
     <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-10 text-[#4a1d44]">
@@ -163,27 +142,22 @@ export default function AdminPedidos() {
           </div>
           
           <div className="flex flex-col gap-4 w-full md:w-auto">
-            <div className="bg-white p-1 rounded-2xl flex border border-[#4a1d44]/5 shadow-sm">
-              {/* Botón Ventas Reales con fondo verde */}
-              <button 
-                onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} 
-                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'APROBADO' ? 'bg-green-600 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}
-              >
-                Ventas Reales
-              </button>
-              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Pendientes</button>
-              <button onClick={() => setFiltroEstadoPago('Todos')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Historial</button>
+            {/* Botones de Filtro Restaurados al Estilo Original */}
+            <div className="flex gap-2">
+              <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
+              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
+              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
             </div>
 
             {filtroEstadoPago === 'APROBADO' && (
               <div className="flex bg-white/50 p-1 rounded-2xl gap-1">
-                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
+                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
                   <Inbox size={14} /> Por Despachar
                 </button>
-                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
+                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
                   <Truck size={14} /> En camino
                 </button>
-                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
+                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
                   <CheckCircle2 size={14} /> Finalizados
                 </button>
               </div>
@@ -198,7 +172,7 @@ export default function AdminPedidos() {
             <div className="flex-1">
               <p className="text-[8px] font-black uppercase tracking-tighter opacity-30">Filtrar ciudad actual</p>
               <select value={filtroCiudad} onChange={(e) => setFiltroCiudad(e.target.value)} className="bg-transparent text-sm font-bold outline-none w-full cursor-pointer">
-                {ciudadesDisponibles.map(c => <option key={c} value={c}>{c}</option>)}
+                {ciudadesUnicas.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
@@ -228,15 +202,17 @@ export default function AdminPedidos() {
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
                     
+                    {/* Información Cliente */}
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-600 text-white border-green-700 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        {/* Verde PAGADO un poco más claro */}
+                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                           {venta.estado_pago === 'APROBADO' ? '● PAGADO' : '○ PENDIENTE'}
                         </span>
                         
                         {esValledupar && (
                           <span className="bg-[#4a1d44] text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Truck size={12} /> Prioridad Valledupar
+                            <Bike size={12} /> Prioridad Valledupar
                           </span>
                         )}
 
@@ -257,6 +233,7 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
+                    {/* Artículos */}
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2">
                         <Package size={14} /> Artículos del Pedido
@@ -274,6 +251,7 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
+                    {/* Acciones y Pago */}
                     <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
@@ -291,6 +269,7 @@ export default function AdminPedidos() {
                       <div className="w-full flex flex-col gap-3">
                         {venta.estado_pago === 'APROBADO' && (
                           <>
+                            {/* PASO 1: POR DESPACHAR */}
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
                               <div className="flex flex-col gap-2">
                                 {!esValledupar ? (
@@ -298,15 +277,16 @@ export default function AdminPedidos() {
                                     <Truck size={16} /> Registrar Guía Nacional
                                   </button>
                                 ) : (
-                                  <button onClick={() => handleDespachoDomiciliario(venta.id)} className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-xl flex items-center justify-center gap-2">
+                                  <button onClick={() => setPedidoADomicilio(venta)} className="w-full bg-white text-[#4a1d44] border-2 border-[#4a1d44] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#4a1d44] hover:text-white transition-all flex items-center justify-center gap-2">
                                     <Bike size={16} /> Enviar con Domiciliario
                                   </button>
                                 )}
                               </div>
                             )}
 
+                            {/* PASO 2: EN CAMINO */}
                             {venta.estado_logistico === 'ENVIADO' && (
-                              <button onClick={() => handleMarcarEntregado(venta.id)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2">
+                              <button onClick={() => setPedidoAFinalizar(venta)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2">
                                 <CheckCircle2 size={16} /> Marcar como Entregado
                               </button>
                             )}
@@ -327,6 +307,7 @@ export default function AdminPedidos() {
         </div>
       </div>
 
+      {/* MODAL 1: REGISTRAR GUÍA NACIONAL */}
       {pedidoADespachar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">
@@ -358,6 +339,45 @@ export default function AdminPedidos() {
           </div>
         </div>
       )}
+
+      {/* MODAL 2: CONFIRMAR DOMICILIARIO (VALLEDUPAR) */}
+      {pedidoADomicilio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600"><Bike size={48} /></div>
+              <h2 className="text-2xl font-black font-playfair">Despacho Local</h2>
+              <p className="text-sm opacity-60 mt-2 px-4">¿Confirmas que enviarás este pedido con un domiciliario en Valledupar?</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button disabled={procesandoAccion} onClick={handleConfirmarDomicilio} className="w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : "SÍ, ENVIAR AHORA"}
+              </button>
+              <button onClick={() => setPedidoADomicilio(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: FINALIZAR PEDIDO (YA ENTREGADO) */}
+      {pedidoAFinalizar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><Package size={48} /></div>
+              <h2 className="text-2xl font-black font-playfair">¿Pedido Entregado?</h2>
+              <p className="text-sm opacity-60 mt-2 px-4">Esta acción moverá el pedido a la pestaña de "Finalizados" y cerrará la gestión.</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button disabled={procesandoAccion} onClick={handleConfirmarFinalizar} className="w-full bg-green-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : "CONFIRMAR ENTREGA"}
+              </button>
+              <button onClick={() => setPedidoAFinalizar(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">AÚN NO</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

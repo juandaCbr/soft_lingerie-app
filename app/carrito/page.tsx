@@ -64,6 +64,7 @@ export default function CartPage() {
             <div className="bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.08)] border border-white/60 ring-1 ring-[#4a1d44]/5 flex flex-col p-1.5 md:p-3 overflow-hidden backdrop-blur-xl">
               {cartOrdenado.map((item: any, index: number) => {
                 const imagenAShow = item.imagenes_urls?.[0] || item.imagen_url || "/placeholder.png";
+                const isMax = item.quantity >= (item.stock_disponible ?? 99);
 
                 return (
                   <div key={`${item.id}-${item.talla_id}`} className="relative group">
@@ -106,22 +107,28 @@ export default function CartPage() {
                           </button>
                         </div>
                         <div className="flex items-end justify-between mt-2">
-                          <div className="flex items-center bg-white shadow-sm rounded-full p-0.5 md:p-1 border border-[#4a1d44]/10">
-                            <button
-                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, -1, item.talla_id); }}
-                              className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
-                            >
-                              <Minus size={12} />
-                            </button>
-                            <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm text-[#361531]">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, 1, item.talla_id); }}
-                              className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
-                            >
-                              <Plus size={12} />
-                            </button>
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center bg-white shadow-sm rounded-full p-0.5 md:p-1 border border-[#4a1d44]/10 w-fit">
+                              <button
+                                onClick={(e) => { e.preventDefault(); updateQuantity(item.id, -1, item.talla_id); }}
+                                className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm text-[#361531]">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={(e) => { e.preventDefault(); updateQuantity(item.id, 1, item.talla_id); }}
+                                disabled={isMax}
+                                className={`p-1 rounded-full transition active:scale-90 text-[#4a1d44] ${isMax ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#f2e1d9]/50'}`}
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                            {isMax && (
+                              <p className="text-[8px] font-black uppercase text-[#4a1d44]/40 ml-2">Stock Máximo</p>
+                            )}
                           </div>
                           <div className="text-right flex flex-col justify-end">
                             <p className="text-sm md:text-base font-black whitespace-nowrap flex items-baseline gap-1 mt-1 text-[#4a1d44]">

@@ -10,7 +10,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 1. Escuchar el estado de autenticación
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -27,13 +26,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Cargar datos del carrito
   useEffect(() => {
     const loadCart = async () => {
       if (user) {
+        // Traemos el stock_talla específico para cada item del carrito
         const { data, error } = await supabase
           .from('carrito')
-          .select('*, productos(*), tallas(*)')
+          .select(`
+            *, 
+            productos(*), 
+            tallas(*),
+            producto_tallas!inner(stock_talla)
+          `)
           .eq('user_id', user.id);
         
         if (!error && data) {
@@ -42,14 +46,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             quantity: item.cantidad,
             cart_item_id: item.id,
             talla: item.tallas,
-            talla_id: item.talla_id
+            talla_id: item.talla_id,
+            stock_disponible: item.producto_tallas?.stock_talla ?? item.productos.stock
           }));
           setCart(formattedCart);
         }
       } else {
         const savedCart = localStorage.getItem('soft_cart');
         if (savedCart) {
-          try { setCart(JSON.parse(savedCart)); } catch (e) { setCart([]); }
+          try { 
+            const parsed = JSON.parse(savedCart);
+            // Para invitados, intentamos refrescar el stock si es posible
+            setCart(parsed); 
+          } catch (e) { setCart([]); }
         }
       }
       setIsLoaded(true);
@@ -57,38 +66,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     loadCart();
   }, [user]);
 
-  // 3. Persistencia para invitados
   useEffect(() => {
     if (isLoaded && !user) {
       localStorage.setItem('soft_cart', JSON.stringify(cart));
     }
   }, [cart, user, isLoaded]);
 
-  // --- FUNCIONES OPTIMIZADAS ---
-
   const addToCart = async (product: any, talla?: any, qty: number = 1) => {
-    // Identificador único considerando la talla
     const tallaId = talla?.id || null;
+    const stockMax = talla?.stock ?? product.stock;
 
-    // Actualización local inmediata
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id && item.talla_id === tallaId);
       if (existing) {
+        const newQty = Math.min(stockMax, existing.quantity + qty);
         return prev.map(item => 
           (item.id === product.id && item.talla_id === tallaId) 
-            ? { ...item, quantity: item.quantity + qty } 
+            ? { ...item, quantity: newQty } 
             : item
         );
       }
-      return [...prev, { ...product, quantity: qty, talla, talla_id: tallaId }];
+      return [...prev, { ...product, quantity: qty, talla, talla_id: tallaId, stock_disponible: stockMax }];
     });
 
-    // Sincronización en segundo plano si hay usuario
     if (user) {
       const existing = cart.find(item => item.id === product.id && item.talla_id === tallaId);
       if (existing) {
+        const newQty = Math.min(stockMax, existing.quantity + qty);
         await supabase.from('carrito')
-          .update({ cantidad: existing.quantity + qty })
+          .update({ cantidad: newQty })
           .eq('user_id', user.id)
           .eq('producto_id', product.id)
           .eq('talla_id', tallaId);
@@ -104,21 +110,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = async (id: number, delta: number, tallaId: any = null) => {
-    let newQty = 0;
+    let finalQty = 0;
 
-    // 1. Actualización visual instantánea
     setCart(prev => prev.map(item => {
       if (item.id === id && item.talla_id === tallaId) {
-        newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
+        const stockMax = item.stock_disponible ?? 99;
+        finalQty = Math.max(1, Math.min(stockMax, item.quantity + delta));
+        return { ...item, quantity: finalQty };
       }
       return item;
     }));
 
-    // 2. Sincronización silenciosa con la DB
-    if (user) {
+    if (user && finalQty > 0) {
       supabase.from('carrito')
-        .update({ cantidad: newQty })
+        .update({ cantidad: finalQty })
         .eq('user_id', user.id)
         .eq('producto_id', id)
         .eq('talla_id', tallaId)
@@ -127,10 +132,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = async (id: number, tallaId: any = null) => {
-    // 1. Quitar de la vista inmediatamente
     setCart(prev => prev.filter(item => !(item.id === id && item.talla_id === tallaId)));
-
-    // 2. Borrar de la DB en segundo plano
     if (user) {
       await supabase.from('carrito')
         .delete()

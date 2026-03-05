@@ -29,36 +29,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadCart = async () => {
       if (user) {
-        // Traemos el stock_talla específico para cada item del carrito
-        const { data, error } = await supabase
-          .from('carrito')
-          .select(`
-            *, 
-            productos(*), 
-            tallas(*),
-            producto_tallas!inner(stock_talla)
-          `)
-          .eq('user_id', user.id);
-        
-        if (!error && data) {
-          const formattedCart = data.map(item => ({
-            ...item.productos,
-            quantity: item.cantidad,
-            cart_item_id: item.id,
-            talla: item.tallas,
-            talla_id: item.talla_id,
-            stock_disponible: item.producto_tallas?.stock_talla ?? item.productos.stock
-          }));
-          setCart(formattedCart);
+        try {
+          const { data, error } = await supabase
+            .from('carrito')
+            .select(`
+              *, 
+              productos(*), 
+              tallas(*)
+            `)
+            .eq('user_id', user.id);
+          
+          if (!error && data) {
+            // Obtenemos los stocks por talla de forma separada para evitar errores de Join
+            const { data: stocksTallas } = await supabase
+              .from('producto_tallas')
+              .select('producto_id, talla_id, stock_talla');
+
+            const formattedCart = data.map(item => {
+              const stockEspecifico = stocksTallas?.find(
+                s => s.producto_id === item.producto_id && s.talla_id === item.talla_id
+              )?.stock_talla;
+
+              return {
+                ...item.productos,
+                quantity: item.cantidad,
+                cart_item_id: item.id,
+                talla: item.tallas,
+                talla_id: item.talla_id,
+                stock_disponible: stockEspecifico ?? item.productos.stock
+              };
+            });
+            setCart(formattedCart);
+          }
+        } catch (err) {
+          console.error("Error cargando carrito:", err);
         }
       } else {
         const savedCart = localStorage.getItem('soft_cart');
         if (savedCart) {
-          try { 
-            const parsed = JSON.parse(savedCart);
-            // Para invitados, intentamos refrescar el stock si es posible
-            setCart(parsed); 
-          } catch (e) { setCart([]); }
+          try { setCart(JSON.parse(savedCart)); } catch (e) { setCart([]); }
         }
       }
       setIsLoaded(true);

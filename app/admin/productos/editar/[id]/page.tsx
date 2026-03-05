@@ -110,9 +110,15 @@ export default function EditarProductoPage() {
   };
 
   const handleStockChange = (id: string, value: string) => {
-    // Eliminamos ceros a la izquierda y convertimos a numero
-    const val = value === "" ? 0 : parseInt(value, 10);
-    setStocksPorTalla(prev => ({ ...prev, [id]: val }));
+    // Si esta vacio, lo dejamos como string vacio temporalmente para poder borrar el 0
+    if (value === "") {
+      setStocksPorTalla(prev => ({ ...prev, [id]: "" as any }));
+      return;
+    }
+    const val = parseInt(value, 10);
+    if (!isNaN(val)) {
+      setStocksPorTalla(prev => ({ ...prev, [id]: val }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

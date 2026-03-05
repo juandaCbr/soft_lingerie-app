@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler } from 'lucide-react';
+import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function NuevoProductoPage() {
@@ -25,10 +25,9 @@ export default function NuevoProductoPage() {
     descripcion: '',
     precio: '',
     categoria: '',
-    grupo_id: '', // Crucial para agrupar colores
+    grupo_id: '',
   });
 
-  // Cargar colores y tallas desde Supabase
   useEffect(() => {
     const fetchDatos = async () => {
       const { data: colores } = await supabase.from('colores').select('*').order('nombre');
@@ -46,16 +45,23 @@ export default function NuevoProductoPage() {
       if (id in newStocks) {
         delete newStocks[id];
       } else {
-        newStocks[id] = 1; // Stock inicial de 1 al seleccionar
+        newStocks[id] = 1;
       }
       return newStocks;
     });
   };
 
   const handleStockChange = (id: string, value: string) => {
-    // Eliminamos ceros a la izquierda y convertimos a numero
-    const val = value === "" ? 0 : parseInt(value, 10);
-    setStocksPorTalla(prev => ({ ...prev, [id]: val }));
+    // Si esta vacio, lo dejamos como string vacio temporalmente para poder borrar el 0
+    // Al guardar se convertira a 0
+    if (value === "") {
+      setStocksPorTalla(prev => ({ ...prev, [id]: "" as any }));
+      return;
+    }
+    const val = parseInt(value, 10);
+    if (!isNaN(val)) {
+      setStocksPorTalla(prev => ({ ...prev, [id]: val }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +81,6 @@ export default function NuevoProductoPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validaciones básicas
     if (archivosImagenes.length === 0) {
       toast.error('¡Sube al menos una foto!');
       return;
@@ -93,8 +98,6 @@ export default function NuevoProductoPage() {
 
     try {
       const urlsSubidas = [];
-
-      // 1. Subida de múltiples imágenes al Storage
       for (const archivo of archivosImagenes) {
         const fileExt = archivo.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
@@ -113,9 +116,9 @@ export default function NuevoProductoPage() {
         urlsSubidas.push(publicUrlData.publicUrl);
       }
 
-      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + b, 0);
+      // Convertir stocks vacios a 0 antes de sumar
+      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => Number(a) + Number(b || 0), 0);
 
-      // 2. Insertar el producto en la tabla 'productos'
       const { data: nuevoProducto, error: dbError } = await supabase
         .from('productos')
         .insert([{
@@ -124,7 +127,7 @@ export default function NuevoProductoPage() {
           precio: parseFloat(formData.precio),
           stock: stockTotal,
           categoria: formData.categoria,
-          grupo_id: formData.grupo_id.trim() || null, // Si está vacío, es null
+          grupo_id: formData.grupo_id.trim() || null,
           imagenes_urls: urlsSubidas
         }])
         .select()
@@ -132,7 +135,6 @@ export default function NuevoProductoPage() {
 
       if (dbError) throw dbError;
 
-      // 3. Vincular el color en la tabla intermedia 'producto_colores'
       const { error: colorError } = await supabase
         .from('producto_colores')
         .insert([{
@@ -142,11 +144,10 @@ export default function NuevoProductoPage() {
 
       if (colorError) throw colorError;
 
-      // 4. Vincular las tallas en la tabla intermedia 'producto_tallas'
       const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
         producto_id: nuevoProducto.id,
         talla_id: tallaId,
-        stock_talla: stockVal
+        stock_talla: Number(stockVal || 0)
       }));
 
       const { error: tallasError } = await supabase
@@ -169,8 +170,6 @@ export default function NuevoProductoPage() {
   return (
     <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-8 text-[#4a1d44]">
       <div className="max-w-2xl mx-auto">
-        
-        {/* Botón Volver */}
         <button onClick={() => router.back()} className="flex items-center gap-3 mb-6 group">
           <div className="p-2 bg-white rounded-full shadow-sm group-hover:shadow-md transition-all">
             <ArrowLeft size={18} />
@@ -182,8 +181,6 @@ export default function NuevoProductoPage() {
           <h1 className="text-3xl font-black font-playfair mb-8 text-[#4a1d44]">Nuevo Producto</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* GALERÍA DE IMÁGENES */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Fotos del Producto</label>
               <div className="grid grid-cols-3 gap-4">
@@ -203,7 +200,6 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* AGRUPACIÓN Y COLOR (Estructura de 2 columnas) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de Grupo (Agrupar colores)</label>
@@ -238,7 +234,6 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* TALLAS Y STOCKS ESPECÍFICOS */}
             <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
                 <Ruler size={14} /> Gestión de Inventario por Talla
@@ -279,7 +274,6 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* NOMBRE */}
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nombre del Producto</label>
               <div className="relative">
@@ -295,7 +289,6 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* PRECIO Y CATEGORÍA */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Precio</label>
@@ -331,7 +324,6 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* DESCRIPCIÓN */}
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Descripción</label>
               <textarea 
@@ -343,7 +335,6 @@ export default function NuevoProductoPage() {
               />
             </div>
 
-            {/* BOTÓN DE PUBLICACIÓN */}
             <button 
               disabled={loading} 
               className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-[#5d2555] transition-all disabled:opacity-50 shadow-lg shadow-[#4a1d44]/20"

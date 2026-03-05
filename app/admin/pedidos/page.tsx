@@ -34,7 +34,7 @@ export default function AdminPedidos() {
 
   // Filtros principales
   const [filtroEstadoPago, setFiltroEstadoPago] = useState('APROBADO'); 
-  const [filtroLogistica, setFiltroLogistica] = useState('POR_DESPACHAR'); // POR_DESPACHAR, EN_CAMINO, ENTREGADOS
+  const [filtroLogistica, setFiltroLogistica] = useState('POR_DESPACHAR'); 
   
   // Filtros secundarios
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
@@ -65,11 +65,18 @@ export default function AdminPedidos() {
         empresa_envio: guiaForm.empresa,
         estado_logistico: 'ENVIADO'
       }).eq('id', pedidoADespachar.id);
+      
       if (error) throw error;
-      toast.success("Pedido enviado con guía");
+      
+      toast.success("Pedido movido a 'En Camino'");
       setPedidoADespachar(null);
-      cargarVentas();
-    } catch (e) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
+      // Forzamos actualización local inmediata
+      setVentas(prev => prev.map(v => v.id === pedidoADespachar.id ? { ...v, estado_logistico: 'ENVIADO', numero_guia: guiaForm.numero, empresa_envio: guiaForm.empresa } : v));
+    } catch (e: any) {
+      toast.error("Error: " + e.message);
+    } finally {
+      setProcesandoAccion(false);
+    }
   };
 
   const handleDespachoDomiciliario = async (id: string) => {
@@ -81,10 +88,17 @@ export default function AdminPedidos() {
         empresa_envio: 'Domicilio Local',
         numero_guia: 'DOMICILIO-' + Date.now().toString().slice(-4)
       }).eq('id', id);
+      
       if (error) throw error;
-      toast.success("Pedido despachado localmente");
-      cargarVentas();
-    } catch (e) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
+      
+      toast.success("Pedido movido a 'En Camino'");
+      // Actualización local
+      setVentas(prev => prev.map(v => v.id === id ? { ...v, estado_logistico: 'ENVIADO', empresa_envio: 'Domicilio Local' } : v));
+    } catch (e: any) {
+      toast.error("Error: " + e.message);
+    } finally {
+      setProcesandoAccion(false);
+    }
   };
 
   const handleMarcarEntregado = async (id: string) => {
@@ -93,22 +107,20 @@ export default function AdminPedidos() {
     try {
       const { error } = await supabase.from('ventas_realizadas').update({ estado_logistico: 'ENTREGADO' }).eq('id', id);
       if (error) throw error;
-      toast.success("Venta finalizada");
-      cargarVentas();
-    } catch (e) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
+      toast.success("Venta movida a 'Finalizados'");
+      setVentas(prev => prev.map(v => v.id === id ? { ...v, estado_logistico: 'ENTREGADO' } : v));
+    } catch (e: any) {
+      toast.error("Error: " + e.message);
+    } finally {
+      setProcesandoAccion(false);
+    }
   };
-
-  // --- LÓGICA DE FILTRADO ---
 
   const ventasSegunPagoYLogistica = useMemo(() => {
     let base = [...ventas];
-    
-    // Primero filtramos por estado de pago
     if (filtroEstadoPago !== 'Todos') {
       base = base.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
     }
-
-    // Si estamos en ventas aprobadas, aplicamos las pestañas de logística
     if (filtroEstadoPago === 'APROBADO') {
       if (filtroLogistica === 'POR_DESPACHAR') {
         base = base.filter(v => (v.estado_logistico || 'PREPARANDO') === 'PREPARANDO');
@@ -152,20 +164,26 @@ export default function AdminPedidos() {
           
           <div className="flex flex-col gap-4 w-full md:w-auto">
             <div className="bg-white p-1 rounded-2xl flex border border-[#4a1d44]/5 shadow-sm">
-              <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white' : 'text-[#4a1d44]/40'}`}>Ventas Reales</button>
-              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white' : 'text-[#4a1d44]/40'}`}>Pendientes</button>
-              <button onClick={() => setFiltroEstadoPago('Todos')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white' : 'text-[#4a1d44]/40'}`}>Historial</button>
+              {/* Botón Ventas Reales con fondo verde */}
+              <button 
+                onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} 
+                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'APROBADO' ? 'bg-green-600 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}
+              >
+                Ventas Reales
+              </button>
+              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Pendientes</button>
+              <button onClick={() => setFiltroEstadoPago('Todos')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'text-[#4a1d44]/40 hover:bg-gray-50'}`}>Historial</button>
             </div>
 
             {filtroEstadoPago === 'APROBADO' && (
               <div className="flex bg-white/50 p-1 rounded-2xl gap-1">
-                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
+                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
                   <Inbox size={14} /> Por Despachar
                 </button>
-                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
+                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
                   <Truck size={14} /> En camino
                 </button>
-                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
+                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30 hover:text-[#4a1d44]'}`}>
                   <CheckCircle2 size={14} /> Finalizados
                 </button>
               </div>
@@ -210,7 +228,6 @@ export default function AdminPedidos() {
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
                     
-                    {/* Información Cliente */}
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border bg-white ${venta.estado_pago === 'APROBADO' ? 'text-green-600 border-green-100' : 'text-amber-600 border-amber-100'}`}>
@@ -240,7 +257,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Artículos */}
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2">
                         <Package size={14} /> Artículos del Pedido
@@ -258,7 +274,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Acciones y Pago */}
                     <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
@@ -274,24 +289,22 @@ export default function AdminPedidos() {
                       </div>
                       
                       <div className="w-full flex flex-col gap-3">
-                        {/* Botones Inteligentes según logística */}
                         {venta.estado_pago === 'APROBADO' && (
                           <>
-                            {/* PASO 1: POR DESPACHAR */}
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
                               <div className="flex flex-col gap-2">
-                                <button onClick={() => setPedidoADespachar(venta)} className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-xl flex items-center justify-center gap-2">
-                                  <Truck size={16} /> Registrar Guía Nacional
-                                </button>
-                                {esValledupar && (
-                                  <button onClick={() => handleDespachoDomiciliario(venta.id)} className="w-full bg-white text-[#4a1d44] border-2 border-[#4a1d44] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#4a1d44] hover:text-white transition-all flex items-center justify-center gap-2">
+                                {!esValledupar ? (
+                                  <button onClick={() => setPedidoADespachar(venta)} className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-xl flex items-center justify-center gap-2">
+                                    <Truck size={16} /> Registrar Guía Nacional
+                                  </button>
+                                ) : (
+                                  <button onClick={() => handleDespachoDomiciliario(venta.id)} className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-xl flex items-center justify-center gap-2">
                                     <Bike size={16} /> Enviar con Domiciliario
                                   </button>
                                 )}
                               </div>
                             )}
 
-                            {/* PASO 2: EN CAMINO */}
                             {venta.estado_logistico === 'ENVIADO' && (
                               <button onClick={() => handleMarcarEntregado(venta.id)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2">
                                 <CheckCircle2 size={16} /> Marcar como Entregado
@@ -314,7 +327,6 @@ export default function AdminPedidos() {
         </div>
       </div>
 
-      {/* MODAL PARA REGISTRAR GUÍA NACIONAL */}
       {pedidoADespachar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">

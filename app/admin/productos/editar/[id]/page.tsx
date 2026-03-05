@@ -110,7 +110,8 @@ export default function EditarProductoPage() {
   };
 
   const handleStockChange = (id: string, value: string) => {
-    const val = parseInt(value) || 0;
+    // Eliminamos ceros a la izquierda y convertimos a numero
+    const val = value === "" ? 0 : parseInt(value, 10);
     setStocksPorTalla(prev => ({ ...prev, [id]: val }));
   };
 

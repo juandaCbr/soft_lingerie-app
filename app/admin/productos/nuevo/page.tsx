@@ -18,13 +18,12 @@ export default function NuevoProductoPage() {
   const [coloresDB, setColoresDB] = useState<any[]>([]);
   const [tallasDB, setTallasDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
-  const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
+  const [stocksPorTalla, setStocksPorTalla] = useState<{[key: string]: number}>({});
 
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
     precio: '',
-    stock: '1',
     categoria: '',
     grupo_id: '', // Crucial para agrupar colores
   });
@@ -42,9 +41,21 @@ export default function NuevoProductoPage() {
   }, []);
 
   const handleTallaToggle = (id: string) => {
-    setTallasSeleccionadas(prev => 
-      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
-    );
+    setStocksPorTalla(prev => {
+      const newStocks = { ...prev };
+      if (id in newStocks) {
+        delete newStocks[id];
+      } else {
+        newStocks[id] = 1; // Stock inicial de 1 al seleccionar
+      }
+      return newStocks;
+    });
+  };
+
+  const handleStockChange = (id: string, value: string) => {
+    // Eliminamos ceros a la izquierda y convertimos a numero
+    const val = value === "" ? 0 : parseInt(value, 10);
+    setStocksPorTalla(prev => ({ ...prev, [id]: val }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +84,7 @@ export default function NuevoProductoPage() {
       toast.error('¡Selecciona un color para esta variante!');
       return;
     }
-    if (tallasSeleccionadas.length === 0) {
+    if (Object.keys(stocksPorTalla).length === 0) {
       toast.error('¡Selecciona al menos una talla!');
       return;
     }
@@ -102,6 +113,8 @@ export default function NuevoProductoPage() {
         urlsSubidas.push(publicUrlData.publicUrl);
       }
 
+      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + b, 0);
+
       // 2. Insertar el producto en la tabla 'productos'
       const { data: nuevoProducto, error: dbError } = await supabase
         .from('productos')
@@ -109,7 +122,7 @@ export default function NuevoProductoPage() {
           nombre: formData.nombre,
           descripcion: formData.descripcion,
           precio: parseFloat(formData.precio),
-          stock: parseInt(formData.stock),
+          stock: stockTotal,
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null, // Si está vacío, es null
           imagenes_urls: urlsSubidas
@@ -130,10 +143,10 @@ export default function NuevoProductoPage() {
       if (colorError) throw colorError;
 
       // 4. Vincular las tallas en la tabla intermedia 'producto_tallas'
-      const insertTallas = tallasSeleccionadas.map(tallaId => ({
+      const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
         producto_id: nuevoProducto.id,
         talla_id: tallaId,
-        stock_talla: Math.floor(parseInt(formData.stock) / tallasSeleccionadas.length) || 1
+        stock_talla: stockVal
       }));
 
       const { error: tallasError } = await supabase
@@ -225,26 +238,44 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            {/* TALLAS */}
-            <div className="space-y-3">
+            {/* TALLAS Y STOCKS ESPECÍFICOS */}
+            <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
-                <Ruler size={14} /> Tallas Disponibles
+                <Ruler size={14} /> Gestión de Inventario por Talla
               </label>
-              <div className="flex flex-wrap gap-2">
-                {tallasDB.map(t => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => handleTallaToggle(t.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-                      tallasSeleccionadas.includes(t.id)
-                        ? 'bg-[#4a1d44] text-white border-[#4a1d44]'
-                        : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
-                    }`}
-                  >
-                    {t.nombre}
-                  </button>
-                ))}
+              
+              <div className="grid grid-cols-1 gap-3">
+                {tallasDB.map(t => {
+                  const isSelected = t.id.toString() in stocksPorTalla;
+                  return (
+                    <div key={t.id} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isSelected ? 'bg-[#4a1d44]/5 border-[#4a1d44]/20' : 'bg-white border-[#4a1d44]/5'}`}>
+                      <button
+                        type="button"
+                        onClick={() => handleTallaToggle(t.id.toString())}
+                        className={`flex items-center gap-3 font-bold text-sm ${isSelected ? 'text-[#4a1d44]' : 'text-[#4a1d44]/40'}`}
+                      >
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-[#4a1d44] border-[#4a1d44]' : 'border-[#4a1d44]/20'}`}>
+                          {isSelected && <Plus size={12} className="text-white" />}
+                        </div>
+                        Talla {t.nombre}
+                      </button>
+
+                      {isSelected && (
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[#4a1d44]/10 shadow-sm">
+                          <Hash size={12} className="opacity-30" />
+                          <span className="text-[10px] font-bold uppercase opacity-40">Stock:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={stocksPorTalla[t.id.toString()]}
+                            onChange={(e) => handleStockChange(t.id.toString(), e.target.value)}
+                            className="w-12 bg-transparent outline-none font-black text-sm text-[#4a1d44]"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

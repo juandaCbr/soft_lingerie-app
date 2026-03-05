@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { COLOMBIA_COMPLETA } from '@/app/lib/colombia';
-import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard } from 'lucide-react';
+import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
@@ -43,28 +43,15 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Al confirmar, generamos referencia, cambiamos vista y subimos el scroll
-  const procesarPedido = (e: React.FormEvent) => {
+  const registrarPedidoPendiente = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const referencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    setReferenciaUnica(referencia);
-
-    // Cambiamos el estado
-    setPreparandoPago(true);
-
-    // Corregimos el problema del scroll: movemos al usuario al inicio de la pagina
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    toast.success('Información confirmada.');
-  };
-
-  const handlePagoExitoso = async (transaccion: any) => {
     setLoading(true);
 
     try {
+      const referencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.departamento})`;
 
+      // Guardamos el pedido como PENDIENTE antes de ir a Wompi
       const { error: errorPedido } = await supabase
         .from('ventas_realizadas')
         .insert([{
@@ -74,38 +61,33 @@ export default function CheckoutPage() {
           direccion_envio: direccionCompleta,
           ciudad: formData.ciudad,
           monto_total: totalPrice,
-          estado_pago: 'APROBADO',
-          referencia_wompi: referenciaUnica,
+          estado_pago: 'PENDIENTE',
+          referencia_wompi: referencia,
           detalle_compra: cart
         }]);
 
       if (errorPedido) throw errorPedido;
 
-      for (const item of cart) {
-        const { data: productoDB, error: errorLectura } = await supabase
-          .from('productos')
-          .select('stock')
-          .eq('id', item.id)
-          .single();
+      setReferenciaUnica(referencia);
+      setPreparandoPago(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast.success('Información confirmada.');
 
-        if (productoDB && !errorLectura) {
-          const nuevoStock = Math.max(0, productoDB.stock - item.quantity);
-          await supabase
-            .from('productos')
-            .update({ stock: nuevoStock })
-            .eq('id', item.id);
-        }
-      }
-
-      toast.success('¡Pedido realizado con éxito!');
-      clearCart();
-      router.push('/gracias');
-
-    } catch (error) {
-      console.error("Error post-pago:", error);
-      toast.error('Error al registrar el pedido.');
+    } catch (error: any) {
+      console.error("Error registro inicial:", error);
+      toast.error('Error al preparar el pedido.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Esta función se ejecuta si el usuario NO cierra la ventana
+  // Sirve como confirmación inmediata, pero el Webhook es el que manda por seguridad
+  const handlePagoConfirmadoVisual = async (transaccion: any) => {
+    if (transaccion.status === 'APPROVED') {
+      toast.success('¡Pago exitoso detectado!');
+      clearCart();
+      router.push('/gracias');
     }
   };
 
@@ -122,8 +104,7 @@ export default function CheckoutPage() {
 
         <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
           {!preparandoPago ? (
-            /* FORMULARIO INICIAL */
-            <form onSubmit={procesarPedido} className="space-y-6 animate-in fade-in duration-500">
+            <form onSubmit={registrarPedidoPendiente} className="space-y-6 animate-in fade-in duration-500">
 
               <div className="space-y-4">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
@@ -170,12 +151,12 @@ export default function CheckoutPage() {
                 <input name="apartamento" value={formData.apartamento} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Apto, Torre o Casa (Opcional)" />
               </div>
 
-              <button type="submit" disabled={cart.length === 0} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
-                <ShieldCheck size={20} /> Confirmar información
+              <button type="submit" disabled={loading || cart.length === 0} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
+                {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />} 
+                {loading ? 'Preparando pedido...' : 'Confirmar información'}
               </button>
             </form>
           ) : (
-            /* VISTA DE METODO DE PAGO */
             <div className="flex flex-col items-center justify-center py-10 space-y-8 animate-in zoom-in duration-500">
               <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                 <CreditCard size={48} />
@@ -186,17 +167,11 @@ export default function CheckoutPage() {
               </div>
 
               <div className="w-full">
-                {loading ? (
-                  <div className="w-full bg-gray-50 p-6 rounded-2xl font-black text-center animate-pulse border border-[#4a1d44]/5">
-                    Registrando Pedido...
-                  </div>
-                ) : (
-                  <BotonWompi
-                    montoTotal={totalPrice}
-                    referenciaPedido={referenciaUnica}
-                    onExito={handlePagoExitoso}
-                  />
-                )}
+                <BotonWompi
+                  montoTotal={totalPrice}
+                  referenciaPedido={referenciaUnica}
+                  onExito={handlePagoConfirmadoVisual}
+                />
               </div>
 
               <button
@@ -231,7 +206,7 @@ export default function CheckoutPage() {
                   : (item.imagen_url || "/placeholder.png");
 
                 return (
-                  <div key={item.id} className="flex justify-between items-center gap-4">
+                  <div key={`${item.id}-${item.talla_id}`} className="flex justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-20 bg-white rounded-2xl overflow-hidden border border-[#4a1d44]/10 shrink-0 shadow-sm">
                         <img src={imgPrincipal} alt={item.nombre} className="w-full h-full object-cover" />
@@ -241,9 +216,16 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <p className="text-sm font-bold leading-tight text-[#4a1d44]">{item.nombre}</p>
-                        <p className="text-[10px] font-black opacity-30 mt-1 uppercase tracking-widest">
-                          ${Number(item.precio).toLocaleString('es-CO')} c/u
-                        </p>
+                        <div className="flex gap-2 mt-1">
+                          <p className="text-[8px] font-black opacity-30 uppercase tracking-widest">
+                            ${Number(item.precio).toLocaleString('es-CO')} c/u
+                          </p>
+                          {item.talla && (
+                            <p className="text-[8px] font-black text-pink-600 uppercase tracking-widest">
+                              Talla: {item.talla.nombre}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">

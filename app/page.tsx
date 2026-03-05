@@ -195,16 +195,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Boton de Prueba */}
-      <section className="py-16 flex justify-center bg-white border-b border-[#4a1d44]/5">
-        <Link 
-          href="/productos" 
-          className="bg-[#4a1d44] text-white px-10 py-5 rounded-full font-bold text-xs md:text-sm hover:bg-[#632a5b] transition-all shadow-xl inline-flex items-center gap-3 uppercase tracking-widest active:scale-95"
-        >
-          boton de prueba <ArrowRight size={18} />
-        </Link>
-      </section>
-
       <footer className="py-12 bg-[#fdf8f6] text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[#4a1d44]/30">Soft Lingerie © 2026</p>
       </footer>

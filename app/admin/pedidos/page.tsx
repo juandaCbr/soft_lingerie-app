@@ -230,7 +230,7 @@ export default function AdminPedidos() {
                     
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border bg-white ${venta.estado_pago === 'APROBADO' ? 'text-green-600 border-green-100' : 'text-amber-600 border-amber-100'}`}>
+                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-600 text-white border-green-700 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                           {venta.estado_pago === 'APROBADO' ? '● PAGADO' : '○ PENDIENTE'}
                         </span>
                         

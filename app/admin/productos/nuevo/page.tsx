@@ -135,7 +135,7 @@ export default function NuevoProductoPage() {
         .insert([{
           nombre: formData.nombre,
           descripcion: formData.descripcion,
-          precio: parseFloat(formData.precio),
+          precio: Math.round(parseFloat(formData.precio)),
           stock: stockTotal,
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null,
@@ -312,6 +312,7 @@ export default function NuevoProductoPage() {
                     placeholder="0.00" 
                     value={formData.precio} 
                     onChange={e => setFormData({...formData, precio: e.target.value})} 
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
               </div>

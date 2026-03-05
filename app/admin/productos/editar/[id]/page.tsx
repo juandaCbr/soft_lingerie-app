@@ -144,7 +144,7 @@ export default function EditarProductoPage() {
 
       const { error } = await supabase.from('productos').update({
         nombre,
-        precio: parseFloat(precio),
+        precio: Math.round(parseFloat(precio)),
         stock: stockTotal,
         categoria,
         descripcion,
@@ -218,7 +218,13 @@ export default function EditarProductoPage() {
 
             <div>
               <label className="text-[10px] font-black uppercase opacity-30 ml-2">Precio</label>
-              <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" />
+              <input 
+                type="number" 
+                value={precio} 
+                onChange={e => setPrecio(e.target.value)} 
+                onWheel={(e) => e.currentTarget.blur()}
+                className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" 
+              />
             </div>
 
             {/* TALLAS Y STOCKS ESPECÍFICOS */}

@@ -40,7 +40,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             .eq('user_id', user.id);
           
           if (!error && data) {
-            // Obtenemos los stocks por talla de forma separada para evitar errores de Join
             const { data: stocksTallas } = await supabase
               .from('producto_tallas')
               .select('producto_id, talla_id, stock_talla');
@@ -67,7 +66,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } else {
         const savedCart = localStorage.getItem('soft_cart');
         if (savedCart) {
-          try { setCart(JSON.parse(savedCart)); } catch (e) { setCart([]); }
+          try { 
+            const parsed = JSON.parse(savedCart);
+            if (Array.isArray(parsed)) {
+              setCart(parsed);
+            } else {
+              setCart([]);
+            }
+          } catch (e) { 
+            setCart([]); 
+          }
+        } else {
+          // Si no hay nada en localStorage, el carrito debe estar vacío
+          setCart([]);
         }
       }
       setIsLoaded(true);
@@ -86,11 +97,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const stockMax = talla?.stock ?? product.stock;
 
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id && item.talla_id === tallaId);
+      const existing = prev.find(item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)));
       if (existing) {
         const newQty = Math.min(stockMax, existing.quantity + qty);
         return prev.map(item => 
-          (item.id === product.id && item.talla_id === tallaId) 
+          (item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId))) 
             ? { ...item, quantity: newQty } 
             : item
         );
@@ -99,14 +110,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (user) {
-      const existing = cart.find(item => item.id === product.id && item.talla_id === tallaId);
+      const existing = cart.find(item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)));
       if (existing) {
         const newQty = Math.min(stockMax, existing.quantity + qty);
         await supabase.from('carrito')
           .update({ cantidad: newQty })
           .eq('user_id', user.id)
           .eq('producto_id', product.id)
-          .eq('talla_id', tallaId);
+          .eq(tallaId ? 'talla_id' : 'id', tallaId ? tallaId : existing.cart_item_id); // Ajuste para identificar item
       } else {
         await supabase.from('carrito').insert([{ 
           user_id: user.id, 
@@ -122,7 +133,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     let finalQty = 0;
 
     setCart(prev => prev.map(item => {
-      if (item.id === id && item.talla_id === tallaId) {
+      if (item.id === id && (item.talla_id === tallaId || (!item.talla_id && !tallaId))) {
         const stockMax = item.stock_disponible ?? 99;
         finalQty = Math.max(1, Math.min(stockMax, item.quantity + delta));
         return { ...item, quantity: finalQty };
@@ -131,23 +142,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }));
 
     if (user && finalQty > 0) {
-      supabase.from('carrito')
+      const query = supabase.from('carrito')
         .update({ cantidad: finalQty })
         .eq('user_id', user.id)
-        .eq('producto_id', id)
-        .eq('talla_id', tallaId)
-        .then();
+        .eq('producto_id', id);
+      
+      if (tallaId) query.eq('talla_id', tallaId);
+      else query.is('talla_id', null);
+      
+      await query;
     }
   };
 
   const removeFromCart = async (id: number, tallaId: any = null) => {
-    setCart(prev => prev.filter(item => !(item.id === id && item.talla_id === tallaId)));
+    // 1. Actualizar estado local inmediatamente
+    setCart(prev => prev.filter(item => {
+      const matchId = item.id === id;
+      const matchTalla = (item.talla_id === tallaId) || (!item.talla_id && !tallaId);
+      return !(matchId && matchTalla);
+    }));
+
+    // 2. Si no hay usuario, localStorage se actualizará por el useEffect
+    // 3. Si hay usuario, borrar de la DB
     if (user) {
-      await supabase.from('carrito')
+      const query = supabase.from('carrito')
         .delete()
         .eq('user_id', user.id)
-        .eq('producto_id', id)
-        .eq('talla_id', tallaId);
+        .eq('producto_id', id);
+      
+      if (tallaId) query.eq('talla_id', tallaId);
+      else query.is('talla_id', null);
+      
+      await query;
     }
   };
 
@@ -159,8 +185,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cart.reduce((acc, item) => acc + (Number(item.precio) || 0) * item.quantity, 0);
+  const totalItems = Array.isArray(cart) ? cart.reduce((acc, item) => acc + (item.quantity || 0), 0) : 0;
+  const totalPrice = Array.isArray(cart) ? cart.reduce((acc, item) => acc + (Number(item.precio) || 0) * (item.quantity || 0), 0) : 0;
 
   return (
     <CartContext.Provider value={{ 

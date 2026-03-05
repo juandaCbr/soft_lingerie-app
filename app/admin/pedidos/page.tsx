@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import { obtenerVentasAdmin } from '@/app/lib/admin';
@@ -34,15 +34,11 @@ export default function AdminPedidos() {
   const [ventas, setVentas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtros principales
   const [filtroEstadoPago, setFiltroEstadoPago] = useState('APROBADO'); 
   const [filtroLogistica, setFiltroLogistica] = useState('POR_DESPACHAR'); 
-  
-  // Filtros secundarios
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
   const [ordenPrioridad, setOrdenPrioridad] = useState('Recientes');
 
-  // Estados para Modals
   const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
   const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
   const [pedidoAFinalizar, setPedidoAFinalizar] = useState<any>(null);
@@ -51,10 +47,17 @@ export default function AdminPedidos() {
   const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
+  // Función para scroll inteligente
+  const smartScrollUp = () => {
+    if (typeof window !== 'undefined' && window.scrollY > 300) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     cargarVentas();
     const canalVentas = supabase
-      .channel('admin-pedidos-realtime-v3')
+      .channel('admin-pedidos-realtime-v4')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas_realizadas' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setVentas(prev => [payload.new, ...prev]);
@@ -88,6 +91,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Pedido enviado con guía");
       setPedidoADespachar(null);
+      smartScrollUp();
     } catch (e: any) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
   };
 
@@ -102,6 +106,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Despachado con domiciliario");
       setPedidoADomicilio(null);
+      smartScrollUp();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
@@ -112,6 +117,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Venta finalizada");
       setPedidoAFinalizar(null);
+      smartScrollUp();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
@@ -122,6 +128,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Pedido eliminado");
       setPedidoAEliminar(null);
+      smartScrollUp();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
@@ -166,14 +173,12 @@ export default function AdminPedidos() {
           </div>
           
           <div className="flex flex-col gap-5 w-full md:w-auto">
-            {/* FILTROS DE PAGO SIEMPRE VISIBLES */}
             <div className="flex gap-2">
               <button onClick={() => { setFiltroEstadoPago('APROBADO'); }} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
               <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
               <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
             </div>
 
-            {/* FILTROS DE LOGÍSTICA SIEMPRE VISIBLES PARA EVITAR SALTOS */}
             <div className={`flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner transition-all duration-500 overflow-x-auto scrollbar-hide md:overflow-visible ${filtroEstadoPago !== 'APROBADO' ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
               <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 min-w-fit whitespace-nowrap flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
                 <Inbox size={18} /> Por Despachar

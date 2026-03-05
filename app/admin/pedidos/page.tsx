@@ -47,17 +47,20 @@ export default function AdminPedidos() {
   const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
-  // Función para scroll inteligente
-  const smartScrollUp = () => {
-    if (typeof window !== 'undefined' && window.scrollY > 300) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  // Función mejorada para scroll suave y seguro
+  const scrollToTop = () => {
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
 
   useEffect(() => {
     cargarVentas();
     const canalVentas = supabase
-      .channel('admin-pedidos-realtime-v4')
+      .channel('admin-pedidos-realtime-final-v5')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas_realizadas' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setVentas(prev => [payload.new, ...prev]);
@@ -91,7 +94,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Pedido enviado con guía");
       setPedidoADespachar(null);
-      smartScrollUp();
+      scrollToTop();
     } catch (e: any) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
   };
 
@@ -106,7 +109,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Despachado con domiciliario");
       setPedidoADomicilio(null);
-      smartScrollUp();
+      scrollToTop();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
@@ -117,7 +120,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Venta finalizada");
       setPedidoAFinalizar(null);
-      smartScrollUp();
+      scrollToTop();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
@@ -128,7 +131,7 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Pedido eliminado");
       setPedidoAEliminar(null);
-      smartScrollUp();
+      scrollToTop();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 

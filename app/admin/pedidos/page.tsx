@@ -51,14 +51,38 @@ export default function AdminPedidos() {
 
   useEffect(() => {
     cargarVentas();
-    const canalVentas = supabase.channel('cambios-ventas-full').on('postgres_changes', { event: '*', schema: 'public', table: 'ventas_realizadas' }, () => cargarVentas()).subscribe();
+    
+    // WEBSOCKET (REALTIME) - Sincronización instantánea
+    const canalVentas = supabase
+      .channel('admin-pedidos-realtime')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'ventas_realizadas' }, 
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setVentas(prev => [payload.new, ...prev]);
+            if (payload.new.estado_pago === 'APROBADO') toast.success("¡Nueva venta recibida!");
+          } else if (payload.eventType === 'UPDATE') {
+            setVentas(prev => prev.map(v => v.id === payload.new.id ? payload.new : v));
+          } else if (payload.eventType === 'DELETE') {
+            setVentas(prev => prev.filter(v => v.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
     return () => { supabase.removeChannel(canalVentas); };
   }, []);
 
   const cargarVentas = async () => {
-    const data = await obtenerVentasAdmin();
-    setVentas(data || []);
-    setLoading(false);
+    try {
+      const data = await obtenerVentasAdmin();
+      setVentas(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDespacharConGuia = async () => {
@@ -73,7 +97,6 @@ export default function AdminPedidos() {
       if (error) throw error;
       toast.success("Pedido enviado con guía");
       setPedidoADespachar(null);
-      setVentas(prev => prev.map(v => v.id === pedidoADespachar.id ? { ...v, estado_logistico: 'ENVIADO', numero_guia: guiaForm.numero, empresa_envio: guiaForm.empresa } : v));
     } catch (e: any) { toast.error("Error al actualizar"); } finally { setProcesandoAccion(false); }
   };
 
@@ -87,7 +110,6 @@ export default function AdminPedidos() {
       }).eq('id', pedidoADomicilio.id);
       if (error) throw error;
       toast.success("Despachado con domiciliario");
-      setVentas(prev => prev.map(v => v.id === pedidoADomicilio.id ? { ...v, estado_logistico: 'ENVIADO', empresa_envio: 'Domicilio Local' } : v));
       setPedidoADomicilio(null);
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
@@ -98,7 +120,6 @@ export default function AdminPedidos() {
       const { error } = await supabase.from('ventas_realizadas').update({ estado_logistico: 'ENTREGADO' }).eq('id', pedidoAFinalizar.id);
       if (error) throw error;
       toast.success("Venta finalizada");
-      setVentas(prev => prev.map(v => v.id === pedidoAFinalizar.id ? { ...v, estado_logistico: 'ENTREGADO' } : v));
       setPedidoAFinalizar(null);
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
@@ -114,7 +135,8 @@ export default function AdminPedidos() {
     return base;
   }, [ventas, filtroEstadoPago, filtroLogistica]);
 
-  const ciudadesDisponibles = useMemo(() => {
+  // FIX: Definir ciudadesUnicas para corregir error de Vercel
+  const ciudadesUnicas = useMemo(() => {
     const ciudades = ventasSegunPagoYLogistica.map(v => v.ciudad).filter(Boolean);
     return ['Todas', ...Array.from(new Set(ciudades))];
   }, [ventasSegunPagoYLogistica]);
@@ -125,6 +147,8 @@ export default function AdminPedidos() {
     res.sort((a, b) => ordenPrioridad === 'Recientes' ? new Date(b.fecha).getTime() - new Date(a.fecha).getTime() : new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
     return res;
   }, [ventasSegunPagoYLogistica, filtroCiudad, ordenPrioridad]);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión logística...</div>;
 
   return (
     <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-10 text-[#4a1d44]">
@@ -142,7 +166,6 @@ export default function AdminPedidos() {
           </div>
           
           <div className="flex flex-col gap-4 w-full md:w-auto">
-            {/* Botones de Filtro Restaurados al Estilo Original */}
             <div className="flex gap-2">
               <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
               <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
@@ -165,7 +188,6 @@ export default function AdminPedidos() {
           </div>
         </header>
 
-        {/* Filtros Secundarios */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="bg-white px-5 py-3 rounded-2xl border border-[#4a1d44]/5 shadow-sm flex items-center gap-3 flex-1">
             <Filter size={16} className="opacity-30" />
@@ -188,7 +210,6 @@ export default function AdminPedidos() {
           </div>
         </div>
 
-        {/* Listado */}
         <div className="grid gap-6">
           {ventasFinales.length === 0 ? (
             <div className="bg-white py-32 rounded-[3rem] text-center border-2 border-dashed border-[#4a1d44]/5">
@@ -202,10 +223,8 @@ export default function AdminPedidos() {
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
                     
-                    {/* Información Cliente */}
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
-                        {/* Verde PAGADO un poco más claro */}
                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                           {venta.estado_pago === 'APROBADO' ? '● PAGADO' : '○ PENDIENTE'}
                         </span>
@@ -233,7 +252,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Artículos */}
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2">
                         <Package size={14} /> Artículos del Pedido
@@ -251,7 +269,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Acciones y Pago */}
                     <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
@@ -269,7 +286,6 @@ export default function AdminPedidos() {
                       <div className="w-full flex flex-col gap-3">
                         {venta.estado_pago === 'APROBADO' && (
                           <>
-                            {/* PASO 1: POR DESPACHAR */}
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
                               <div className="flex flex-col gap-2">
                                 {!esValledupar ? (
@@ -284,7 +300,6 @@ export default function AdminPedidos() {
                               </div>
                             )}
 
-                            {/* PASO 2: EN CAMINO */}
                             {venta.estado_logistico === 'ENVIADO' && (
                               <button onClick={() => setPedidoAFinalizar(venta)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2">
                                 <CheckCircle2 size={16} /> Marcar como Entregado
@@ -307,7 +322,6 @@ export default function AdminPedidos() {
         </div>
       </div>
 
-      {/* MODAL 1: REGISTRAR GUÍA NACIONAL */}
       {pedidoADespachar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">
@@ -340,7 +354,6 @@ export default function AdminPedidos() {
         </div>
       )}
 
-      {/* MODAL 2: CONFIRMAR DOMICILIARIO (VALLEDUPAR) */}
       {pedidoADomicilio && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">
@@ -359,7 +372,6 @@ export default function AdminPedidos() {
         </div>
       )}
 
-      {/* MODAL 3: FINALIZAR PEDIDO (YA ENTREGADO) */}
       {pedidoAFinalizar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">

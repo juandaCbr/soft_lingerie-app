@@ -64,13 +64,19 @@ export default function HomePage() {
     const conteo: { [key: string]: number } = {};
 
     ventas.forEach(v => {
-      if (Array.isArray(v.detalle_compra)) {
+      if (v && Array.isArray(v.detalle_compra)) {
         v.detalle_compra.forEach((item: any) => {
           const id = item.id;
           if (id) conteo[id] = (conteo[id] || 0) + (item.quantity || 1);
         });
       }
     });
+
+    // Si hay productos pero no hay ventas registradas (o no accesibles por RLS)
+    // mostramos los productos mas populares/recientes como favoritos por defecto
+    if (Object.keys(conteo).length === 0 && productos.length > 0) {
+      return [...productos].slice(0, 8);
+    }
 
     return [...productos]
       .filter(p => conteo[p.id])
@@ -143,9 +149,15 @@ export default function HomePage() {
           className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-5"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {novedades.map(prod => (
-            <ProductCard key={prod.id} prod={prod} mounted={mounted} etiqueta="NUEVO" />
-          ))}
+          {novedades.length > 0 ? (
+            novedades.map(prod => (
+              <ProductCard key={prod.id} prod={prod} mounted={mounted} etiqueta="NUEVO" />
+            ))
+          ) : (
+            <div className="w-full text-center py-20 opacity-30 italic font-medium">
+              Próximamente nuevas prendas...
+            </div>
+          )}
         </div>
       </section>
 
@@ -176,7 +188,7 @@ export default function HomePage() {
                 ))
               ) : (
                 <div className="w-full text-center py-20 opacity-30 italic font-medium">
-                  Cargando favoritos...
+                  {loading ? "Cargando favoritos..." : "Descubre nuestra colección..."}
                 </div>
               )}
             </div>

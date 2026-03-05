@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { supabase } from '@/app/lib/supabase';
-import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike, Copy, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 function RastreoContent() {
   const [busqueda, setBusqueda] = useState('');
@@ -49,35 +50,20 @@ function RastreoContent() {
     }
   }, [searchParams, ejecutarBusqueda]);
 
-  // WEBSOCKET (REALTIME) - Escuchar cambios en el pedido que se está visualizando
   useEffect(() => {
     if (!pedido?.id) return;
-
     const canalRastreo = supabase
       .channel(`rastreo-pedido-${pedido.id}`)
-      .on(
-        'postgres_changes',
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'ventas_realizadas', 
-          filter: `id=eq.${pedido.id}` 
-        },
-        (payload) => {
-          // Actualizar el estado del pedido en pantalla automáticamente
-          setPedido(payload.new);
-        }
-      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ventas_realizadas', filter: `id=eq.${pedido.id}` }, (payload) => {
+        setPedido(payload.new);
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(canalRastreo);
-    };
+    return () => { supabase.removeChannel(canalRastreo); };
   }, [pedido?.id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    ejecutarBusqueda(busqueda);
+  const copiarGuia = (guia: string) => {
+    navigator.clipboard.writeText(guia);
+    toast.success("Número de guía copiado");
   };
 
   const obtenerProgreso = (estado: string) => {
@@ -86,12 +72,11 @@ function RastreoContent() {
     return 33;
   };
 
-  const getLinkTransportadora = (empresa: string, guia: string) => {
-    const cleanGuia = guia.trim();
-    if (empresa === 'Interrapidisimo') return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${cleanGuia}`;
-    if (empresa === 'Servientrega') return `https://mobile.servientrega.com/WebSite.Portal.Transporte.Rastreo/SeguimientoGuias?Id=${cleanGuia}`;
+  const getLinkTransportadora = (empresa: string) => {
+    if (empresa === 'Interrapidisimo') return `https://www.interrapidisimo.com/sigue-tu-envio/`;
+    if (empresa === 'Servientrega') return `https://www.servientrega.com/wps/portal/Colombia/transaccional/rastreo-envios`;
     if (empresa === 'Envía' || empresa === 'Envia') return `https://envia.co/`;
-    if (empresa === 'Coordinadora') return `https://www.coordinadora.com/rastreo/rastreo-de-guia/detalle-de-rastreo/?guia=${cleanGuia}`;
+    if (empresa === 'Coordinadora') return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/`;
     return '#';
   };
 
@@ -104,7 +89,7 @@ function RastreoContent() {
           <p className="opacity-60 text-sm uppercase font-bold tracking-widest">Ingresa tu correo o número de pedido</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="relative mb-12">
+        <form onSubmit={(e) => { e.preventDefault(); ejecutarBusqueda(busqueda); }} className="relative mb-12">
           <input 
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
@@ -132,7 +117,7 @@ function RastreoContent() {
               </div>
               <div className="text-left md:text-right">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Referencia</span>
-                <p className="font-mono text-sm opacity-60">{pedido.referencia_wompi.split(' ')[0]}</p>
+                <p className="font-mono text-sm opacity-60">{pedido.referencia_wompi?.split(' ')[0] || '---'}</p>
               </div>
             </div>
 
@@ -175,13 +160,18 @@ function RastreoContent() {
                     <div className="bg-white p-4 rounded-2xl shadow-sm text-[#4a1d44]"><MapPin size={28} /></div>
                     <div className="flex-1">
                       <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Transportadora: {pedido.empresa_envio}</p>
-                      <p className="font-bold text-lg mb-4">Guía: {pedido.numero_guia}</p>
+                      <div className="flex items-center gap-3 mt-1 mb-4">
+                        <p className="font-bold text-lg">Guía: {pedido.numero_guia}</p>
+                        <button onClick={() => copiarGuia(pedido.numero_guia)} className="p-1.5 bg-white rounded-lg border border-[#4a1d44]/10 text-[#4a1d44]/40 hover:text-[#4a1d44] transition-all">
+                          <Copy size={14} />
+                        </button>
+                      </div>
                       <a 
-                        href={getLinkTransportadora(pedido.empresa_envio, pedido.numero_guia)}
+                        href={getLinkTransportadora(pedido.empresa_envio)}
                         target="_blank"
                         className="inline-flex items-center gap-3 bg-[#4a1d44] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-md"
                       >
-                        Ver en tiempo real <ArrowRight size={14} />
+                        Ir a rastrear ahora <ArrowRight size={14} />
                       </a>
                     </div>
                   </div>

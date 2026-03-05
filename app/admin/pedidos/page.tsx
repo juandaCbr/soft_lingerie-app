@@ -20,7 +20,8 @@ import {
   Send,
   Search,
   Archive,
-  Inbox
+  Inbox,
+  Loader2
 } from 'lucide-react';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Otro'];

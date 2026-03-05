@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import LinkComponent from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingCart, User, LogOut, Loader2, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { useCart } from '@/context/CartContext';
 import AdminButton from './AdminButton'; 
@@ -19,18 +19,16 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Cerrar el menú si cambiamos de página
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
 
-  // Scroll Inteligente
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY && currentScrollY > 80) {
         setIsVisible(false);
-        setIsMenuOpen(false); // También cerramos el menú si el usuario scrollea
+        setIsMenuOpen(false);
       } else {
         setIsVisible(true);
       }
@@ -40,7 +38,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Manejo de Sesión
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -84,7 +81,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* OVERLAY: Capa para cerrar el menú al tocar fuera */}
       <div 
         className={`fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[90] transition-opacity duration-500 md:hidden ${
           isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -97,7 +93,6 @@ export default function Navbar() {
       }`}>
         <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex justify-between items-center relative z-[101]">
           
-          {/* LOGO */}
           <div className="flex items-center gap-4">
             <button 
               className="md:hidden text-[#4a1d44] p-1 active:scale-90 transition-transform" 
@@ -116,14 +111,13 @@ export default function Navbar() {
             </LinkComponent>
           </div>
 
-          {/* NAVEGACIÓN PC */}
           <div className="hidden md:flex items-center gap-10">
             <NavLink href="/">Inicio</NavLink>
             <NavLink href="/productos">Catálogo</NavLink>
+            <NavLink href="/rastreo">Rastreo</NavLink>
             <NavLink href="/contacto">Contacto</NavLink>
           </div>
 
-          {/* BOTONES DERECHA */}
           <div className="flex gap-4 md:gap-6 items-center">
             <div className="hidden sm:block">
               {!loading && <AdminButton />}
@@ -132,11 +126,11 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               {!loading && (
                 user ? (
-                  <button onClick={handleLogout} className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
+                  <button onClick={handleLogout} title="Cerrar Sesión" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
                     <LogOut size={20} />
                   </button>
                 ) : (
-                  <LinkComponent href="/login" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
+                  <LinkComponent href="/login" title="Mi Cuenta" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
                     <User size={22} />
                   </LinkComponent>
                 )
@@ -156,13 +150,13 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* MENÚ MÓVIL */}
         <div className={`md:hidden overflow-hidden transition-all duration-1000 ease-in-out bg-white/95 backdrop-blur-md relative z-[101] ${
           isMenuOpen ? "max-h-screen opacity-100 border-b border-[#4a1d44]/5" : "max-h-0 opacity-0"
         }`}>
           <div className="p-10 flex flex-col items-center gap-6">
             <LinkComponent href="/" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Inicio</LinkComponent>
             <LinkComponent href="/productos" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Catálogo</LinkComponent>
+            <LinkComponent href="/rastreo" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Rastrear Pedido</LinkComponent>
             <LinkComponent href="/contacto" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase pb-4 w-full text-center border-b border-[#4a1d44]/5">Contacto</LinkComponent>
             <div className="pt-2">
               {!loading && <AdminButton />}

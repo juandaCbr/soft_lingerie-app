@@ -49,6 +49,32 @@ function RastreoContent() {
     }
   }, [searchParams, ejecutarBusqueda]);
 
+  // WEBSOCKET (REALTIME) - Escuchar cambios en el pedido que se está visualizando
+  useEffect(() => {
+    if (!pedido?.id) return;
+
+    const canalRastreo = supabase
+      .channel(`rastreo-pedido-${pedido.id}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'ventas_realizadas', 
+          filter: `id=eq.${pedido.id}` 
+        },
+        (payload) => {
+          // Actualizar el estado del pedido en pantalla automáticamente
+          setPedido(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canalRastreo);
+    };
+  }, [pedido?.id]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     ejecutarBusqueda(busqueda);
@@ -132,7 +158,6 @@ function RastreoContent() {
               </div>
             </div>
 
-            {/* LÓGICA ESPECIAL PARA VALLEDUPAR VS NACIONAL */}
             {pedido.estado_logistico === 'ENVIADO' && (
               <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border border-[#4a1d44]/5 mb-8">
                 {pedido.ciudad?.toLowerCase() === 'valledupar' ? (

@@ -23,7 +23,8 @@ import {
   Inbox,
   Loader2,
   Bike,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Domicilio Local', 'Otro'];
@@ -45,6 +46,7 @@ export default function AdminPedidos() {
   const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
   const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
   const [pedidoAFinalizar, setPedidoAFinalizar] = useState<any>(null);
+  const [pedidoAEliminar, setPedidoAEliminar] = useState<any>(null);
 
   const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
   const [procesandoAccion, setProcesandoAccion] = useState(false);
@@ -52,7 +54,7 @@ export default function AdminPedidos() {
   useEffect(() => {
     cargarVentas();
     
-    // WEBSOCKET (REALTIME) - Sincronización instantánea
+    // WEBSOCKET (REALTIME)
     const canalVentas = supabase
       .channel('admin-pedidos-realtime-final')
       .on(
@@ -124,6 +126,16 @@ export default function AdminPedidos() {
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
   };
 
+  const handleConfirmarEliminar = async () => {
+    setProcesandoAccion(true);
+    try {
+      const { error } = await supabase.from('ventas_realizadas').delete().eq('id', pedidoAEliminar.id);
+      if (error) throw error;
+      toast.success("Pedido eliminado del historial");
+      setPedidoAEliminar(null);
+    } catch (e: any) { toast.error("Error al eliminar"); } finally { setProcesandoAccion(false); }
+  };
+
   const ventasSegunPagoYLogistica = useMemo(() => {
     let base = [...ventas];
     if (filtroEstadoPago !== 'Todos') base = base.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
@@ -165,14 +177,12 @@ export default function AdminPedidos() {
           </div>
           
           <div className="flex flex-col gap-5 w-full md:w-auto">
-            {/* Botones de Filtro Pago */}
             <div className="flex gap-2">
               <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
               <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
               <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
             </div>
 
-            {/* Botones de Logística - MÁS GRANDES */}
             {filtroEstadoPago === 'APROBADO' && (
               <div className="flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner">
                 <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
@@ -189,7 +199,6 @@ export default function AdminPedidos() {
           </div>
         </header>
 
-        {/* Filtros Secundarios */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="bg-white px-5 py-3 rounded-2xl border border-[#4a1d44]/5 shadow-sm flex items-center gap-3 flex-1">
             <Filter size={16} className="opacity-30" />
@@ -212,7 +221,6 @@ export default function AdminPedidos() {
           </div>
         </div>
 
-        {/* Listado */}
         <div className="grid gap-6">
           {ventasFinales.length === 0 ? (
             <div className="bg-white py-32 rounded-[3rem] text-center border-2 border-dashed border-[#4a1d44]/5">
@@ -226,7 +234,6 @@ export default function AdminPedidos() {
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
                     
-                    {/* Información Cliente */}
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
@@ -256,7 +263,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Artículos */}
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2">
                         <Package size={14} /> Artículos del Pedido
@@ -274,7 +280,6 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
-                    {/* Acciones y Pago */}
                     <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
@@ -290,7 +295,6 @@ export default function AdminPedidos() {
                       </div>
                       
                       <div className="w-full flex flex-col gap-3">
-                        {/* Botones Inteligentes - SÓLIDOS MORADOS */}
                         {venta.estado_pago === 'APROBADO' && (
                           <>
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
@@ -310,6 +314,12 @@ export default function AdminPedidos() {
                             {venta.estado_logistico === 'ENVIADO' && (
                               <button onClick={() => setPedidoAFinalizar(venta)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2">
                                 <CheckCircle2 size={16} /> Marcar como Entregado
+                              </button>
+                            )}
+
+                            {venta.estado_logistico === 'ENTREGADO' && (
+                              <button onClick={() => setPedidoAEliminar(venta)} className="w-full bg-red-50 text-red-600 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                                <Trash2 size={14} /> Eliminar del Historial
                               </button>
                             )}
                           </>
@@ -395,6 +405,26 @@ export default function AdminPedidos() {
                 CONFIRMAR ENTREGA
               </button>
               <button onClick={() => setPedidoAFinalizar(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">AÚN NO</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: ELIMINAR PEDIDO */}
+      {pedidoAEliminar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600"><AlertTriangle size={48} /></div>
+              <h2 className="text-2xl font-black font-playfair">¿Eliminar definitivamente?</h2>
+              <p className="text-sm opacity-60 mt-2 px-4 text-balance text-red-800/60">Esta acción borrará el pedido de tu base de datos para siempre. Úsalo solo para registros de prueba o basura.</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button disabled={procesandoAccion} onClick={handleConfirmarEliminar} className={`w-full bg-red-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}>
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <Trash2 size={18} />}
+                ELIMINAR PARA SIEMPRE
+              </button>
+              <button onClick={() => setPedidoAEliminar(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button>
             </div>
           </div>
         </div>

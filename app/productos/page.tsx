@@ -29,7 +29,7 @@ export default function CatalogoPage() {
   const [busqueda, setBusqueda] = useState('');
 
   const [loading, setLoading] = useState(true);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
   const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);

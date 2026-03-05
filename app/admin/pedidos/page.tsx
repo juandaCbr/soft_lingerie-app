@@ -12,7 +12,8 @@ import {
   ExternalLink,
   ArrowLeft,
   Filter,
-  ArrowDownUp
+  ArrowDownUp,
+  Ruler
 } from 'lucide-react';
 
 export default function AdminPedidos() {
@@ -244,14 +245,23 @@ export default function AdminPedidos() {
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 flex items-center gap-2">
                         <Package size={14} /> Articulos
                       </h4>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {venta.detalle_compra?.map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between items-center text-xs bg-[#fdf8f6] p-3 rounded-xl border border-[#4a1d44]/5">
-                            <span className="font-medium text-[#4a1d44] truncate pr-2">
-                              <span className="font-black mr-2">{item.quantity}x</span>
-                              {item.nombre}
-                            </span>
-                            <span className="font-bold text-[#4a1d44] shrink-0">${Number(item.precio).toLocaleString('es-CO')}</span>
+                          <div key={idx} className="flex flex-col gap-1.5 bg-[#fdf8f6] p-3 rounded-xl border border-[#4a1d44]/5">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-[#4a1d44] truncate pr-2 uppercase tracking-tight">
+                                <span className="bg-[#4a1d44] text-white px-1.5 py-0.5 rounded mr-2 text-[9px]">{item.quantity}x</span>
+                                {item.nombre}
+                              </span>
+                              <span className="font-bold text-[#4a1d44] shrink-0">${Number(item.precio * item.quantity).toLocaleString('es-CO')}</span>
+                            </div>
+                            
+                            {/* Visualización de la Talla en el Resumen */}
+                            {item.talla && (
+                              <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-[#4a1d44]/50 ml-8">
+                                <Ruler size={10} /> Talla: {item.talla.nombre}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

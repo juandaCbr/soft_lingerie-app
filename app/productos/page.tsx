@@ -10,24 +10,28 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   MessageCircle,
-  ArrowUp
+  ArrowUp,
+  Ruler
 } from 'lucide-react';
 import ProductoCard from '@/components/ProductoCard';
 
 export default function CatalogoPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [coloresFiltro, setColoresFiltro] = useState<any[]>([]);
+  const [tallasFiltro, setTallasFiltro] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
 
   // Estados de configuracion
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [colorSeleccionado, setColorSeleccionado] = useState('Todos');
+  const [tallaSeleccionada, setTallaSeleccionada] = useState('Todas');
   const [ordenarPor, setOrdenarPor] = useState('novedades');
   const [busqueda, setBusqueda] = useState('');
 
   const [loading, setLoading] = useState(true);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
   const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
+  const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Datos de contacto para asesoria
@@ -46,7 +50,6 @@ export default function CatalogoPage() {
       )
       .subscribe();
 
-    // Listener para el boton de volver arriba
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
     };
@@ -66,6 +69,10 @@ export default function CatalogoPage() {
           *,
           producto_colores!left (
             colores (nombre, hex)
+          ),
+          producto_tallas!left (
+            stock_talla,
+            tallas (nombre, id)
           )
         `)
         .eq('activo', true);
@@ -95,6 +102,9 @@ export default function CatalogoPage() {
       const { data: colData } = await supabase.from('colores').select('nombre, hex');
       if (colData) setColoresFiltro(colData);
 
+      const { data: tallasData } = await supabase.from('tallas').select('nombre').order('orden');
+      if (tallasData) setTallasFiltro(tallasData);
+
     } catch (err) {
       console.error("Error al sincronizar catalogo:", err);
     } finally {
@@ -112,11 +122,16 @@ export default function CatalogoPage() {
 
       const matchSearch = query === "" || nombreString.includes(query) || catString.includes(query);
       const matchCat = categoriaSeleccionada === 'Todas' || String(catProd).trim() === categoriaSeleccionada;
+      
       const matchColor = colorSeleccionado === 'Todos' || p.variantes.some((v: any) =>
         v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorSeleccionado)
       );
 
-      return matchSearch && matchCat && matchColor;
+      const matchTalla = tallaSeleccionada === 'Todas' || p.variantes.some((v: any) =>
+        v.producto_tallas?.some((pt: any) => pt.tallas?.nombre === tallaSeleccionada && pt.stock_talla > 0)
+      );
+
+      return matchSearch && matchCat && matchColor && matchTalla;
     });
 
     return [...resultado].sort((a, b) => {
@@ -124,7 +139,7 @@ export default function CatalogoPage() {
       if (ordenarPor === 'precio-mayor') return b.precio - a.precio;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, ordenarPor]);
+  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor]);
 
   const irArriba = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -135,7 +150,6 @@ export default function CatalogoPage() {
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 text-[#4a1d44] min-h-screen relative">
 
-      {/* Boton flotante de volver arriba */}
       {showScrollTop && (
         <button
           onClick={irArriba}
@@ -155,7 +169,6 @@ export default function CatalogoPage() {
         <div className="h-[2px] w-12 bg-[#4a1d44]/20 mt-6" />
       </header>
 
-      {/* Barra de estado del catalogo */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white/60 p-5 rounded-[2rem] border border-[#4a1d44]/5 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[#f2e1d9] flex items-center justify-center">
@@ -184,7 +197,6 @@ export default function CatalogoPage() {
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative mb-20">
 
-        {/* Sidebar de Filtros Lateral */}
         <aside className="w-full lg:w-[260px] flex-shrink-0 lg:sticky lg:top-24 space-y-6">
           <div className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 p-7 shadow-sm">
             <div className="mb-8">
@@ -200,6 +212,7 @@ export default function CatalogoPage() {
               </div>
             </div>
 
+            {/* FILTRO DE CATEGORÍAS */}
             <div className="mb-8">
               <button
                 onClick={() => setIsFiltersOpen(!isFiltersOpen)}
@@ -229,7 +242,38 @@ export default function CatalogoPage() {
               )}
             </div>
 
-            <div>
+            {/* FILTRO DE TALLAS (NUEVO) */}
+            <div className="mb-8">
+              <button
+                onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)}
+                className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-4 opacity-50 hover:opacity-100 transition-all"
+              >
+                Talla <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
+              </button>
+
+              {isTallaFilterOpen && (
+                <div className="grid grid-cols-4 gap-2 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <button
+                    onClick={() => setTallaSeleccionada('Todas')}
+                    className={`px-2 py-2 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white border-[#4a1d44]' : 'bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30'}`}
+                  >
+                    ALL
+                  </button>
+                  {tallasFiltro.map((t) => (
+                    <button
+                      key={t.nombre}
+                      onClick={() => setTallaSeleccionada(t.nombre)}
+                      className={`px-2 py-2 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === t.nombre ? 'bg-[#4a1d44] text-white border-[#4a1d44]' : 'bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30'}`}
+                    >
+                      {t.nombre}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* FILTRO DE COLORES */}
+            <div className="mb-4">
               <button
                 onClick={() => setIsColorFilterOpen(!isColorFilterOpen)}
                 className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-4 opacity-50 hover:opacity-100 transition-all"
@@ -258,9 +302,9 @@ export default function CatalogoPage() {
               )}
             </div>
 
-            {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos') && (
+            {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas') && (
               <button
-                onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); }}
+                onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }}
                 className="mt-10 w-full py-3.5 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-all"
               >
                 Limpiar Selección
@@ -269,7 +313,6 @@ export default function CatalogoPage() {
           </div>
         </aside>
 
-        {/* Listado de Productos */}
         <div className="flex-1 w-full">
           {productosFinales.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-40 bg-white/40 rounded-[3.5rem] border border-dashed border-[#4a1d44]/10 backdrop-blur-sm">
@@ -287,7 +330,6 @@ export default function CatalogoPage() {
         </div>
       </div>
 
-      {/* SECCION FINAL: ASESORIA WHATSAPP (Nueva Mejora) */}
       <section className="mt-10 mb-20 bg-[#4a1d44] text-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl relative overflow-hidden text-center md:text-left">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">

@@ -22,7 +22,6 @@ export default function ProductoDetallePage() {
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
 
-  // Estado para los acordeones de información
   const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
 
   const toggleAcordeon = (seccion: string) => {
@@ -56,8 +55,6 @@ export default function ProductoDetallePage() {
         }
 
         setVarianteActiva(productoPrincipal);
-
-        // Cargar tallas del producto activo
         await fetchTallas(productoPrincipal.id);
 
         const { data: dataRelacionados } = await supabase
@@ -97,10 +94,17 @@ export default function ProductoDetallePage() {
       .eq('producto_id', productoId);
     
     if (!errorTallas && tallasRel) {
-      const tallas = tallasRel.map(r => r.tallas).sort((a, b) => a.orden - b.orden);
-      setTallasDisponibles(tallas);
-      // Seleccionar la primera talla por defecto si hay
-      if (tallas.length > 0) setTallaSeleccionada(tallas[0]);
+      // Guardamos la relación completa para tener acceso al stock_talla
+      const tallasConStock = tallasRel.map(r => ({
+        ...r.tallas,
+        stock: r.stock_talla || 0
+      })).sort((a, b) => a.orden - b.orden);
+      
+      setTallasDisponibles(tallasConStock);
+      
+      // Seleccionar la primera talla CON STOCK por defecto
+      const primeraDisponible = tallasConStock.find(t => t.stock > 0);
+      setTallaSeleccionada(primeraDisponible || null);
     }
   };
 
@@ -113,7 +117,11 @@ export default function ProductoDetallePage() {
 
   const handleAddToCart = () => {
     if (tallasDisponibles.length > 0 && !tallaSeleccionada) {
-      toast.error("Por favor selecciona una talla");
+      toast.error("Por favor selecciona una talla disponible");
+      return;
+    }
+    if (tallaSeleccionada && tallaSeleccionada.stock <= 0) {
+      toast.error("Esta talla está agotada");
       return;
     }
     addToCart(varianteActiva, tallaSeleccionada);
@@ -141,7 +149,6 @@ export default function ProductoDetallePage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 text-[#4a1d44]">
-      {/* Botón Volver */}
       <div className="-mt-2 mb-6 max-w-5xl mx-auto">
         <button onClick={() => router.back()} className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase tracking-[0.2em] py-1">
           <ArrowLeft size={14} /> Volver al catálogo
@@ -209,27 +216,45 @@ export default function ProductoDetallePage() {
             </p>
           </div>
 
-          {/* Selector de Tallas */}
+          {/* Selector de Tallas con Agotados */}
           {tallasDisponibles.length > 0 && (
             <div className="py-2 flex flex-col items-start">
               <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50 flex items-center gap-2">
-                <Ruler size={12} /> Tallas Disponibles
+                <Ruler size={12} /> Selecciona tu Talla
               </h3>
               <div className="flex flex-wrap gap-2">
-                {tallasDisponibles.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTallaSeleccionada(t)}
-                    className={`min-w-[45px] px-3 py-2 rounded-xl text-xs font-black transition-all duration-300 border ${
-                      tallaSeleccionada?.id === t.id
-                        ? 'bg-[#4a1d44] text-white border-[#4a1d44] shadow-lg scale-105'
-                        : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
-                    }`}
-                  >
-                    {t.nombre}
-                  </button>
-                ))}
+                {tallasDisponibles.map((t) => {
+                  const agotado = t.stock <= 0;
+                  return (
+                    <button
+                      key={t.id}
+                      disabled={agotado}
+                      onClick={() => setTallaSeleccionada(t)}
+                      className={`min-w-[50px] px-3 py-2.5 rounded-xl text-xs font-black transition-all duration-300 border relative overflow-hidden ${
+                        tallaSeleccionada?.id === t.id
+                          ? 'bg-[#4a1d44] text-white border-[#4a1d44] shadow-lg scale-105 z-10'
+                          : agotado
+                            ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed'
+                            : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
+                      }`}
+                    >
+                      <span className={agotado ? 'opacity-50' : ''}>{t.nombre}</span>
+                      {agotado && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-full h-[1.5px] bg-gray-300 -rotate-45" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              {tallaSeleccionada && (
+                <p className="mt-3 text-[10px] font-bold text-[#4a1d44]/40 uppercase tracking-widest">
+                  {tallaSeleccionada.stock <= 5 && tallaSeleccionada.stock > 0 
+                    ? `¡Últimas ${tallaSeleccionada.stock} unidades!` 
+                    : 'Disponible en stock'}
+                </p>
+              )}
             </div>
           )}
 
@@ -266,7 +291,8 @@ export default function ProductoDetallePage() {
 
           <button
             onClick={handleAddToCart}
-            className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-2 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all"
+            disabled={tallasDisponibles.length > 0 && (!tallaSeleccionada || tallaSeleccionada.stock <= 0)}
+            className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-2 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
           >
             <ShoppingCart size={18} /> AÑADIR AL CARRITO
           </button>

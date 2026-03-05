@@ -54,7 +54,7 @@ export default function AdminPedidos() {
     
     // WEBSOCKET (REALTIME) - Sincronización instantánea
     const canalVentas = supabase
-      .channel('admin-pedidos-realtime')
+      .channel('admin-pedidos-realtime-final')
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'ventas_realizadas' }, 
@@ -135,7 +135,6 @@ export default function AdminPedidos() {
     return base;
   }, [ventas, filtroEstadoPago, filtroLogistica]);
 
-  // FIX: Definir ciudadesUnicas para corregir error de Vercel
   const ciudadesUnicas = useMemo(() => {
     const ciudades = ventasSegunPagoYLogistica.map(v => v.ciudad).filter(Boolean);
     return ['Todas', ...Array.from(new Set(ciudades))];
@@ -159,35 +158,38 @@ export default function AdminPedidos() {
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Volver al Panel</span>
         </button>
 
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8">
           <div>
             <h1 className="text-4xl font-black font-playfair text-[#4a1d44]">Ventas & Logística</h1>
             <p className="opacity-60 text-sm mt-1">Gestión inteligente de pedidos y envíos</p>
           </div>
           
-          <div className="flex flex-col gap-4 w-full md:w-auto">
+          <div className="flex flex-col gap-5 w-full md:w-auto">
+            {/* Botones de Filtro Pago */}
             <div className="flex gap-2">
-              <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
-              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
-              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
+              <button onClick={() => { setFiltroEstadoPago('APROBADO'); setFiltroLogistica('POR_DESPACHAR'); }} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
+              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
+              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
             </div>
 
+            {/* Botones de Logística - MÁS GRANDES */}
             {filtroEstadoPago === 'APROBADO' && (
-              <div className="flex bg-white/50 p-1 rounded-2xl gap-1">
-                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
-                  <Inbox size={14} /> Por Despachar
+              <div className="flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner">
+                <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+                  <Inbox size={18} /> Por Despachar
                 </button>
-                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
-                  <Truck size={14} /> En camino
+                <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+                  <Truck size={18} /> En camino
                 </button>
-                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-white text-[#4a1d44] shadow-sm' : 'text-[#4a1d44]/30'}`}>
-                  <CheckCircle2 size={14} /> Finalizados
+                <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+                  <CheckCircle2 size={18} /> Finalizados
                 </button>
               </div>
             )}
           </div>
         </header>
 
+        {/* Filtros Secundarios */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="bg-white px-5 py-3 rounded-2xl border border-[#4a1d44]/5 shadow-sm flex items-center gap-3 flex-1">
             <Filter size={16} className="opacity-30" />
@@ -210,6 +212,7 @@ export default function AdminPedidos() {
           </div>
         </div>
 
+        {/* Listado */}
         <div className="grid gap-6">
           {ventasFinales.length === 0 ? (
             <div className="bg-white py-32 rounded-[3rem] text-center border-2 border-dashed border-[#4a1d44]/5">
@@ -223,6 +226,7 @@ export default function AdminPedidos() {
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
                     
+                    {/* Información Cliente */}
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
@@ -252,6 +256,7 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
+                    {/* Artículos */}
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2">
                         <Package size={14} /> Artículos del Pedido
@@ -269,6 +274,7 @@ export default function AdminPedidos() {
                       </div>
                     </div>
 
+                    {/* Acciones y Pago */}
                     <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
@@ -284,6 +290,7 @@ export default function AdminPedidos() {
                       </div>
                       
                       <div className="w-full flex flex-col gap-3">
+                        {/* Botones Inteligentes - SÓLIDOS MORADOS */}
                         {venta.estado_pago === 'APROBADO' && (
                           <>
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
@@ -293,7 +300,7 @@ export default function AdminPedidos() {
                                     <Truck size={16} /> Registrar Guía Nacional
                                   </button>
                                 ) : (
-                                  <button onClick={() => setPedidoADomicilio(venta)} className="w-full bg-white text-[#4a1d44] border-2 border-[#4a1d44] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#4a1d44] hover:text-white transition-all flex items-center justify-center gap-2">
+                                  <button onClick={() => setPedidoADomicilio(venta)} className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-xl flex items-center justify-center gap-2">
                                     <Bike size={16} /> Enviar con Domiciliario
                                   </button>
                                 )}
@@ -322,6 +329,7 @@ export default function AdminPedidos() {
         </div>
       </div>
 
+      {/* MODAL 1: REGISTRAR GUÍA NACIONAL */}
       {pedidoADespachar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">
@@ -360,11 +368,12 @@ export default function AdminPedidos() {
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600"><Bike size={48} /></div>
               <h2 className="text-2xl font-black font-playfair">Despacho Local</h2>
-              <p className="text-sm opacity-60 mt-2 px-4">¿Confirmas que enviarás este pedido con un domiciliario en Valledupar?</p>
+              <p className="text-sm opacity-60 mt-2 px-4 text-balance">¿Confirmas que enviarás este pedido con un domiciliario en Valledupar?</p>
             </div>
             <div className="flex flex-col gap-3">
-              <button disabled={procesandoAccion} onClick={handleConfirmarDomicilio} className="w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                {procesandoAccion ? <Loader2 className="animate-spin" /> : "SÍ, ENVIAR AHORA"}
+              <button disabled={procesandoAccion} onClick={handleConfirmarDomicilio} className={`w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}>
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <Bike size={18} />}
+                SÍ, ENVIAR AHORA
               </button>
               <button onClick={() => setPedidoADomicilio(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button>
             </div>
@@ -378,11 +387,12 @@ export default function AdminPedidos() {
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><Package size={48} /></div>
               <h2 className="text-2xl font-black font-playfair">¿Pedido Entregado?</h2>
-              <p className="text-sm opacity-60 mt-2 px-4">Esta acción moverá el pedido a la pestaña de "Finalizados" y cerrará la gestión.</p>
+              <p className="text-sm opacity-60 mt-2 px-4 text-balance">Esta acción moverá el pedido a la pestaña de "Finalizados" y cerrará la gestión.</p>
             </div>
             <div className="flex flex-col gap-3">
-              <button disabled={procesandoAccion} onClick={handleConfirmarFinalizar} className="w-full bg-green-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                {procesandoAccion ? <Loader2 className="animate-spin" /> : "CONFIRMAR ENTREGA"}
+              <button disabled={procesandoAccion} onClick={handleConfirmarFinalizar} className={`w-full bg-green-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}>
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
+                CONFIRMAR ENTREGA
               </button>
               <button onClick={() => setPedidoAFinalizar(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">AÚN NO</button>
             </div>

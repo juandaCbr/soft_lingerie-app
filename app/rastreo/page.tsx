@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { supabase } from '@/app/lib/supabase';
-import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -61,10 +61,11 @@ function RastreoContent() {
   };
 
   const getLinkTransportadora = (empresa: string, guia: string) => {
-    if (empresa === 'Interrapidisimo') return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${guia}`;
-    if (empresa === 'Servientrega') return `https://www.servientrega.com/wps/portal/Colombia/transaccional/rastreo-envios?id=${guia}`;
-    if (empresa === 'Envia' || empresa === 'Envía') return `https://envia.co/`;
-    if (empresa === 'Coordinadora') return `https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=${guia}`;
+    const cleanGuia = guia.trim();
+    if (empresa === 'Interrapidisimo') return `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${cleanGuia}`;
+    if (empresa === 'Servientrega') return `https://mobile.servientrega.com/WebSite.Portal.Transporte.Rastreo/SeguimientoGuias?Id=${cleanGuia}`;
+    if (empresa === 'Envía' || empresa === 'Envia') return `https://envia.co/`;
+    if (empresa === 'Coordinadora') return `https://www.coordinadora.com/rastreo/rastreo-de-guia/detalle-de-rastreo/?guia=${cleanGuia}`;
     return '#';
   };
 
@@ -73,7 +74,7 @@ function RastreoContent() {
       <div className="max-w-2xl mx-auto">
         
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-black font-playfair italic mb-4">Rastrea tu pedido</h1>
+          <h1 className="text-4xl md:text-6xl font-black font-playfair italic mb-4 text-[#4a1d44]">Rastrea tu pedido</h1>
           <p className="opacity-60 text-sm uppercase font-bold tracking-widest">Ingresa tu correo o número de pedido</p>
         </div>
 
@@ -82,7 +83,7 @@ function RastreoContent() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="ejemplo@correo.com o SOFT-123..."
-            className="w-full p-6 pr-20 rounded-[2rem] bg-white shadow-xl outline-none border-2 border-transparent focus:border-[#4a1d44]/10 transition-all font-medium"
+            className="w-full p-6 pr-20 rounded-[2rem] bg-white shadow-xl outline-none border-2 border-transparent focus:border-[#4a1d44]/10 transition-all font-medium text-[#4a1d44]"
           />
           <button 
             disabled={loading}
@@ -95,10 +96,10 @@ function RastreoContent() {
         {error && <p className="text-center text-red-500 font-bold mb-8 animate-bounce">{error}</p>}
 
         {pedido && (
-          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl animate-in zoom-in duration-500">
+          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl animate-in zoom-in duration-500 border border-[#4a1d44]/5">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Estado del pedido</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Estado del envío</span>
                 <h2 className="text-2xl font-black text-[#4a1d44] uppercase tracking-tight">
                   {pedido.estado_logistico || 'PREPARANDO'}
                 </h2>
@@ -118,44 +119,57 @@ function RastreoContent() {
 
             <div className="grid grid-cols-3 gap-2 mb-12">
               <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 33 ? 'bg-[#4a1d44] text-white' : 'bg-gray-100 opacity-30'}`}><Package size={20} /></div>
+                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 33 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><Package size={20} /></div>
                 <span className="text-[8px] font-black uppercase tracking-widest">Preparando</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 66 ? 'bg-[#4a1d44] text-white' : 'bg-gray-100 opacity-30'}`}><Truck size={20} /></div>
+                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 66 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><Truck size={20} /></div>
                 <span className="text-[8px] font-black uppercase tracking-widest">En camino</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 100 ? 'bg-[#4a1d44] text-white' : 'bg-gray-100 opacity-30'}`}><CheckCircle2 size={20} /></div>
+                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 100 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><CheckCircle2 size={20} /></div>
                 <span className="text-[8px] font-black uppercase tracking-widest">Entregado</span>
               </div>
             </div>
 
-            {pedido.numero_guia && (
-              <div className="bg-[#fdf8f6] p-6 rounded-[2rem] border border-[#4a1d44]/5 mb-8">
-                <div className="flex items-start gap-4">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm text-[#4a1d44]"><MapPin size={24} /></div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Transportadora: {pedido.empresa_envio}</p>
-                    <p className="font-bold text-lg mb-4">Guía: {pedido.numero_guia}</p>
-                    <a 
-                      href={getLinkTransportadora(pedido.empresa_envio, pedido.numero_guia)}
-                      target="_blank"
-                      className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-pink-600 hover:text-pink-700 transition-colors"
-                    >
-                      Ver en tiempo real <ArrowRight size={14} />
-                    </a>
+            {/* LÓGICA ESPECIAL PARA VALLEDUPAR VS NACIONAL */}
+            {pedido.estado_logistico === 'ENVIADO' && (
+              <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border border-[#4a1d44]/5 mb-8">
+                {pedido.ciudad?.toLowerCase() === 'valledupar' ? (
+                  <div className="flex items-center gap-5">
+                    <div className="bg-white p-4 rounded-full shadow-sm text-pink-600 animate-bounce"><Bike size={32} /></div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 mb-1">Envío Local Detectado</p>
+                      <p className="font-bold text-[#4a1d44] text-sm leading-relaxed">
+                        ¡Buenas noticias! En breve un domiciliario llevará tu pedido directamente a tu puerta en Valledupar.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-start gap-5">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm text-[#4a1d44]"><MapPin size={28} /></div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Transportadora: {pedido.empresa_envio}</p>
+                      <p className="font-bold text-lg mb-4">Guía: {pedido.numero_guia}</p>
+                      <a 
+                        href={getLinkTransportadora(pedido.empresa_envio, pedido.numero_guia)}
+                        target="_blank"
+                        className="inline-flex items-center gap-3 bg-[#4a1d44] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-md"
+                      >
+                        Ver en tiempo real <ArrowRight size={14} />
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             <div className="border-t border-gray-100 pt-8">
-              <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-2 text-center">Artículos en este envío</p>
+              <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-center">Resumen de tu pedido</p>
               <div className="flex flex-wrap justify-center gap-3">
                 {pedido.detalle_compra?.map((item: any, i: number) => (
-                  <div key={i} className="px-4 py-2 bg-gray-50 rounded-xl text-[10px] font-bold border border-gray-100">
-                    {item.quantity}x {item.nombre}
+                  <div key={i} className="px-4 py-2 bg-gray-50 rounded-xl text-[10px] font-bold border border-gray-100 text-[#4a1d44]/60">
+                    {item.quantity}x {item.nombre} {item.talla && `(Talla: ${item.talla.nombre})`}
                   </div>
                 ))}
               </div>
@@ -164,7 +178,7 @@ function RastreoContent() {
         )}
 
         <div className="mt-12 text-center">
-          <Link href="/productos" className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 pb-1">
+          <Link href="/productos" className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 pb-1 text-[#4a1d44]">
             ← Volver a la tienda
           </Link>
         </div>

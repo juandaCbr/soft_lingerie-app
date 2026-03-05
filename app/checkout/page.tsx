@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [referenciaUnica, setReferenciaUnica] = useState('');
+  const [pedidoIdExistente, setPedidoIdExistente] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -48,27 +49,42 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const referencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const referencia = referenciaUnica || `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.departamento})`;
 
-      // Guardamos el pedido como PENDIENTE antes de ir a Wompi
-      const { error: errorPedido } = await supabase
-        .from('ventas_realizadas')
-        .insert([{
-          nombre_cliente: formData.nombre,
-          email_cliente: formData.email,
-          telefono_cliente: formData.telefono,
-          direccion_envio: direccionCompleta,
-          ciudad: formData.ciudad,
-          monto_total: totalPrice,
-          estado_pago: 'PENDIENTE',
-          referencia_wompi: referencia,
-          detalle_compra: cart
-        }]);
+      const datosPedido = {
+        nombre_cliente: formData.nombre,
+        email_cliente: formData.email,
+        telefono_cliente: formData.telefono,
+        direccion_envio: direccionCompleta,
+        ciudad: formData.ciudad,
+        monto_total: totalPrice,
+        estado_pago: 'PENDIENTE',
+        referencia_wompi: referencia,
+        detalle_compra: cart
+      };
 
-      if (errorPedido) throw errorPedido;
+      if (pedidoIdExistente) {
+        // Si ya se creó un registro en esta sesión, lo actualizamos en lugar de crear otro
+        await supabase
+          .from('ventas_realizadas')
+          .update(datosPedido)
+          .eq('id', pedidoIdExistente);
+      } else {
+        // Primera vez que confirma en esta sesión
+        const { data, error } = await supabase
+          .from('ventas_realizadas')
+          .insert([datosPedido])
+          .select()
+          .single();
 
-      setReferenciaUnica(referencia);
+        if (error) throw error;
+        if (data) {
+          setPedidoIdExistente(data.id);
+          setReferenciaUnica(referencia);
+        }
+      }
+
       setPreparandoPago(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       toast.success('Información confirmada.');
@@ -81,8 +97,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // Esta función se ejecuta si el usuario NO cierra la ventana
-  // Sirve como confirmación inmediata, pero el Webhook es el que manda por seguridad
   const handlePagoConfirmadoVisual = async (transaccion: any) => {
     if (transaccion.status === 'APPROVED') {
       toast.success('¡Pago exitoso detectado!');
@@ -195,7 +209,6 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Resumen de Compra */}
         <div className="space-y-8 lg:sticky lg:top-10 h-fit">
           <h2 className="text-xl font-bold font-playfair uppercase tracking-widest opacity-40">Tu selección</h2>
           <div className="bg-[#f2e1d9]/20 p-8 rounded-[2.5rem] border border-[#4a1d44]/5">

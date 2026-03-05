@@ -1,0 +1,3933 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+app/admin/page.tsx
+app/admin/pedidos/page.tsx
+app/admin/productos/editar/[id]/page.tsx
+app/admin/productos/nuevo/page.tsx
+app/admin/productos/page.tsx
+app/carrito/page.tsx
+app/checkout/page.tsx
+app/contacto/page.tsx
+app/favicon.ico
+app/globals.css
+app/layout.tsx
+app/lib/admin.ts
+app/lib/colombia.ts
+app/lib/supabase.ts
+app/login/page.tsx
+app/page.tsx
+app/productos/[id]/page.tsx
+app/productos/page.tsx
+app/registro/page.tsx
+app/verificar/page.tsx
+components/AdminButton.tsx
+components/BotonWompi.tsx
+components/DiscountModal.tsx
+components/Navbar.tsx
+components/ProductoCard.tsx
+context/CartContext.tsx
+eslint.config.mjs
+middleware.ts
+next.config.ts
+package.json
+postcss.config.mjs
+public/file.svg
+public/globe.svg
+public/home.jpg
+public/next.svg
+public/vercel.svg
+public/window.svg
+README.md
+scripts/test-supabase.mjs
+test-supabase.cjs
+testsupabase.js
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="app/admin/page.tsx">
+import Link from 'next/link';
+import { PlusCircle, ShoppingBag, PackageOpen } from 'lucide-react';
+
+export default function AdminDashboard() {
+  return (
+    <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        
+        <header className="mb-10">
+          <h1 className="text-3xl md:text-4xl font-black font-playfair text-[#4a1d44] mb-2">
+            Panel de Administración
+          </h1>
+          <p className="text-[#4a1d44]/70">
+            Bienvenida. ¿Qué te gustaría hacer hoy?
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Tarjeta 1: Agregar Producto */}
+          <Link href="/admin/productos/nuevo" 
+            className="group bg-white p-8 rounded-[2rem] shadow-sm border border-[#4a1d44]/5 hover:border-[#4a1d44]/30 hover:shadow-md transition-all flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-[#fdf8f6] rounded-2xl flex items-center justify-center text-[#4a1d44] mb-6 group-hover:scale-110 transition-transform">
+              <PlusCircle size={32} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-bold text-[#4a1d44] mb-2">Agregar Producto</h2>
+            <p className="text-sm text-[#4a1d44]/60">
+              Sube fotos, precios y detalles de nuevos conjuntos al catálogo.
+            </p>
+          </Link>
+
+          {/* Tarjeta 2: Ver Ventas */}
+          <Link href="/admin/pedidos" 
+            className="group bg-white p-8 rounded-[2rem] shadow-sm border border-[#4a1d44]/5 hover:border-[#4a1d44]/30 hover:shadow-md transition-all flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-[#fdf8f6] rounded-2xl flex items-center justify-center text-[#4a1d44] mb-6 group-hover:scale-110 transition-transform">
+              <ShoppingBag size={32} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-bold text-[#4a1d44] mb-2">Ventas y Pedidos</h2>
+            <p className="text-sm text-[#4a1d44]/60">
+              Revisa las compras de tus clientas y gestiona los envíos.
+            </p>
+          </Link>
+
+          {/* Tarjeta 3: Gestionar Catálogo (Activar/Desactivar) */}
+          <Link href="/admin/productos" 
+            className="group bg-white p-8 rounded-[2rem] shadow-sm border border-[#4a1d44]/5 hover:border-[#4a1d44]/30 hover:shadow-md transition-all flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-[#fdf8f6] rounded-2xl flex items-center justify-center text-[#4a1d44] mb-6 group-hover:scale-110 transition-transform">
+              <PackageOpen size={32} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-bold text-[#4a1d44] mb-2">Gestionar Catálogo</h2>
+            <p className="text-sm text-[#4a1d44]/60">
+              Pausa productos agotados, edita precios o cambia el stock disponible.
+            </p>
+          </Link>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/admin/pedidos/page.tsx">
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // Importación para la navegación
+import { obtenerVentasAdmin } from '@/app/lib/admin';
+import { 
+  Truck, 
+  Package, 
+  Clock, 
+  CheckCircle2, 
+  MapPin, 
+  ExternalLink, 
+  ArrowLeft // Importamos el icono de la flecha
+} from 'lucide-react';
+
+export default function AdminPedidos() {
+  const router = useRouter(); // Inicializamos el router
+  const [ventas, setVentas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    obtenerVentasAdmin().then(data => {
+      setVentas(data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6]">
+      <div className="text-center font-playfair animate-pulse text-[#4a1d44]">
+        Cargando pedidos de Soft Lingerie...
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-10 text-[#4a1d44]">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* --- BOTÓN DE RETROCESO --- */}
+        <button 
+          onClick={() => router.push('/admin')}
+          className="flex items-center gap-3 text-[#4a1d44]/50 hover:text-[#4a1d44] transition-all mb-8 group"
+        >
+          <div className="p-2 bg-white rounded-full shadow-sm group-hover:shadow-md group-active:scale-95 transition-all">
+            <ArrowLeft size={18} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Volver al Panel</span>
+        </button>
+
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
+          <div>
+            <h1 className="text-4xl font-black font-playfair">Panel de Ventas</h1>
+            <p className="opacity-60 text-sm mt-1">Gestiona los pedidos y despachos de hoy</p>
+          </div>
+          <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-[#4a1d44]/5 flex items-center gap-3">
+            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm font-bold">{ventas.length} Pedidos Totales</span>
+          </div>
+        </header>
+
+        <div className="grid gap-6">
+          {ventas.length === 0 ? (
+            <div className="bg-white p-20 rounded-[2rem] text-center border border-dashed border-[#4a1d44]/20">
+              <p className="opacity-40 font-bold">No hay ventas registradas todavía.</p>
+            </div>
+          ) : (
+            ventas.map((venta) => (
+              <div key={venta.id} className={`bg-white rounded-[2rem] shadow-sm border ${venta.ciudad?.toLowerCase() === 'valledupar' ? 'border-green-200' : 'border-[#4a1d44]/5'} overflow-hidden transition-hover hover:shadow-md`}>
+                <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+                  
+                  {/* Columna 1: Info Cliente & Estado */}
+                  <div className="flex-1 space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                        venta.estado_pago === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {venta.estado_pago}
+                      </span>
+                      {venta.ciudad?.toLowerCase() === 'valledupar' && (
+                        <span className="bg-[#4a1d44] text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                          <Truck size={12} /> Envío Inmediato
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-xl font-bold tracking-tight">{venta.nombre_cliente}</h3>
+                      <p className="text-xs opacity-60 font-medium">{venta.email_cliente} • {venta.telefono_cliente}</p>
+                    </div>
+
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin size={16} className="shrink-0 mt-1 opacity-30" />
+                      <p className="leading-relaxed">
+                        <strong className="text-[#4a1d44]">{venta.barrio}</strong>, {venta.direccion_exacta} <br />
+                        <span className="opacity-60 text-xs">{venta.ciudad}, {venta.departamento} {venta.apartamento_opcional && `• ${venta.apartamento_opcional}`}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Columna 2: Productos Comprados */}
+                  <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-100 px-0 md:px-8 py-6 md:py-0">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 flex items-center gap-2">
+                      <Package size={14} /> Artículos del Pedido
+                    </h4>
+                    <div className="space-y-2">
+                      {venta.items_pedido?.map((item: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-xs bg-[#fdf8f6] p-3 rounded-xl border border-[#4a1d44]/5">
+                          <span className="font-medium text-[#4a1d44]">{item.cantidad}x {item.nombre_producto_snapshot}</span>
+                          <span className="font-bold text-[#4a1d44]">${Number(item.precio_unitario).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Columna 3: Total y Acción */}
+                  <div className="w-full md:w-48 flex flex-col justify-between items-end gap-6">
+                    <div className="text-right">
+                      <p className="text-[9px] opacity-40 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
+                      <p className="text-3xl font-black text-[#4a1d44]">${Number(venta.monto_total).toLocaleString()}</p>
+                    </div>
+                    
+                    <button className="w-full bg-[#f2e1d9] hover:bg-[#ebd5c8] text-[#4a1d44] py-3.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 border border-[#4a1d44]/5">
+                      Detalles Wompi <ExternalLink size={14} />
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/admin/productos/editar/[id]/page.tsx">
+"use client";
+
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { supabase } from '@/app/lib/supabase';
+import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon } from 'lucide-react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+
+// 1. CATEGORÍAS ESPECÍFICAS DE LENCERÍA
+const CATEGORIAS_LENCERIA = [
+  "Conjuntos",
+  "Bodys",
+  "Pijamas",
+  "Baby-dolls",
+  "Panties",
+  "Brasieres",
+  "Batas",
+  "Accesorios / Ligas",
+  "Cuidado Corporal"
+];
+
+export default function EditarProductoPage() {
+  const params = useParams();
+  const router = useRouter();
+  const idProducto = params?.id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  const [nombre, setNombre] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [stock, setStock] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [descripcion, setDescripcion] = useState(""); 
+  const [imagenesUrls, setImagenesUrls] = useState<string[]>([]);
+  const [nuevasImagenes, setNuevasImagenes] = useState<File[]>([]);
+  const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
+  
+  const [esCategoriaManual, setEsCategoriaManual] = useState(false);
+
+  const cargarProducto = useCallback(async () => {
+    if (!idProducto) return;
+    try {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('id', idProducto)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setNombre(data.nombre || "");
+        setPrecio(data.precio?.toString() || "0");
+        setStock(data.stock?.toString() || "0");
+        setCategoria(data.categoria || "");
+        setDescripcion(data.descripcion || ""); 
+        setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
+        
+        // Si la categoría no está en la lista de lencería, activamos modo manual
+        if (data.categoria && !CATEGORIAS_LENCERIA.includes(data.categoria)) {
+          setEsCategoriaManual(true);
+        }
+      }
+    } catch (error: any) {
+      toast.error("Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  }, [idProducto]);
+
+  useEffect(() => { cargarProducto(); }, [cargarProducto]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setNuevasImagenes(prev => [...prev, ...filesArray]);
+      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
+      setPrevisualizaciones(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const urlsNuevasSubidas = [];
+      for (const file of nuevasImagenes) {
+        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+        const { data, error } = await supabase.storage.from('productos').upload(`public/${fileName}`, file);
+        if (error) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('productos').getPublicUrl(data.path);
+        urlsNuevasSubidas.push(publicUrl);
+      }
+
+      const listaFinalUrls = [...imagenesUrls, ...urlsNuevasSubidas];
+
+      const { error } = await supabase.from('productos').update({
+        nombre,
+        precio: parseFloat(precio),
+        stock: parseInt(stock),
+        categoria,
+        descripcion,
+        imagenes_urls: listaFinalUrls
+      }).eq('id', idProducto);
+
+      if (error) throw error;
+      toast.success("¡Prenda de lencería actualizada!");
+      router.push("/admin/productos");
+      router.refresh();
+    } catch (error: any) {
+      toast.error("Error al guardar cambios");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center bg-[#fdf8f6]"><Loader2 className="animate-spin text-[#4a1d44]" size={40} /></div>;
+
+  return (
+    <div className="min-h-screen bg-[#fdf8f6] p-4 pb-24 text-[#4a1d44]">
+      <div className="max-w-2xl mx-auto">
+        <header className="flex items-center gap-4 mb-8">
+          <Link href="/admin/productos" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10"><ArrowLeft size={20} /></Link>
+          <h1 className="text-2xl font-black font-playfair italic uppercase">Editar Prenda</h1>
+        </header>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* GALERÍA */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
+            <h2 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Fotos</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {imagenesUrls.map((url, i) => (
+                <div key={`old-${i}`} className="relative aspect-square">
+                  <img src={url} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" />
+                  <button type="button" onClick={() => setImagenesUrls(imagenesUrls.filter(u => u !== url))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"><X size={12} strokeWidth={3} /></button>
+                </div>
+              ))}
+              {previsualizaciones.map((url, i) => (
+                <div key={`new-${i}`} className="relative aspect-square">
+                  <img src={url} className="w-full h-full object-cover rounded-2xl border-2 border-[#4a1d44]/20 opacity-60" alt="Nueva" />
+                  <div className="absolute inset-0 flex items-center justify-center"><ImageIcon size={18} className="text-[#4a1d44]/40" /></div>
+                </div>
+              ))}
+              <label className="border-2 border-dashed border-[#4a1d44]/10 rounded-2xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                <Plus size={24} className="opacity-20" />
+                <input type="file" multiple className="hidden" onChange={handleFileChange} />
+              </label>
+            </div>
+          </div>
+
+          {/* DATOS */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5 space-y-6">
+            <div>
+              <label className="text-[10px] font-black uppercase opacity-30 ml-2">Nombre del Artículo</label>
+              <input value={nombre} onChange={e => setNombre(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner focus:ring-2 focus:ring-[#4a1d44]/5 transition-all" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black uppercase opacity-30 ml-2">Precio</label>
+                <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase opacity-30 ml-2">Stock</label>
+                <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" />
+              </div>
+            </div>
+
+            {/* --- DESPLEGABLE DE CATEGORÍA LENCERÍA --- */}
+            <div>
+              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Tipo de Prenda</label>
+              {!esCategoriaManual ? (
+                <div className="relative mt-1">
+                  <select 
+                    value={categoria}
+                    onChange={(e) => {
+                      if (e.target.value === "NUEVA") {
+                        setEsCategoriaManual(true);
+                        setCategoria("");
+                      } else {
+                        setCategoria(e.target.value);
+                      }
+                    }}
+                    className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold appearance-none shadow-inner cursor-pointer"
+                  >
+                    <option value="">Selecciona una categoría...</option>
+                    {CATEGORIAS_LENCERIA.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="NUEVA">+ Otra categoría...</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" size={20} />
+                </div>
+              ) : (
+                <div className="flex gap-2 mt-1">
+                  <input 
+                    autoFocus
+                    placeholder="Ej: Medias veladas..."
+                    value={categoria}
+                    onChange={e => setCategoria(e.target.value)}
+                    className="flex-1 bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold shadow-inner"
+                  />
+                  <button type="button" onClick={() => { setEsCategoriaManual(false); setCategoria(""); }} className="bg-gray-100 px-5 rounded-2xl font-black text-[10px]">X</button>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Descripción / Tallas / Material</label>
+              <textarea 
+                value={descripcion} 
+                onChange={e => setDescripcion(e.target.value)} 
+                className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none h-32 resize-none mt-1 shadow-inner leading-relaxed" 
+                placeholder="Ej: Material encaje, disponible en Talla S, M y L..."
+              />
+            </div>
+          </div>
+
+          <button disabled={saving} className="w-full bg-[#4a1d44] text-white p-5 rounded-[2rem] font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+            {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} 
+            {saving ? "Guardando..." : "Actualizar Producto"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/admin/productos/nuevo/page.tsx">
+"use client";
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/app/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function NuevoProductoPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  
+  // Estados para imágenes
+  const [archivosImagenes, setArchivosImagenes] = useState<File[]>([]);
+  const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
+  
+  // Estados para colores
+  const [coloresDB, setColoresDB] = useState<any[]>([]);
+  const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
+
+  const [formData, setFormData] = useState({
+    nombre: '',
+    descripcion: '',
+    precio: '',
+    stock: '1',
+    categoria: '',
+    grupo_id: '', // Crucial para agrupar colores
+  });
+
+  // Cargar colores desde Supabase
+  useEffect(() => {
+    const fetchColores = async () => {
+      const { data } = await supabase.from('colores').select('*').order('nombre');
+      if (data) setColoresDB(data);
+    };
+    fetchColores();
+  }, []);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setArchivosImagenes(prev => [...prev, ...files]);
+      const nuevasPrev = files.map(file => URL.createObjectURL(file));
+      setPrevisualizaciones(prev => [...prev, ...nuevasPrev]);
+    }
+  };
+
+  const quitarImagen = (index: number) => {
+    setArchivosImagenes(prev => prev.filter((_, i) => i !== index));
+    setPrevisualizaciones(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validaciones básicas
+    if (archivosImagenes.length === 0) {
+      toast.error('¡Sube al menos una foto!');
+      return;
+    }
+    if (!colorSeleccionado) {
+      toast.error('¡Selecciona un color para esta variante!');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const urlsSubidas = [];
+
+      // 1. Subida de múltiples imágenes al Storage
+      for (const archivo of archivosImagenes) {
+        const fileExt = archivo.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+        const filePath = `lenceria/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('productos')
+          .upload(filePath, archivo);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('productos')
+          .getPublicUrl(filePath);
+        
+        urlsSubidas.push(publicUrlData.publicUrl);
+      }
+
+      // 2. Insertar el producto en la tabla 'productos'
+      const { data: nuevoProducto, error: dbError } = await supabase
+        .from('productos')
+        .insert([{
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          precio: parseFloat(formData.precio),
+          stock: parseInt(formData.stock),
+          categoria: formData.categoria,
+          grupo_id: formData.grupo_id.trim() || null, // Si está vacío, es null
+          imagenes_urls: urlsSubidas
+        }])
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // 3. Vincular el color en la tabla intermedia 'producto_colores'
+      const { error: colorError } = await supabase
+        .from('producto_colores')
+        .insert([{
+          producto_id: nuevoProducto.id,
+          color_id: colorSeleccionado
+        }]);
+
+      if (colorError) throw colorError;
+
+      toast.success('¡Producto publicado con éxito!');
+      router.push('/admin');
+      router.refresh();
+
+    } catch (error: any) {
+      toast.error(error.message || 'Error al publicar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-8 text-[#4a1d44]">
+      <div className="max-w-2xl mx-auto">
+        
+        {/* Botón Volver */}
+        <button onClick={() => router.back()} className="flex items-center gap-3 mb-6 group">
+          <div className="p-2 bg-white rounded-full shadow-sm group-hover:shadow-md transition-all">
+            <ArrowLeft size={18} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Volver al Panel</span>
+        </button>
+
+        <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-[#4a1d44]/5">
+          <h1 className="text-3xl font-black font-playfair mb-8 text-[#4a1d44]">Nuevo Producto</h1>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* GALERÍA DE IMÁGENES */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Fotos del Producto</label>
+              <div className="grid grid-cols-3 gap-4">
+                {previsualizaciones.map((url, i) => (
+                  <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-[#4a1d44]/10">
+                    <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                    <button type="button" onClick={() => quitarImagen(i)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+                <label className="aspect-square rounded-2xl border-2 border-dashed border-[#4a1d44]/20 flex flex-col items-center justify-center cursor-pointer hover:bg-[#fdf8f6] transition-colors">
+                  <Upload size={24} className="opacity-30" />
+                  <span className="text-[9px] font-bold mt-2 uppercase">Añadir</span>
+                  <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+              </div>
+            </div>
+
+            {/* AGRUPACIÓN Y COLOR (Estructura de 2 columnas) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de Grupo (Agrupar colores)</label>
+                <div className="relative">
+                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <input 
+                    type="text" 
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm border border-pink-100 focus:border-pink-300 transition-colors" 
+                    placeholder="Ej: conjunto-seda" 
+                    value={formData.grupo_id} 
+                    onChange={e => setFormData({...formData, grupo_id: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
+                <div className="relative">
+                  <Palette className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <select 
+                    required 
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm appearance-none cursor-pointer border border-transparent focus:border-[#4a1d44]/10 transition-colors" 
+                    value={colorSeleccionado} 
+                    onChange={e => setColorSeleccionado(e.target.value)}
+                  >
+                    <option value="">Elegir color...</option>
+                    {coloresDB.map(c => (
+                      <option key={c.id} value={c.id}>{c.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* NOMBRE */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nombre del Producto</label>
+              <div className="relative">
+                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                <input 
+                  required 
+                  type="text" 
+                  className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm" 
+                  placeholder="Ej: Conjunto Encaje Rojo" 
+                  value={formData.nombre} 
+                  onChange={e => setFormData({...formData, nombre: e.target.value})} 
+                />
+              </div>
+            </div>
+
+            {/* PRECIO Y CATEGORÍA */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Precio</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <input 
+                    required 
+                    type="number" 
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm" 
+                    placeholder="0.00" 
+                    value={formData.precio} 
+                    onChange={e => setFormData({...formData, precio: e.target.value})} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Categoría</label>
+                <div className="relative">
+                  <List className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <select 
+                    required 
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm appearance-none cursor-pointer" 
+                    value={formData.categoria} 
+                    onChange={e => setFormData({...formData, categoria: e.target.value})}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="conjuntos">Conjuntos</option>
+                    <option value="bodys">Bodys</option>
+                    <option value="brasieres">Brasieres</option>
+                    <option value="pantis">Pantis</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* DESCRIPCIÓN */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Descripción</label>
+              <textarea 
+                required 
+                className="w-full px-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm min-h-[120px] resize-none border border-transparent focus:border-[#4a1d44]/10 transition-colors" 
+                placeholder="Describe los detalles de la prenda..." 
+                value={formData.descripcion} 
+                onChange={e => setFormData({...formData, descripcion: e.target.value})} 
+              />
+            </div>
+
+            {/* BOTÓN DE PUBLICACIÓN */}
+            <button 
+              disabled={loading} 
+              className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-[#5d2555] transition-all disabled:opacity-50 shadow-lg shadow-[#4a1d44]/20"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : 'Publicar Producto'}
+            </button>
+            
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/admin/productos/page.tsx">
+"use client";
+
+import { useEffect, useState, useMemo } from 'react';
+import { supabase } from '@/app/lib/supabase';
+import Link from 'next/link';
+import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+type Producto = {
+  id: string;
+  nombre: string;
+  precio: number;
+  stock: number;
+  categoria: string;
+  imagen_url?: string;
+  imagenes_urls?: string[];
+  activo: boolean;
+};
+
+export default function GestionProductosPage() {
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busqueda, setBusqueda] = useState("");
+
+  // Estados para el Modal de Confirmación Estilizado
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [productoAEliminar, setProductoAEliminar] = useState<{id: string, nombre: string} | null>(null);
+  const [eliminando, setEliminando] = useState(false);
+
+  useEffect(() => {
+    fetchProductos();
+  }, []);
+
+  const fetchProductos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) throw error;
+      setProductos(data || []);
+    } catch (error: any) {
+      toast.error('Error al cargar los productos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para abrir el modal
+  const abrirModalEliminar = (id: string, nombre: string) => {
+    setProductoAEliminar({ id, nombre });
+    setMostrarModal(true);
+  };
+
+  // Función que realmente borra en Supabase
+  const ejecutarEliminacion = async () => {
+    if (!productoAEliminar) return;
+    setEliminando(true);
+    try {
+      const { error } = await supabase
+        .from('productos')
+        .delete()
+        .eq('id', productoAEliminar.id);
+
+      if (error) throw error;
+
+      setProductos(productos.filter(p => p.id !== productoAEliminar.id));
+      toast.success('Prenda eliminada correctamente');
+    } catch (error: any) {
+      toast.error('No se pudo eliminar');
+    } finally {
+      setEliminando(false);
+      setMostrarModal(false);
+      setProductoAEliminar(null);
+    }
+  };
+
+  const productosFiltrados = useMemo(() => {
+    return productos.filter((p) => {
+      const nombre = p.nombre.toLowerCase();
+      const cat = String(p.categoria || "").toLowerCase();
+      const query = busqueda.toLowerCase();
+      return nombre.includes(query) || cat.includes(query);
+    });
+  }, [productos, busqueda]);
+
+  const toggleActivo = async (id: string, estadoActual: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('productos')
+        .update({ activo: !estadoActual })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setProductos(productos.map(p => 
+        p.id === id ? { ...p, activo: !estadoActual } : p
+      ));
+
+      toast.success(!estadoActual ? 'Producto activado' : 'Producto ocultado');
+    } catch (error: any) {
+      toast.error('Error al actualizar estado');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fdf8f6] flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#4a1d44]" size={40} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#fdf8f6] pb-24 md:pb-8 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* ENCABEZADO */}
+        <header className="flex flex-col gap-6 mb-8">
+          <div className="flex items-center justify-between">
+            <Link href="/admin" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10 text-[#4a1d44]">
+              <ArrowLeft size={20} />
+            </Link>
+            <h1 className="text-2xl font-black font-playfair text-[#4a1d44]">Inventario</h1>
+            <div className="w-10" /> 
+          </div>
+
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-30" size={18} />
+            <input 
+              type="text"
+              placeholder="Buscar prenda o categoría..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full bg-white border border-[#4a1d44]/10 py-4 pl-12 pr-10 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#4a1d44]/5 transition-all text-[#4a1d44] font-medium"
+            />
+            {busqueda && (
+              <button onClick={() => setBusqueda("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-40">
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-2 bg-[#4a1d44] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">
+            <Plus size={20} /> Nueva Prenda
+          </Link>
+        </header>
+
+        {/* LISTADO */}
+        {productosFiltrados.length === 0 ? (
+          <div className="bg-white rounded-[2rem] p-12 text-center border border-[#4a1d44]/5 shadow-sm">
+            <Package className="mx-auto text-[#4a1d44]/20 mb-4" size={48} />
+            <h3 className="text-xl font-bold text-[#4a1d44]">{busqueda ? "No hay resultados" : "No hay prendas"}</h3>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {productosFiltrados.map((producto) => {
+              const miniatura = (producto.imagenes_urls && producto.imagenes_urls.length > 0)
+                ? producto.imagenes_urls[0]
+                : producto.imagen_url;
+
+              return (
+                <div 
+                  key={producto.id} 
+                  className={`bg-white p-4 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col md:flex-row md:items-center gap-4 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''}`}
+                >
+                  {/* Imagen y Nombre */}
+                  <div className="flex items-center gap-4 flex-1">
+                    <img 
+                      src={miniatura || 'https://placehold.co/100x100?text=S.L'} 
+                      className="w-16 h-16 rounded-2xl object-cover shadow-sm bg-gray-50"
+                      alt={producto.nombre} 
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[#4a1d44] leading-tight">{producto.nombre}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full w-fit mt-1">
+                        {typeof producto.categoria === 'object' ? (producto.categoria as any).nombre : producto.categoria}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* PRECIO Y STOCK (ESTO ES LO QUE SE HABÍA PERDIDO) */}
+                  <div className="grid grid-cols-2 md:flex md:gap-8 border-y md:border-none border-[#4a1d44]/5 py-3 md:py-0 px-2 md:px-0">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-gray-400">Precio</span>
+                      <span className="font-black text-[#4a1d44]">${Number(producto.precio).toLocaleString('es-CO')}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-bold text-gray-400">Stock</span>
+                      <span className={`font-bold ${producto.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>
+                        {producto.stock} uds.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => toggleActivo(producto.id, producto.activo)}
+                      className={`flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-5 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}
+                    >
+                      {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
+                    </button>
+                    
+                    <Link 
+                      href={`/admin/productos/editar/${producto.id}`} 
+                      className="p-3 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors"
+                    >
+                      <Edit3 size={18} />
+                    </Link>
+
+                    <button 
+                      onClick={() => abrirModalEliminar(producto.id, producto.nombre)}
+                      className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* --- MODAL DE CONFIRMACIÓN ESTILIZADO --- */}
+      {mostrarModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Fondo oscuro con desenfoque */}
+          <div 
+            className="absolute inset-0 bg-[#4a1d44]/40 backdrop-blur-sm" 
+            onClick={() => !eliminando && setMostrarModal(false)} 
+          />
+          
+          {/* Tarjeta del Modal */}
+          <div className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-[#4a1d44]/10 animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-playfair uppercase italic">¿Confirmar?</h2>
+              <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                ¿Estás segura de eliminar <span className="font-bold text-[#4a1d44]">"{productoAEliminar?.nombre}"</span>? Esta acción no se puede deshacer.
+              </p>
+              
+              <div className="flex flex-col w-full gap-3">
+                <button 
+                  disabled={eliminando}
+                  onClick={ejecutarEliminacion}
+                  className="w-full bg-red-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {eliminando ? <Loader2 className="animate-spin" size={20} /> : "Sí, eliminar para siempre"}
+                </button>
+                <button 
+                  disabled={eliminando}
+                  onClick={() => setMostrarModal(false)}
+                  className="w-full bg-gray-100 text-[#4a1d44] py-4 rounded-2xl font-bold active:scale-95 transition-all disabled:opacity-50"
+                >
+                  No, volver atrás
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="app/carrito/page.tsx">
+"use client";
+
+import { useCart } from "@/context/CartContext";
+import { Trash2, ArrowLeft, Plus, Minus, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useEffect, useState } from "react";
+// IMPORTAMOS EL BOTÓN DE WOMPI (Asegúrate de que la ruta sea la correcta)
+import BotonWompi from "@/components/BotonWompi";
+
+export default function CartPage() {
+  // Nota: Si tienes una función 'clearCart' en tu CartContext, agrégala aquí
+  const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const cartOrdenado = useMemo(() => {
+    return [...cart].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+  }, [cart]);
+
+  // Generamos una referencia única para este pago (Wompi lo requiere)
+  const referenciaUnica = useMemo(() => {
+    return `PEDIDO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  }, [totalPrice]); // Se regenera si cambia el precio total
+
+  // ESTA ES LA FUNCIÓN QUE SE EJECUTA CUANDO EL PAGO SE APRUEBA
+  const handlePagoExitoso = async (transaccion: any) => {
+    console.log("¡Recibimos el pago exitoso en el Carrito!", transaccion);
+
+    // AQUÍ HAREMOS LO SIGUIENTE MÁS ADELANTE:
+    // 1. Guardar el pedido en Supabase
+    // 2. Restar el stock de los productos
+    // 3. Vaciar el carrito (ej. clearCart())
+
+    alert(`¡Pago exitoso! Ref: ${transaccion.id}`);
+
+    // Redirigimos a una página de gracias
+    // router.push("/gracias"); 
+  };
+
+  // Prevenir Hydration Mismatch
+  if (!isMounted) {
+    return <div className="min-h-screen bg-[#faf8f7] pb-16" />;
+  }
+
+  // Pantalla de Carrito Vacío
+  if (totalItems === 0) {
+    return (
+      <div className="min-h-[75vh] flex flex-col items-center justify-center px-6 text-center text-[#4a1d44]">
+        <div className="bg-[#f2e1d9]/50 p-10 rounded-full mb-8 animate-pulse">
+          <Trash2 size={48} className="opacity-20" />
+        </div>
+        <h2 className="text-3xl font-black font-playfair uppercase tracking-tight mb-3">
+          Tu carrito está vacío
+        </h2>
+        <p className="max-w-xs text-sm italic opacity-60 mb-10 leading-relaxed">
+          "Las piezas más exclusivas no suelen esperar demasiado. Encuentra hoy ese diseño que te hará sentir única."
+        </p>
+        <Link
+          href="/productos"
+          className="group relative overflow-hidden bg-[#4a1d44] text-white px-10 py-4 rounded-full font-bold shadow-xl transition-all hover:pr-14 active:scale-95"
+        >
+          <span className="relative z-10 uppercase tracking-widest text-xs">Explorar la Colección</span>
+          <ArrowLeft className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 rotate-180 transition-all group-hover:opacity-100 group-hover:right-6" size={18} />
+        </Link>
+      </div>
+    );
+  }
+
+  // Pantalla de Carrito con Productos
+  return (
+    <div className="min-h-screen bg-[#faf8f7] pb-16">
+      <main className="max-w-6xl mx-auto px-6 md:px-12 pt-8 text-[#4a1d44]">
+        {/* Botón Volver */}
+        <div className="flex items-center gap-4 mb-10">
+          <Link href="/productos" className="p-2 bg-white shadow-sm border border-[#4a1d44]/5 hover:bg-[#f2e1d9] hover:shadow-md rounded-full transition-all text-[#4a1d44]">
+            <ArrowLeft size={24} />
+          </Link>
+          <h1 className="text-3xl font-black tracking-tighter uppercase text-[#361531]">Tu Carrito <span className="text-xl opacity-60">({totalItems})</span></h1>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-8">
+          {/* Columna Izquierda: Lista de Productos */}
+          <div className="flex-grow">
+            <div className="bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.08)] border border-white/60 ring-1 ring-[#4a1d44]/5 flex flex-col p-1.5 md:p-3 overflow-hidden backdrop-blur-xl">
+              {cartOrdenado.map((item: any, index: number) => {
+                const imagenAShow = item.imagenes_urls?.[0] || item.imagen_url || "/placeholder.png";
+
+                return (
+                  <div key={item.id} className="relative group">
+                    {index > 0 && (
+                      <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-[#4a1d44]/10 to-transparent" />
+                    )}
+                    <div className="flex flex-row items-stretch gap-3 md:gap-5 p-4 md:p-5 rounded-[2rem] transition-all duration-300 hover:bg-[#faf8f7] hover:shadow-[0_8px_30px_rgb(74,29,68,0.04)] m-1">
+                      <img
+                        src={imagenAShow}
+                        loading="lazy"
+                        className="w-16 h-20 md:w-20 md:h-28 object-cover rounded-2xl shadow-sm bg-[#f2e1d9]/20 flex-shrink-0 border border-[#4a1d44]/5"
+                        alt={item.nombre}
+                      />
+                      <div className="flex flex-col justify-between flex-grow">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <h3 className="text-sm md:text-base font-bold leading-tight text-[#361531] group-hover:text-[#4a1d44] transition-colors">{item.nombre}</h3>
+                            <div className="inline-block px-2 py-0.5 mt-1 bg-[#4a1d44]/5 rounded-full border border-[#4a1d44]/10 text-center w-fit">
+                              <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-[#4a1d44]/70">
+                                {item.producto_colores?.[0]?.colores?.nombre || "Color único"}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="p-1.5 md:p-2.5 text-[#4a1d44]/30 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-300 active:scale-90 flex-shrink-0"
+                            title="Eliminar producto"
+                            aria-label="Eliminar producto"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                        <div className="flex items-end justify-between mt-2">
+                          <div className="flex items-center bg-white shadow-sm rounded-full p-0.5 md:p-1 border border-[#4a1d44]/10">
+                            <button
+                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, -1); }}
+                              className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="w-6 md:w-8 text-center font-bold text-xs md:text-sm text-[#361531]">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, 1); }}
+                              className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
+                          <div className="text-right flex flex-col justify-end">
+                            <p className="text-sm md:text-base font-black whitespace-nowrap flex items-baseline gap-1 mt-1 text-[#4a1d44]">
+                              ${(item.precio * item.quantity).toLocaleString('es-CO')}
+                              <span className="text-[8px] md:text-[9px] font-bold opacity-50 tracking-wieder">COP</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Columna Derecha: Resumen de Pago */}
+          <div className="w-full lg:w-[400px] flex-shrink-0">
+            <div className="p-8 md:p-10 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.12)] border border-white/60 ring-1 ring-[#4a1d44]/5 sticky top-24 backdrop-blur-xl">
+              <div className="flex flex-col gap-8 mb-8">
+                <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Total a pagar</p>
+                  <div className="flex items-baseline gap-2 justify-center lg:justify-start">
+                    <p className="text-4xl font-black text-[#4a1d44]">
+                      ${totalPrice.toLocaleString('es-CO')}
+                    </p>
+                    <span className="text-sm font-black opacity-30 tracking-widest">COP</span>
+                  </div>
+                </div>
+
+                {/* AQUÍ REEMPLAZAMOS EL BOTÓN MANUAL POR EL WIDGET DE WOMPI */}
+                <BotonWompi
+                  montoTotal={totalPrice}
+                  referenciaPedido={referenciaUnica}
+                  onExito={handlePagoExitoso}
+                />
+              </div>
+
+              {/* MÉTODOS DE PAGO */}
+              <div className="flex flex-col items-center gap-6 pt-8 border-t border-[#4a1d44]/5">
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 text-center">
+                  Aceptamos tus medios de pago favoritos
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-700 ease-in-out">
+                  <img src="https://juntanacional.co/wp-content/uploads/2015/08/logo_380.png" alt="PSE" className="h-6 object-contain" />
+                  <img src="https://unicentro.com/wp-content/uploads/2025/07/BANCOLOMBIA.png" alt="Bancolombia" className="h-4 object-contain" />
+                  <img src="https://images.seeklogo.com/logo-png/50/3/nequi-colombia-logo-png_seeklogo-505078.png" alt="Nequi" className="h-5 object-contain" />
+                  <img src="https://app.redecom.co/396-medium_default/recarga-claro.jpg" alt="Daviplata" className="h-7 object-contain mix-blend-multiply" />
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-[#4a1d44]/5 flex items-center justify-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.2em] opacity-30 italic text-center">
+                <ShieldCheck size={14} className="text-green-600 opacity-70" />
+                Transacción Privada & Segura
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+</file>
+
+<file path="app/checkout/page.tsx">
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
+import { COLOMBIA_COMPLETA } from '@/app/lib/colombia';
+import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, Image as ImageIcon } from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/app/lib/supabase';
+import toast from 'react-hot-toast';
+
+export default function CheckoutPage() {
+  const { cart, totalPrice, clearCart } = useCart();
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    telefono: '',
+    departamento: 'Cesar',
+    ciudad: '',
+    direccion: '',
+    barrio: '',
+    apartamento: '', 
+  });
+
+  const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
+
+  useEffect(() => {
+    const ciudades = COLOMBIA_COMPLETA[formData.departamento] || [];
+    setCiudadesDisponibles(ciudades);
+    if (!ciudades.includes(formData.ciudad)) {
+      setFormData(prev => ({ ...prev, ciudad: ciudades[0] || '' }));
+    }
+  }, [formData.departamento]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const manejarPago = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: pedido, error } = await supabase
+        .from('ventas_realizadas')
+        .insert([{
+          nombre_cliente: formData.nombre,
+          email_cliente: formData.email,
+          telefono_cliente: formData.telefono,
+          direccion_envio: `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.ciudad}, ${formData.departamento})`,
+          monto_total: totalPrice,
+          detalle_compra: cart
+        }])
+        .select().single();
+
+      if (error) throw error;
+
+      // @ts-ignore
+      const checkout = new WidgetCheckout({
+        currency: 'COP',
+        amountInCents: Math.round(totalPrice * 100),
+        reference: `SOFT-${pedido.id.slice(0, 8)}`,
+        publicKey: 'pub_test_tu_llave_aqui', // REEMPLAZAR CON TU LLAVE PÚBLICA DE WOMPI
+        redirectUrl: `${window.location.origin}/gracias`,
+      });
+
+      checkout.open((result: any) => {
+        if (result.transaction.status === 'APPROVED') {
+          toast.success('¡Pago exitoso!');
+          clearCart();
+        }
+      });
+    } catch (error) {
+      toast.error('Error al procesar el pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44]">
+      <div className="flex items-center gap-4 mb-10">
+        <Link href="/carrito" className="p-2 hover:bg-[#f2e1d9] rounded-full transition">
+          <ArrowLeft size={24} />
+        </Link>
+        <h1 className="text-3xl font-bold font-playfair text-[#4a1d44]">Finalizar Compra</h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
+          <form onSubmit={manejarPago} className="space-y-6">
+            
+            <div className="space-y-4">
+              <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
+                <User size={14} /> Información de Contacto
+              </h2>
+              <input required name="nombre" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all text-[#4a1d44]" placeholder="Nombre completo" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input required type="email" name="email" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all text-[#4a1d44]" placeholder="Email" />
+                <input required type="tel" name="telefono" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all text-[#4a1d44]" placeholder="WhatsApp / Celular" />
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t border-gray-50">
+              <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
+                <MapPin size={14} /> Ubicación de Envío
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <select name="departamento" value={formData.departamento} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none cursor-pointer text-[#4a1d44]">
+                  {Object.keys(COLOMBIA_COMPLETA).sort().map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+                <select name="ciudad" value={formData.ciudad} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none cursor-pointer text-[#4a1d44]">
+                  {ciudadesDisponibles.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.ciudad === 'Valledupar' && (
+                <div className="bg-green-50 border border-green-100 p-5 rounded-3xl flex items-center gap-4 animate-in fade-in zoom-in duration-500">
+                  <div className="bg-green-500 p-2 rounded-full text-white"><Truck size={20} /></div>
+                  <div>
+                    <p className="text-sm font-black text-green-900 leading-none">¡Envío prioritario!</p>
+                    <p className="text-xs text-green-700 mt-1">Recibe tu pedido hoy mismo en Valledupar.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input required name="direccion" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none text-[#4a1d44]" placeholder="Dirección (Calle/Cra)" />
+                <input required name="barrio" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none text-[#4a1d44]" placeholder="Barrio" />
+              </div>
+              <input name="apartamento" onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none text-[#4a1d44]" placeholder="Apto, Torre o Casa (Opcional)" />
+            </div>
+
+            <button disabled={loading} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3">
+              {loading ? 'Procesando...' : <><Lock size={20} /> Proceder al Pago Seguro</>}
+            </button>
+            
+            {/* PASARELAS DE PAGO */}
+            <div className="pt-6 border-t border-gray-100 flex flex-wrap justify-center items-center gap-x-6 gap-y-4 opacity-70">
+                <img src="https://servicios.inm.gov.co/images/Boton_PSE.png" alt="PSE" className="h-8 w-auto grayscale hover:grayscale-0 transition" />
+                <img src="https://www.bancolombia.com/wcm/connect/www.bancolombia.com-26918/31244132-98d7-44e4-8884-64f20788acd3/thumbnail.png?MOD=AJPERES" alt="Bancolombia" className="h-6 w-auto grayscale hover:grayscale-0 transition" />
+                <img src="https://mimerkato.com/wp-content/uploads/2021/04/Nequi-Depositos-2.png" alt="Nequi" className="h-8 w-auto grayscale hover:grayscale-0 transition" />
+                <img src="https://app.redecom.co/396-medium_default/recarga-claro.jpg" alt="Daviplata" className="h-8 w-auto grayscale hover:grayscale-0 transition" />
+                <div className="flex items-center gap-2 text-[10px] font-bold text-[#4a1d44] uppercase tracking-tighter">
+                  <ShieldCheck size={16} className="text-green-600" /> Wompi Secure
+                </div>
+            </div>
+          </form>
+        </div>
+
+        {/* COLUMNA DERECHA: RESUMEN */}
+        <div className="space-y-8 lg:sticky lg:top-10 h-fit">
+          <h2 className="text-xl font-bold font-playfair uppercase tracking-widest opacity-60">Tu Pedido</h2>
+          <div className="bg-[#f2e1d9]/20 p-8 rounded-[2.5rem] border border-[#4a1d44]/5">
+            <div className="space-y-6 mb-8">
+                {cart.map((item: any) => {
+                  // Extraemos la imagen desde el array de la DB o fallback
+                  const imgPrincipal = Array.isArray(item.imagenes_urls) && item.imagenes_urls.length > 0 
+                    ? item.imagenes_urls[0] 
+                    : (item.imagen_url || "/placeholder.png");
+
+                  return (
+                    <div key={item.id} className="flex justify-between items-center gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-16 h-20 bg-white rounded-2xl overflow-hidden border border-[#4a1d44]/10 shrink-0 shadow-sm">
+                              <img 
+                                src={imgPrincipal} 
+                                alt={item.nombre}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/400x600?text=S/I"; }}
+                              />
+                              <div className="absolute top-0 right-0 bg-[#4a1d44] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-bl-xl font-bold z-10">
+                                {item.quantity}
+                              </div>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold leading-tight text-[#4a1d44]">{item.nombre}</p>
+                                <p className="text-[10px] font-black opacity-30 mt-1 uppercase tracking-widest flex items-center gap-1">
+                                  Uni: ${Number(item.precio).toLocaleString('es-CO')}
+                                  <span className="text-[8px]">COP</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-sm text-[#4a1d44] flex items-center gap-1 justify-end">
+                            ${(item.precio * item.quantity).toLocaleString('es-CO')}
+                            <span className="text-[9px] opacity-40 font-black">COP</span>
+                          </p>
+                        </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="pt-8 border-t-2 border-dashed border-[#4a1d44]/10">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-2">Total Final</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black text-[#4a1d44]">
+                  ${totalPrice.toLocaleString('es-CO')}
+                </span>
+                <span className="text-sm font-black opacity-30 tracking-[0.1em] mb-1">COP</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#4a1d44] text-white p-6 rounded-3xl flex items-start gap-4 shadow-lg shadow-[#4a1d44]/20">
+             <ShieldCheck className="shrink-0 mt-1 text-green-400" size={24} />
+             <p className="text-xs leading-relaxed opacity-80">
+                Tu transacción es segura. Utilizamos encriptación de grado bancario para proteger tus datos y asegurar que tu pedido llegue a tiempo.
+             </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="app/contacto/page.tsx">
+export default function ContactoPage() {
+  const numeroWhatsApp = "573118897646"; // Reemplaza con el número de tu hermana
+  const mensaje = encodeURIComponent("¡Hola! Me gustaría recibir información sobre la lencería.");
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-6">
+      <div className="max-w-xl w-full text-center bg-white p-12 rounded-3xl shadow-xl border border-brand-primary/20">
+        <h1 className="text-4xl font-bold text-brand-dark mb-6">¿Tienes dudas?</h1>
+        <p className="text-brand-dark/60 mb-10 leading-relaxed">
+          Estamos aquí para asesorarte con las tallas, modelos o cualquier detalle de tu pedido. 
+          Escríbenos directamente y te responderemos lo antes posible.
+        </p>
+        <a 
+          href={`https://wa.me/${numeroWhatsApp}?text=${mensaje}`}
+          target="_blank"
+          className="inline-block bg-[#25D366] text-white px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition shadow-lg"
+        >
+          Chatear por WhatsApp
+        </a>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/lib/admin.ts">
+import { supabase } from './supabase';
+
+export async function obtenerVentasAdmin() {
+  const { data, error } = await supabase
+    .from('ventas_realizadas')
+    .select(`
+      *,
+      items_pedido (
+        cantidad,
+        precio_unitario,
+        nombre_producto_snapshot
+      )
+    `)
+    .order('fecha', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+</file>
+
+<file path="app/lib/colombia.ts">
+export const COLOMBIA_COMPLETA: Record<string, string[]> = {
+  "Amazonas": ["Leticia", "Puerto Nariño"],
+  "Antioquia": ["Medellín", "Bello", "Itagüí", "Envigado", "Apartadó", "Rionegro", "Turbo", "Caucasia"],
+  "Arauca": ["Arauca", "Arauquita", "Saravena", "Tame"],
+  "Atlántico": ["Barranquilla", "Soledad", "Malambo", "Sabanalarga", "Puerto Colombia"],
+  "Bolívar": ["Cartagena", "Magangué", "Turbaco", "Arjona", "El Carmen de Bolívar"],
+  "Boyacá": ["Tunja", "Duitama", "Sogamoso", "Chiquinquirá", "Puerto Boyacá"],
+  "Caldas": ["Manizales", "La Dorada", "Riosucio", "Villamaría"],
+  "Caquetá": ["Florencia", "San Vicente del Caguán"],
+  "Casanare": ["Yopal", "Aguazul", "Paz de Ariporo"],
+  "Cauca": ["Popayán", "Santander de Quilichao", "Puerto Tejada"],
+  "Cesar": ["Valledupar", "Aguachica", "Codazzi", "Bosconia", "Curumaní", "El Paso", "La Paz", "Pueblo Bello", "San Alberto"],
+  "Chocó": ["Quibdó", "Istmina", "Condoto"],
+  "Córdoba": ["Montería", "Cereté", "Sahagún", "Lorica", "Montelíbano"],
+  "Cundinamarca": ["Soacha", "Chía", "Zipaquirá", "Facatativá", "Fusagasugá", "Madrid", "Funza", "Cajicá"],
+  "Guainía": ["Inírida"],
+  "Guaviare": ["San José del Guaviare"],
+  "Huila": ["Neiva", "Pitalito", "Garzón", "La Plata"],
+  "La Guajira": ["Riohacha", "Maicao", "Uribia", "Manaure", "San Juan del Cesar"],
+  "Magdalena": ["Santa Marta", "Ciénaga", "Fundación", "El Banco"],
+  "Meta": ["Villavicencio", "Acacías", "Granada", "Puerto López"],
+  "Nariño": ["Pasto", "Tumaco", "Ipiales"],
+  "Norte de Santander": ["Cúcuta", "Ocaña", "Villa del Rosario", "Los Patios", "Pamplona"],
+  "Putumayo": ["Mocoa", "Puerto Asís", "Orito"],
+  "Quindío": ["Armenia", "Calarcá", "La Tebaida", "Quimbaya"],
+  "Risaralda": ["Pereira", "Dosquebradas", "Santa Rosa de Cabal"],
+  "San Andrés": ["San Andrés", "Providencia"],
+  "Santander": ["Bucaramanga", "Floridablanca", "Girón", "Piedecuesta", "Barrancabermeja", "San Gil"],
+  "Sucre": ["Sincelejo", "Corozal", "San Marcos"],
+  "Tolima": ["Ibagué", "Espinal", "Chaparral", "Líbano"],
+  "Valle del Cauca": ["Cali", "Buenaventura", "Palmira", "Tuluá", "Buga", "Cartago", "Jamundí", "Yumbo"],
+  "Vaupés": ["Mitú"],
+  "Vichada": ["Puerto Carreño"]
+};
+</file>
+
+<file path="app/lib/supabase.ts">
+import { createBrowserClient } from '@supabase/ssr'
+
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+</file>
+
+<file path="app/login/page.tsx">
+"use client";
+
+import { useState, useEffect, Suspense } from 'react';
+import { supabase } from '@/app/lib/supabase';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { useCart } from '@/context/CartContext'; // 1. Importamos el hook del carrito
+
+function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
+  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { clearCart } = useCart(); // 2. Extraemos la función para limpiar
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (searchParams.get('verified') === 'true') {
+        setMensajeExito("¡Cuenta verificada con éxito! Ya puedes iniciar sesión.");
+        if (session) {
+          await supabase.auth.signOut();
+          clearCart(); // Limpiamos carrito si había una sesión vieja
+          router.refresh();
+        }
+      } 
+      else if (session) {
+        router.push('/');
+      }
+    };
+
+    checkUser();
+  }, [searchParams, router, clearCart]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // 3. Antes de intentar el nuevo login, nos aseguramos de limpiar lo que haya en el local
+      clearCart(); 
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast.success('¡Bienvenida de nuevo!');
+      
+      setTimeout(() => {
+        router.push('/');
+        router.refresh();
+      }, 500);
+
+    } catch (error: any) {
+      toast.error(error.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#fdf8f6] p-6">
+      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-xl shadow-[#4a1d44]/5 p-8 md:p-12 border border-[#4a1d44]/5">
+        
+        {mensajeExito && (
+          <div className="mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-500">
+            <CheckCircle2 className="text-green-600 shrink-0" size={20} />
+            <p className="text-green-800 text-xs font-bold leading-tight">
+              {mensajeExito}
+            </p>
+          </div>
+        )}
+
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-black font-playfair text-[#4a1d44] tracking-tight">Iniciar Sesión</h1>
+          <p className="text-sm text-[#4a1d44]/50 mt-2 font-medium">Gestiona tus pedidos y tu perfil</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]/40 ml-4">Correo Electrónico</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                required
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+                className="w-full bg-[#fdf8f6] border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#4a1d44]/10 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]/40 ml-4">Contraseña</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                required
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-[#fdf8f6] border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#4a1d44]/10 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <button 
+            disabled={loading}
+            className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-[#4a1d44]/20 hover:bg-[#6b2b62] transition-all active:scale-95 flex items-center justify-center gap-2 group"
+          >
+            {loading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              <>
+                Entrar a mi cuenta
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 pt-8 border-t border-gray-50 text-center">
+          <p className="text-sm text-[#4a1d44]/40">
+            ¿No tienes cuenta?{' '}
+            <Link href="/registro" className="text-[#4a1d44] font-bold hover:underline">
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6]">
+        <Loader2 className="animate-spin text-[#4a1d44]" size={40} />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
+  );
+}
+</file>
+
+<file path="app/productos/[id]/page.tsx">
+"use client";
+
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { supabase } from '@/app/lib/supabase';
+import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import toast from 'react-hot-toast';
+import ProductoCard from '@/components/ProductoCard';
+
+export default function ProductoDetallePage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { addToCart } = useCart();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [variantes, setVariantes] = useState<any[]>([]);
+  const [varianteActiva, setVarianteActiva] = useState<any>(null);
+  const [relacionados, setRelacionados] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentImg, setCurrentImg] = useState(0);
+
+  // Estado para los acordeones de información
+  const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
+
+  const toggleAcordeon = (seccion: string) => {
+    setAcordeonAbierto(prev => prev === seccion ? null : seccion);
+  };
+
+  useEffect(() => {
+    const fetchProductoYVariantes = async () => {
+      try {
+        const { data: productoPrincipal, error: errorPrincipal } = await supabase
+          .from('productos')
+          .select(`*, producto_colores ( colores (hex, nombre) )`)
+          .eq('id', id)
+          .single();
+
+        if (errorPrincipal || !productoPrincipal) {
+          toast.error("Producto no encontrado");
+          router.push('/productos');
+          return;
+        }
+
+        if (productoPrincipal.grupo_id) {
+          const { data: todasLasVariantes } = await supabase
+            .from('productos')
+            .select(`*, producto_colores ( colores (hex, nombre) )`)
+            .eq('grupo_id', productoPrincipal.grupo_id)
+            .eq('activo', true);
+          setVariantes(todasLasVariantes || [productoPrincipal]);
+        } else {
+          setVariantes([productoPrincipal]);
+        }
+
+        setVarianteActiva(productoPrincipal);
+
+        const { data: dataRelacionados } = await supabase
+          .from('productos')
+          .select(`*, producto_colores ( colores (hex, nombre) )`)
+          .eq('activo', true)
+          .neq('id', productoPrincipal.id)
+          .limit(12);
+
+        if (dataRelacionados) {
+          const tempGrupos: any = {};
+          dataRelacionados.forEach(item => {
+            const gid = item.grupo_id || `item-${item.id}`;
+            if (gid === productoPrincipal.grupo_id) return;
+            if (!tempGrupos[gid]) {
+              tempGrupos[gid] = { ...item, variantes: [item] };
+            } else {
+              tempGrupos[gid].variantes.push(item);
+            }
+          });
+          setRelacionados(Object.values(tempGrupos));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchProductoYVariantes();
+  }, [id, router]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollAmount = clientWidth * 0.8;
+      const scrollTo = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
+  if (loading || !varianteActiva) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="animate-spin text-[#4a1d44]" size={40} />
+    </div>
+  );
+
+  const imagenes = Array.isArray(varianteActiva.imagenes_urls)
+    ? varianteActiva.imagenes_urls
+    : [varianteActiva.imagen_url];
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 text-[#4a1d44]">
+      {/* Botón Volver */}
+      <div className="-mt-2 mb-6 max-w-5xl mx-auto">
+        <button onClick={() => router.back()} className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase tracking-[0.2em] py-1">
+          <ArrowLeft size={14} /> Volver al catálogo
+        </button>
+      </div>
+
+      {/* CONTENEDOR EN DOS COLUMNAS CON MAX-W Y GAP REDUCIDO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-12 max-w-5xl mx-auto items-start">
+
+        {/* COLUMNA IZQUIERDA: GALERÍA Y TÍTULO EN MÓVIL (Alineado a la Izquierda) */}
+        <div className="space-y-4 w-full max-w-[360px] md:max-w-[420px] mx-auto md:mx-0 flex flex-col">
+
+          {/* Título visible SOLO en móvil (encima de la foto, alineado a la izquierda) */}
+          <div className="md:hidden text-left mb-1.5 px-1">
+            <span className="text-xs font-black uppercase tracking-[0.2em] opacity-40 block mb-1">
+              {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
+            </span>
+            <h1 className="text-3xl font-black font-playfair leading-tight text-[#4a1d44]">
+              {varianteActiva.nombre}
+            </h1>
+          </div>
+
+          <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden bg-[#fdf8f6] shadow-sm border border-[#4a1d44]/5 shrink-0">
+            {imagenes.map((img: string, index: number) => (
+              <img
+                key={`${varianteActiva.id}-${index}`}
+                src={img}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
+                alt={varianteActiva.nombre}
+              />
+            ))}
+            <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-1.5 z-10">
+              {imagenes.map((_: string, i: number) => (
+                <div key={i} className={`h-[2px] rounded-full transition-all duration-500 ${i === currentImg ? 'w-8 bg-white' : 'w-3 bg-white/40'}`} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto py-2 px-1 scrollbar-hide items-center">
+            {imagenes.map((img: string, i: number) => (
+              <button key={i} onClick={() => setCurrentImg(i)} className={`relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${i === currentImg ? 'border-[#4a1d44] scale-105 shadow-md' : 'border-transparent opacity-40 hover:opacity-100'}`}>
+                <img src={img} className="w-full h-full object-cover" alt="miniatura" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* COLUMNA DERECHA: INFORMACIÓN (Todo alineado a la izquierda en móvil) */}
+        <div className="flex flex-col gap-6 md:sticky md:top-28 w-full max-w-[420px] mx-auto md:mx-0">
+
+          <div className="space-y-2">
+            {/* Título y categoría originales: Ocultos en móvil */}
+            <div className="hidden md:block">
+              <span className="text-sm font-black uppercase tracking-[0.2em] opacity-40 block mb-2">
+                {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
+              </span>
+              <h1 className="text-5xl font-black font-playfair leading-tight text-[#4a1d44] mb-4">
+                {varianteActiva.nombre}
+              </h1>
+            </div>
+
+            {/* Precio: Visible siempre, alineado a la izquierda en móvil */}
+            <p className="text-2xl md:text-2xl font-black opacity-90 text-left">
+              ${Number(varianteActiva.precio).toLocaleString('es-CO')} COP
+            </p>
+          </div>
+
+          {/* Descripción: Ahora movida arriba, debajo del precio */}
+          <div className="text-left space-y-3">
+            <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50">Descripción</h3>
+            <p className="text-base leading-relaxed text-[#4a1d44]/80">
+              {varianteActiva.descripcion || "Diseño exclusivo de Soft Lingerie. Confeccionado con materiales premium para garantizar suavidad, comodidad y elegancia en todo momento."}
+            </p>
+          </div>
+
+          {/* Selector de colores: Ahora movido abajo, después de la descripción */}
+          {variantes.length > 1 && (
+            <div className="py-5 border-y border-[#4a1d44]/10 flex flex-col items-start">
+              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Colores Disponibles</h3>
+              <div className="flex gap-3">
+                {variantes.map((v) => {
+                  const color = v.producto_colores?.[0]?.colores;
+                  const isSelected = varianteActiva.id === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => { setVarianteActiva(v); setCurrentImg(0); }}
+                      className={`relative w-9 h-9 rounded-full border border-black/10 transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110' : 'hover:scale-110'}`}
+                      style={{ backgroundColor: color?.hex || '#ccc' }}
+                      title={color?.nombre}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Checkmarks de Compra y Envíos: Alineados a la izquierda en una sola línea (flex-row) */}
+          <div className="flex flex-row gap-6 pt-2 justify-start items-center">
+            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60">
+              <Check size={14} className="text-[#4a1d44]" /> Compra Segura
+            </div>
+            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60">
+              <Check size={14} className="text-[#4a1d44]" /> Envíos Nacionales
+            </div>
+          </div>
+
+          <button
+            onClick={() => { addToCart(varianteActiva); toast.success('Añadido al carrito'); }}
+            className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-2 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all"
+          >
+            <ShoppingCart size={18} /> AÑADIR AL CARRITO
+          </button>
+
+          {/* Acordeones y Pagos */}
+          <div className="mt-4 border border-[#4a1d44]/10 rounded-2xl overflow-hidden bg-[#fdf8f6]/50">
+            {/* Acordeón 1: Cuidado */}
+            <div className="border-b border-[#4a1d44]/10">
+              <button
+                onClick={() => toggleAcordeon('cuidado')}
+                className="w-full flex justify-between items-center p-4 text-xs font-bold uppercase tracking-widest hover:bg-[#4a1d44]/5 transition-colors"
+              >
+                <div className="flex items-center gap-3"><Heart size={16} className="opacity-60" /> Cuidado de la prenda</div>
+                <ChevronDown size={16} className={`transition-transform duration-300 ${acordeonAbierto === 'cuidado' ? 'rotate-180' : ''}`} />
+              </button>
+              {acordeonAbierto === 'cuidado' && (
+                <div className="p-4 pt-0 text-sm text-[#4a1d44]/70 leading-relaxed text-left">
+                  Recomendamos lavar a mano con jabón suave y agua fría. No retorcer, no usar blanqueador y secar a la sombra para mantener intacta la calidad de los encajes y las telas.
+                </div>
+              )}
+            </div>
+
+            {/* Acordeón 2: Envíos */}
+            <div className="border-b border-[#4a1d44]/10">
+              <button
+                onClick={() => toggleAcordeon('envios')}
+                className="w-full flex justify-between items-center p-4 text-xs font-bold uppercase tracking-widest hover:bg-[#4a1d44]/5 transition-colors"
+              >
+                <div className="flex items-center gap-3"><Truck size={16} className="opacity-60" /> Envíos y Discreción</div>
+                <ChevronDown size={16} className={`transition-transform duration-300 ${acordeonAbierto === 'envios' ? 'rotate-180' : ''}`} />
+              </button>
+              {acordeonAbierto === 'envios' && (
+                <div className="p-4 pt-0 text-sm text-[#4a1d44]/70 leading-relaxed text-left">
+                  Realizamos envíos a toda Colombia. Todos nuestros paquetes son 100% discretos, sin logos ni descripciones externas de los productos en el empaque.
+                </div>
+              )}
+            </div>
+
+            {/* Acordeón 3: Garantía */}
+            <div>
+              <button
+                onClick={() => toggleAcordeon('garantia')}
+                className="w-full flex justify-between items-center p-4 text-xs font-bold uppercase tracking-widest hover:bg-[#4a1d44]/5 transition-colors"
+              >
+                <div className="flex items-center gap-3"><ShieldCheck size={16} className="opacity-60" /> Cambios y Devoluciones</div>
+                <ChevronDown size={16} className={`transition-transform duration-300 ${acordeonAbierto === 'garantia' ? 'rotate-180' : ''}`} />
+              </button>
+              {acordeonAbierto === 'garantia' && (
+                <div className="p-4 pt-0 text-sm text-[#4a1d44]/70 leading-relaxed text-left">
+                  Por razones estrictas de higiene, la ropa interior no tiene cambio ni devolución, a excepción de defectos de fábrica comprobables al momento de recibir.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 mt-2 opacity-60">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Pago Seguro y Protegido</span>
+            <div className="flex gap-4">
+              <span className="text-xs font-black italic">Wompi</span>
+              <span className="text-xs font-black italic">PSE</span>
+              <span className="text-xs font-black italic">Nequi</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* SECCIÓN RELACIONADOS */}
+      {relacionados.length > 0 && (
+        <div className="mt-20 md:mt-32 pt-10 border-t border-[#4a1d44]/10 w-full max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-widest opacity-50">También te puede gustar</h3>
+            <div className="flex gap-2">
+              <button onClick={() => scroll('left')} className="p-2 bg-[#fdf8f6] hover:bg-[#4a1d44]/10 rounded-full transition"><ChevronLeft size={20} /></button>
+              <button onClick={() => scroll('right')} className="p-2 bg-[#fdf8f6] hover:bg-[#4a1d44]/10 rounded-full transition"><ChevronRight size={20} /></button>
+            </div>
+          </div>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-6 snap-x items-stretch"
+          >
+            {relacionados.map((prod) => (
+              <div
+                key={prod.id}
+                className="min-w-[200px] max-w-[200px] md:min-w-[250px] md:max-w-[250px] snap-start shrink-0 flex"
+              >
+                <div className="transform md:scale-95 origin-top transition-transform hover:scale-100 w-full h-full [&>div]:h-full">
+                  <ProductoCard producto={prod} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </main>
+  );
+}
+</file>
+
+<file path="app/productos/page.tsx">
+"use client";
+
+import { useEffect, useState, useMemo } from 'react';
+import { supabase } from '@/app/lib/supabase';
+import { Loader2, Heart, Search, ChevronDown, Palette } from 'lucide-react';
+import ProductoCard from '@/components/ProductoCard';
+
+export default function CatalogoPage() {
+  const [productos, setProductos] = useState<any[]>([]);
+  const [coloresFiltro, setColoresFiltro] = useState<any[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
+
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
+  const [colorSeleccionado, setColorSeleccionado] = useState('Todos');
+  const [busqueda, setBusqueda] = useState('');
+
+  const [loading, setLoading] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: prodData, error: prodError } = await supabase
+          .from('productos')
+          .select(`
+            *,
+            producto_colores!left (
+              colores (nombre, hex)
+            )
+          `)
+          .eq('activo', true);
+
+        if (prodError) throw prodError;
+
+        if (prodData) {
+          const tempGrupos: any = {};
+          const tempCats = new Set<string>();
+
+          prodData.forEach(item => {
+            const catNombre = typeof item.categoria === 'object' ? item.categoria?.nombre : item.categoria;
+            if (catNombre) tempCats.add(String(catNombre).trim());
+
+            const gid = item.grupo_id || `item-${item.id}`;
+            if (!tempGrupos[gid]) {
+              tempGrupos[gid] = { ...item, variantes: [item] };
+            } else {
+              tempGrupos[gid].variantes.push(item);
+            }
+          });
+
+          setProductos(Object.values(tempGrupos));
+          setCategorias(Array.from(tempCats));
+        }
+
+        const { data: colData } = await supabase.from('colores').select('nombre, hex');
+        if (colData) setColoresFiltro(colData);
+
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const productosFiltrados = useMemo(() => {
+    const query = busqueda.toLowerCase().trim();
+
+    return productos.filter(p => {
+      // Obtener nombre de categoría para buscar en él también
+      const catProd = typeof p.categoria === 'object' ? p.categoria?.nombre : p.categoria;
+      const catString = String(catProd || "").toLowerCase();
+      const nombreString = (p.nombre || "").toLowerCase();
+
+      // 1. Filtro de Búsqueda (Busca en nombre O en categoría)
+      const matchSearch = query === "" ||
+        nombreString.includes(query) ||
+        catString.includes(query);
+
+      // 2. Filtro de Categoría (Dropdown)
+      const matchCat = categoriaSeleccionada === 'Todas' ||
+        String(catProd).trim() === categoriaSeleccionada;
+
+      // 3. Filtro de Color
+      const matchColor = colorSeleccionado === 'Todos' || p.variantes.some((v: any) =>
+        v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorSeleccionado)
+      );
+
+      return matchSearch && matchCat && matchColor;
+    });
+  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado]);
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <Loader2 className="animate-spin text-[#4a1d44] mb-4" size={32} />
+    </div>
+  );
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 text-[#4a1d44] min-h-screen">
+
+      <header className="text-center mb-10 md:mb-16 flex flex-col items-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a1d44]/30 mb-3">
+          Descubre
+        </span>
+
+        <h1 className="group cursor-default text-3xl md:text-5xl font-black font-playfair uppercase text-[#4a1d44] leading-none transition-all duration-700 ease-out tracking-[0.05em] hover:tracking-[0.25em]">
+          Nuestro Catálogo
+        </h1>
+
+        <div className="h-[1px] w-10 bg-[#4a1d44]/20 mt-6 transition-all duration-700 group-hover:w-28 group-hover:bg-[#4a1d44]/40" />
+      </header>
+
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative pb-16">
+
+        {/* BARRA LATERAL Izquierda (Filtros) */}
+        <aside className="w-full lg:w-[280px] flex-shrink-0 lg:sticky lg:top-24 z-40">
+          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(74,29,68,0.06)] border border-[#4a1d44]/5 p-6 md:p-8 backdrop-blur-xl">
+            <h2 className="text-[#361531] font-black uppercase tracking-[0.2em] text-xs mb-6 flex items-center gap-2">
+              <Search size={14} className="opacity-50" /> Filtrar
+            </h2>
+
+            {/* Búsqueda */}
+            <div className="mb-6 relative">
+              <input
+                type="text"
+                placeholder="Buscar prenda..."
+                className="w-full bg-[#faf8f7] border border-[#4a1d44]/5 py-3.5 pl-4 pr-10 rounded-2xl outline-none focus:border-[#4a1d44]/20 focus:bg-white transition-all text-sm shadow-inner"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+              {busqueda && (
+                <button onClick={() => setBusqueda('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-sm text-black/40 hover:text-black">
+                  <span className="sr-only">Borrar</span>
+                  &times;
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              {/* Categorías (Vertical) */}
+              <div>
+                <button
+                  onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                  className="w-full flex items-center justify-between pb-3 border-b border-[#4a1d44]/10 text-[10px] font-bold uppercase tracking-[0.15em] text-[#4a1d44]/70 hover:text-[#4a1d44] transition-colors"
+                >
+                  <span className="truncate">Categoría</span>
+                  <ChevronDown size={14} className={`transition-transform duration-300 ${isFiltersOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isFiltersOpen && (
+                  <div className="pt-3 flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2">
+                    <button
+                      onClick={() => setCategoriaSeleccionada('Todas')}
+                      className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${categoriaSeleccionada === 'Todas' ? 'bg-[#f2e1d9]/40 text-[#4a1d44] font-bold' : 'hover:bg-gray-50 text-[#4a1d44]/60'
+                        }`}
+                    >
+                      Todas
+                    </button>
+                    {categorias.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setCategoriaSeleccionada(cat)}
+                        className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${categoriaSeleccionada === cat ? 'bg-[#f2e1d9]/40 text-[#4a1d44] font-bold' : 'hover:bg-gray-50 text-[#4a1d44]/60'
+                          }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Colores (Vertical) */}
+              <div>
+                <button
+                  onClick={() => setIsColorFilterOpen(!isColorFilterOpen)}
+                  className="w-full flex items-center justify-between pb-3 border-b border-[#4a1d44]/10 text-[10px] font-bold uppercase tracking-[0.15em] text-[#4a1d44]/70 hover:text-[#4a1d44] transition-colors"
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <Palette size={12} /> Color
+                  </span>
+                  <ChevronDown size={14} className={`transition-transform duration-300 ${isColorFilterOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isColorFilterOpen && (
+                  <div className="pt-3 flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 max-h-48 overflow-y-auto pr-1">
+                    <button
+                      onClick={() => setColorSeleccionado('Todos')}
+                      className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${colorSeleccionado === 'Todos' ? 'bg-[#f2e1d9]/40 text-[#4a1d44] font-bold' : 'hover:bg-gray-50 text-[#4a1d44]/60'
+                        }`}
+                    >
+                      Todos
+                    </button>
+                    {coloresFiltro.map((col) => (
+                      <button
+                        key={col.nombre}
+                        onClick={() => setColorSeleccionado(col.nombre)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${colorSeleccionado === col.nombre ? 'bg-[#f2e1d9]/40 text-[#4a1d44] font-bold' : 'hover:bg-gray-50 text-[#4a1d44]/60'
+                          }`}
+                      >
+                        <div className="w-3 h-3 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: col.hex }} />
+                        {col.nombre}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(busqueda !== '' || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos') && (
+              <button
+                onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); }}
+                className="mt-8 w-full py-3 rounded-xl border border-red-100 text-red-400 text-[9px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                Limpiar Filtros
+              </button>
+            )}
+          </div>
+        </aside>
+
+        {/* CONTENIDO Principal (Grid) */}
+        <div className="flex-1 w-full">
+          {/* Active Filters Display */}
+          <div className="hidden lg:flex flex-wrap items-center gap-2 mb-6 min-h-[32px]">
+            {categoriaSeleccionada !== 'Todas' && (
+              <span className="px-3 py-1.5 bg-white border border-[#4a1d44]/10 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-2">
+                Categoría: {categoriaSeleccionada}
+                <button onClick={() => setCategoriaSeleccionada('Todas')} className="opacity-50 hover:opacity-100">&times;</button>
+              </span>
+            )}
+            {colorSeleccionado !== 'Todos' && (
+              <span className="px-3 py-1.5 bg-white border border-[#4a1d44]/10 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-2">
+                Color: {colorSeleccionado}
+                <button onClick={() => setColorSeleccionado('Todos')} className="opacity-50 hover:opacity-100">&times;</button>
+              </span>
+            )}
+            <span className="text-xs font-medium opacity-40 ml-auto">
+              {productosFiltrados.length} {productosFiltrados.length === 1 ? 'resultado' : 'resultados'}
+            </span>
+          </div>
+
+          {/* GRID */}
+          {productosFiltrados.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white/50 backdrop-blur-sm rounded-[3rem] border border-dashed border-[#4a1d44]/10">
+              <Heart size={48} strokeWidth={1} className="opacity-20 text-[#4a1d44] mb-4" />
+              <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-[#4a1d44]/50">No hay piezas que coincidan</p>
+              <button
+                onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); }}
+                className="mt-6 px-6 py-2.5 rounded-full bg-white shadow-sm border border-[#4a1d44]/5 text-xs font-bold hover:bg-[#f2e1d9] transition-colors"
+              >
+                Ver todo el catálogo
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 lg:gap-x-8 lg:gap-y-12">
+              {productosFiltrados.map((prod) => (
+                <ProductoCard key={prod.id} producto={prod} />
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+    </main>
+  );
+}
+</file>
+
+<file path="app/registro/page.tsx">
+"use client";
+
+import { useState } from 'react';
+import { supabase } from '@/app/lib/supabase'; 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Mail, Lock, User, Loader2, Phone } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function RegisterPage() {
+  const router = useRouter();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: nombre,
+          },
+          // CAMBIO AQUÍ: Redirigimos al login con el parámetro de verificado
+          emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('perfiles')
+          .insert([{
+            id: authData.user.id,
+            nombre_completo: nombre,
+            email: email,
+            telefono: telefono,
+            es_admin: false 
+          }]);
+        
+        if (profileError) {
+          console.error("Error al crear perfil:", profileError);
+          throw new Error("El usuario se creó, pero hubo un error al guardar el perfil.");
+        }
+      }
+
+      toast.success('¡Revisa tu correo para verificar tu cuenta!', {
+        duration: 5000,
+      });
+      
+      setTimeout(() => {
+        router.push('/verificar');
+      }, 1500);
+
+    } catch (error: any) {
+      toast.error(error.message || 'Hubo un error al registrarse');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-[#fdf8f6]">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-8 md:p-10 border border-[#4a1d44]/5">
+        
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-black font-playfair text-[#4a1d44] tracking-tight">Crear Cuenta</h2>
+          <p className="text-[#4a1d44]/60 mt-2 font-medium">Únete a la comunidad de Soft Lingerie</p>
+        </div>
+
+        <form className="space-y-5" onSubmit={handleRegister}>
+          <div className="space-y-1">
+            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Nombre Completo</label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                type="text" 
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                placeholder="Tu nombre completo"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Correo Electrónico</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                placeholder="ejemplo@correo.com"
+                required
+                maxLength={254}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Teléfono / WhatsApp</label>
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                type="tel" 
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                placeholder="300 123 4567"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Contraseña</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold text-sm hover:bg-[#6b2b62] transition-all flex justify-center items-center gap-2 mt-4 shadow-lg shadow-[#4a1d44]/20 active:scale-95 disabled:opacity-70"
+          >
+            {loading ? <Loader2 className="animate-spin" size={20} /> : 'Registrarme'}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center text-sm text-[#4a1d44]/60 pt-6 border-t border-[#4a1d44]/5">
+          ¿Ya tienes cuenta? <Link href="/login" className="text-[#4a1d44] font-black hover:underline">Inicia sesión</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/verificar/page.tsx">
+import { MailCheck } from 'lucide-react';
+import Link from 'next/link';
+
+export default function VerifyPage() {
+  return (
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-[#fdf8f6]">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-10 text-center border border-[#4a1d44]/5">
+        
+        <div className="flex justify-center mb-8">
+          <div className="bg-[#f2e1d9] p-5 rounded-full shadow-inner">
+            <MailCheck size={56} className="text-[#4a1d44]" />
+          </div>
+        </div>
+        
+        <h2 className="text-3xl font-black font-playfair text-[#4a1d44] tracking-tight mb-4">
+          ¡Casi listo!
+        </h2>
+        
+        <p className="text-[#4a1d44]/70 mb-8 leading-relaxed font-medium">
+          Hemos enviado un enlace de confirmación a tu correo electrónico. 
+          Por favor, verifícalo para activar tu cuenta en <strong className="font-black">Soft Lingerie</strong>.
+        </p>
+        
+        <div className="space-y-6 pt-6 border-t border-[#4a1d44]/5">
+          <p className="text-xs text-[#4a1d44]/50 font-medium">
+            ¿No recibiste nada? Revisa tu carpeta de spam o correo no deseado.
+          </p>
+          
+          <Link 
+            href="/login" 
+            className="inline-block bg-[#4a1d44] text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg hover:bg-[#6b2b62] transition-all active:scale-95"
+          >
+            Ir a Iniciar Sesión
+          </Link>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="components/AdminButton.tsx">
+"use client";
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/app/lib/supabase';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
+
+export default function AdminButton() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Función que va a la tabla 'perfiles' a ver si tiene el rol de admin
+    const verificarAdmin = async (userId: string) => {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .select('es_admin')
+        .eq('id', userId)
+        .single();
+        
+      if (data && data.es_admin) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    // 1. Revisar si ya hay alguien logueado cuando se recarga la página
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) verificarAdmin(session.user.id);
+    });
+
+    // 2. MAGIA: Escuchar en tiempo real cuando alguien hace Login o Logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        verificarAdmin(session.user.id);
+      } else {
+        setIsAdmin(false); // Si cierra sesión, escondemos el botón
+      }
+    });
+
+    // Limpiar el escuchador cuando desmontamos el componente
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Si no es admin, devolvemos 'null' para que el botón sea invisible
+  if (!isAdmin) return null; 
+
+  // Si sí es admin, mostramos el botón con el diseño de Soft Lingerie
+  return (
+    <Link 
+      href="/admin" 
+      className="flex items-center gap-2 bg-[#fdf8f6] text-[#4a1d44] border border-[#4a1d44]/20 px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#4a1d44] hover:text-white transition-all shadow-sm"
+    >
+      <Settings size={16} />
+      Panel Admin
+    </Link>
+  );
+}
+</file>
+
+<file path="components/BotonWompi.tsx">
+"use client";
+
+import { useEffect, useState } from 'react';
+import { CreditCard, Loader2 } from 'lucide-react';
+
+declare global {
+    interface Window {
+        WidgetCheckout: any;
+    }
+}
+
+interface BotonWompiProps {
+    montoTotal: number;
+    referenciaPedido: string;
+    onExito: (transaccion: any) => void;
+}
+
+export default function BotonWompi({ montoTotal, referenciaPedido, onExito }: BotonWompiProps) {
+    const [cargando, setCargando] = useState(true);
+
+    useEffect(() => {
+        if (window.WidgetCheckout) {
+            setCargando(false);
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = "https://checkout.wompi.co/widget.js";
+        script.async = true;
+
+        script.onload = () => {
+            console.log("✅ Wompi cargado manualmente");
+            setCargando(false);
+        };
+
+        script.onerror = () => {
+            console.error("❌ Error cargando el script de Wompi");
+        };
+
+        document.body.appendChild(script);
+
+        return () => {
+            if (document.body.contains(script)) {
+                // Opcional: limpiar script
+            }
+        };
+    }, []);
+
+    const abrirWidgetWompi = () => {
+        if (typeof window !== 'undefined' && window.WidgetCheckout) {
+
+            // 1. Validamos que el monto sea un número válido y mayor a 0
+            if (!montoTotal || isNaN(montoTotal) || montoTotal <= 0) {
+                console.error("❌ Error: El monto total es inválido:", montoTotal);
+                alert("Hubo un error calculando el total a pagar.");
+                return;
+            }
+
+            const montoEnCentavos = Math.round(montoTotal * 100);
+            const referenciaUnica = `${referenciaPedido}_${Date.now()}`;
+
+            // 2. Imprimimos en consola lo que le vamos a enviar a Wompi
+            console.log("📤 Enviando a Wompi:", {
+                montoOriginal: montoTotal,
+                montoEnCentavos: montoEnCentavos,
+                referencia: referenciaUnica
+            });
+
+            const checkout = new window.WidgetCheckout({
+                currency: 'COP',
+                amountInCents: montoEnCentavos,
+                reference: referenciaUnica,
+                // 🔥 AQUÍ ESTABA EL ERROR: Cambiamos el 1 por la l minúscula
+                publicKey: 'pub_test_ZeQynhklPQ2b3TqOjxFeT2uhKvwPNnv5',
+            });
+
+            checkout.open((resultado: any) => {
+                if (resultado.transaction && resultado.transaction.status === 'APPROVED') {
+                    onExito(resultado.transaction);
+                }
+            });
+        } else {
+            alert("La pasarela aún no está lista.");
+        }
+    };
+
+    return (
+        <button
+            onClick={abrirWidgetWompi}
+            disabled={cargando}
+            type="button"
+            className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-4 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all uppercase disabled:opacity-50"
+        >
+            {cargando ? (
+                <><Loader2 className="animate-spin" size={18} /> Configurando pago...</>
+            ) : (
+                <><CreditCard size={18} /> PAGAR PEDIDO</>
+            )}
+        </button>
+    );
+}
+</file>
+
+<file path="components/DiscountModal.tsx">
+"use client";
+
+import { useState, useEffect } from 'react';
+import { X, Gift, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+
+export default function DiscountModal() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    // Verificar si ya se mostró o si el usuario ya está logueado
+    const hasSeenModal = localStorage.getItem('hasSeenDiscountModal');
+    
+    if (!hasSeenModal) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 3000); // Aparece a los 3 segundos
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const closeModal = () => {
+    setIsOpen(false);
+    localStorage.setItem('hasSeenDiscountModal', 'true');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl relative animate-in fade-in zoom-in duration-300">
+        
+        <button onClick={closeModal} className="absolute top-4 right-4 text-brand-dark/40 hover:text-brand-dark transition">
+          <X size={24} />
+        </button>
+
+        <div className="flex flex-col md:flex-row">
+          {/* Lado de la imagen/color */}
+          <div className="bg-[#4a1d44] md:w-1/3 flex items-center justify-center p-8">
+            <Gift size={60} className="text-white animate-bounce" />
+          </div>
+
+          {/* Contenido */}
+          <div className="p-8 md:w-2/3">
+            <h2 className="text-2xl font-bold text-brand-dark mb-2">¡Bienvenida a Soft!</h2>
+            <p className="text-brand-dark/60 text-sm mb-6">
+              Regístrate hoy y obtén un <span className="font-bold text-brand-secondary text-lg">10% OFF</span> en tu primera compra de lencería.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <Link 
+                href="/registro" 
+                onClick={closeModal}
+                className="bg-brand-dark text-white text-center py-3 rounded-xl font-bold hover:bg-brand-secondary transition flex items-center justify-center gap-2"
+              >
+                Crear mi cuenta <ArrowRight size={18} />
+              </Link>
+              <button 
+                onClick={closeModal}
+                className="text-xs text-brand-dark/40 hover:underline"
+              >
+                No gracias, prefiero pagar precio completo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="components/Navbar.tsx">
+"use client";
+
+import { useEffect, useState } from 'react';
+import LinkComponent from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { ShoppingCart, User, LogOut, Loader2, Menu, X } from 'lucide-react';
+import { supabase } from '@/app/lib/supabase';
+import { useCart } from '@/context/CartContext';
+import AdminButton from './AdminButton'; 
+
+export default function Navbar() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const { totalItems } = useCart(); 
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Cerrar el menú si cambiamos de página
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  // Scroll Inteligente
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsVisible(false);
+        setIsMenuOpen(false); // También cerramos el menú si el usuario scrollea
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+  // Manejo de Sesión
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+    getSession();
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
+
+  const NavLink = ({ href, children }: { href: string, children: React.ReactNode }) => {
+    const active = pathname === href;
+    return (
+      <LinkComponent href={href} className="relative py-2 px-1">
+        <span className={`
+          block transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase font-bold text-[14px] md:text-[15px]
+          ${active 
+            ? 'text-[#4a1d44] tracking-[0.15em] opacity-100' 
+            : 'text-[#4a1d44] opacity-30 hover:opacity-100 hover:tracking-[0.1em] tracking-normal'
+          }
+        `}>
+          {children}
+        </span>
+        <span className={`
+          absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#4a1d44] rounded-full 
+          transition-all duration-700 ease-out
+          ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
+        `}></span>
+      </LinkComponent>
+    );
+  };
+
+  return (
+    <>
+      {/* OVERLAY: Capa para cerrar el menú al tocar fuera */}
+      <div 
+        className={`fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[90] transition-opacity duration-500 md:hidden ${
+          isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsMenuOpen(false)}
+      />
+
+      <nav className={`fixed top-0 left-0 right-0 z-[100] bg-white/60 backdrop-blur-2xl transition-all duration-700 ease-in-out ${
+        isVisible ? "translate-y-0 shadow-sm" : "-translate-y-full"
+      }`}>
+        <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex justify-between items-center relative z-[101]">
+          
+          {/* LOGO */}
+          <div className="flex items-center gap-4">
+            <button 
+              className="md:hidden text-[#4a1d44] p-1 active:scale-90 transition-transform" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            
+            <LinkComponent href="/" className="flex flex-col group cursor-pointer">
+              <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out tracking-tight group-hover:tracking-[0.05em]">
+                Soft
+              </span>
+              <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out opacity-80 tracking-widest group-hover:tracking-[0.35em]">
+                Lingerie
+              </span>
+            </LinkComponent>
+          </div>
+
+          {/* NAVEGACIÓN PC */}
+          <div className="hidden md:flex items-center gap-10">
+            <NavLink href="/">Inicio</NavLink>
+            <NavLink href="/productos">Catálogo</NavLink>
+            <NavLink href="/contacto">Contacto</NavLink>
+          </div>
+
+          {/* BOTONES DERECHA */}
+          <div className="flex gap-4 md:gap-6 items-center">
+            <div className="hidden sm:block">
+              {!loading && <AdminButton />}
+            </div>
+
+            <div className="flex items-center gap-3">
+              {!loading && (
+                user ? (
+                  <button onClick={handleLogout} className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
+                    <LogOut size={20} />
+                  </button>
+                ) : (
+                  <LinkComponent href="/login" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
+                    <User size={22} />
+                  </LinkComponent>
+                )
+              )}
+              
+              <LinkComponent href="/carrito" className="relative group">
+                <div className="bg-[#4a1d44] text-white p-2.5 rounded-full shadow-lg group-hover:scale-105 transition-all duration-500">
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-white text-[#4a1d44] text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-[#4a1d44]">
+                    {totalItems}
+                  </span>
+                )}
+              </LinkComponent>
+            </div>
+          </div>
+        </div>
+
+        {/* MENÚ MÓVIL */}
+        <div className={`md:hidden overflow-hidden transition-all duration-1000 ease-in-out bg-white/95 backdrop-blur-md relative z-[101] ${
+          isMenuOpen ? "max-h-screen opacity-100 border-b border-[#4a1d44]/5" : "max-h-0 opacity-0"
+        }`}>
+          <div className="p-10 flex flex-col items-center gap-6">
+            <LinkComponent href="/" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Inicio</LinkComponent>
+            <LinkComponent href="/productos" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Catálogo</LinkComponent>
+            <LinkComponent href="/contacto" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase pb-4 w-full text-center border-b border-[#4a1d44]/5">Contacto</LinkComponent>
+            <div className="pt-2">
+              {!loading && <AdminButton />}
+            </div>
+          </div>
+        </div>
+      </nav>
+    </>
+  );
+}
+</file>
+
+<file path="components/ProductoCard.tsx">
+"use client";
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import toast from 'react-hot-toast';
+
+export default function ProductoCard({ producto }: { producto: any }) {
+  const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
+  const [currentImg, setCurrentImg] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (producto.variantes) {
+      setVarianteActiva(producto.variantes[0]);
+    } else {
+      setVarianteActiva(producto);
+    }
+    setCurrentImg(0);
+  }, [producto]);
+
+  const obtenerListaDeFotos = () => {
+    if (Array.isArray(varianteActiva.imagenes_urls) && varianteActiva.imagenes_urls.length > 0) {
+      return varianteActiva.imagenes_urls;
+    }
+    return varianteActiva.imagen_url ? [varianteActiva.imagen_url] : [];
+  };
+
+  const imagenes = obtenerListaDeFotos();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(varianteActiva);
+    toast.success(`¡${varianteActiva.nombre} añadido!`);
+  };
+
+  const cambiarVariante = (e: React.MouseEvent, nuevaVariante: any) => {
+    e.preventDefault();
+    setVarianteActiva(nuevaVariante);
+    setCurrentImg(0);
+  };
+
+  return (
+    <Link href={`/productos/${varianteActiva.id}`} className="block h-full">
+      <div className="group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5">
+
+        {/* Contenedor de Imagen */}
+        <div className="relative w-full pt-[125%] overflow-hidden bg-[#fdf8f6] flex-shrink-0">
+
+          {/* Tag de Categoría Flotante */}
+          <div className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-black/5" suppressHydrationWarning>
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]">
+              {mounted ? (typeof varianteActiva.categoria === 'object' ? varianteActiva.categoria.nombre : (varianteActiva.categoria || 'Lencería')) : 'Lencería'}
+            </span>
+          </div>
+
+          {imagenes.length > 0 ? (
+            <>
+              {imagenes.map((img: string, index: number) => (
+                <img
+                  key={`${varianteActiva.id}-${index}`}
+                  src={img}
+                  alt={`${varianteActiva.nombre} - ${index}`}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'
+                    }`}
+                />
+              ))}
+
+              {imagenes.length > 1 && (
+                <>
+                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-2 z-30 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                    <button onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev - 1 + imagenes.length) % imagenes.length); }} className="p-1.5 bg-white/90 backdrop-blur-md rounded-full text-[#4a1d44] shadow-lg active:scale-90">
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev + 1) % imagenes.length); }} className="p-1.5 bg-white/90 backdrop-blur-md rounded-full text-[#4a1d44] shadow-lg active:scale-90">
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 z-30">
+                    {imagenes.map((_: string, index: number) => (
+                      <div key={index} className={`h-[2px] rounded-full transition-all duration-700 ${index === currentImg ? 'w-6 bg-white' : 'w-2 bg-white/40'}`} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full opacity-20 absolute inset-0">
+              <ImageIcon size={40} />
+            </div>
+          )}
+        </div>
+
+        {/* Información del Producto */}
+        <div className="p-4 md:p-6 text-center flex-grow flex flex-col justify-between bg-white relative z-10 pt-5">
+          <div className="flex flex-col items-center">
+
+            <h3 className="font-playfair font-bold text-[#4a1d44] text-sm md:text-lg mb-4 truncate w-full">
+              {varianteActiva.nombre}
+            </h3>
+
+            {/* SELECTOR DE COLORES */}
+            {producto.variantes && producto.variantes.length > 1 && (
+              <div className="flex justify-center items-center gap-2.5 mb-4">
+                {producto.variantes.map((v: any) => {
+                  const colorInfo = v.producto_colores?.[0]?.colores;
+                  const isSelected = varianteActiva.id === v.id;
+
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={(e) => cambiarVariante(e, v)}
+                      title={colorInfo?.nombre}
+                      className={`group/color relative w-4 h-4 md:w-5 md:h-5 rounded-full transition-all duration-300 border border-black/10 shadow-inner ${isSelected
+                        ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110'
+                        : 'hover:scale-110'
+                        }`}
+                      style={{
+                        backgroundColor: colorInfo?.hex || '#ccc',
+                        boxShadow: isSelected ? '0 0 0 1px rgba(0,0,0,0.05)' : 'none'
+                      }}
+                    >
+                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#4a1d44] text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/color:opacity-100 transition-opacity pointer-events-none uppercase font-bold whitespace-nowrap z-50">
+                        {colorInfo?.nombre}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PRECIO CON COP INTEGRADO Y BENEFICIO */}
+            <div className="flex flex-col items-center mb-4 w-full">
+              <div className="flex items-baseline justify-center gap-1" suppressHydrationWarning>
+                <p className="text-[#4a1d44] font-black text-sm md:text-base">
+                  {mounted ? `$${Number(varianteActiva.precio).toLocaleString('es-CO')}` : `$${varianteActiva.precio}`}
+                </p>
+                <span className="text-[9px] md:text-[10px] font-black opacity-40 tracking-widest uppercase">
+                  COP
+                </span>
+              </div>
+
+              {/* BENEFICIO DE COMPRA */}
+              <div className="flex items-center justify-center gap-1 mt-1.5 opacity-60 w-full">
+                <Package size={11} className="text-[#4a1d44] shrink-0" />
+                <span className="text-[7.5px] md:text-[9px] text-[#4a1d44] font-bold tracking-wider md:tracking-widest uppercase whitespace-nowrap">
+                  Envío 100% Discreto
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* BOTÓN ALINEADO SIEMPRE ABAJO */}
+          <button
+            onClick={handleAddToCart}
+            className="w-full bg-[#4a1d44] text-white py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 hover:bg-[#5d2555] transition-all duration-300 shadow-md active:scale-95 z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <span className="whitespace-nowrap">AÑADIR AL CARRITO</span>
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+</file>
+
+<file path="context/CartContext.tsx">
+"use client";
+
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/app/lib/supabase';
+
+const CartContext = createContext<any>(null);
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cart, setCart] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // 1. Escuchar el estado de autenticación
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        setCart([]);
+        localStorage.removeItem('soft_cart');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 2. Cargar datos del carrito
+  useEffect(() => {
+    const loadCart = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('carrito')
+          .select('*, productos(*)')
+          .eq('user_id', user.id);
+        
+        if (!error && data) {
+          const formattedCart = data.map(item => ({
+            ...item.productos,
+            quantity: item.cantidad,
+            cart_item_id: item.id // Guardamos el ID del registro en la tabla carrito
+          }));
+          setCart(formattedCart);
+        }
+      } else {
+        const savedCart = localStorage.getItem('soft_cart');
+        if (savedCart) {
+          try { setCart(JSON.parse(savedCart)); } catch (e) { setCart([]); }
+        }
+      }
+      setIsLoaded(true);
+    };
+    loadCart();
+  }, [user]);
+
+  // 3. Persistencia para invitados
+  useEffect(() => {
+    if (isLoaded && !user) {
+      localStorage.setItem('soft_cart', JSON.stringify(cart));
+    }
+  }, [cart, user, isLoaded]);
+
+  // --- FUNCIONES OPTIMIZADAS (Instantáneas) ---
+
+  const addToCart = async (product: any) => {
+    // Actualización local inmediata
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+
+    // Sincronización en segundo plano si hay usuario
+    if (user) {
+      const existing = cart.find(item => item.id === product.id);
+      if (existing) {
+        await supabase.from('carrito').update({ cantidad: existing.quantity + 1 })
+          .eq('user_id', user.id).eq('producto_id', product.id);
+      } else {
+        await supabase.from('carrito').insert([{ user_id: user.id, producto_id: product.id, cantidad: 1 }]);
+      }
+    }
+  };
+
+  const updateQuantity = async (id: number, delta: number) => {
+    let newQty = 0;
+
+    // 1. Actualización visual instantánea
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+
+    // 2. Sincronización silenciosa con la DB
+    if (user) {
+      // No usamos await aquí para no bloquear la UI
+      supabase.from('carrito')
+        .update({ cantidad: Math.max(1, (cart.find(i => i.id === id)?.quantity || 0) + delta) })
+        .eq('user_id', user.id)
+        .eq('producto_id', id)
+        .then(); // Ejecuta en segundo plano
+    }
+  };
+
+  const removeFromCart = async (id: number) => {
+    // 1. Quitar de la vista inmediatamente
+    setCart(prev => prev.filter(item => item.id !== id));
+
+    // 2. Borrar de la DB en segundo plano
+    if (user) {
+      await supabase.from('carrito').delete().eq('user_id', user.id).eq('producto_id', id);
+    }
+  };
+
+  const clearCart = async () => {
+    setCart([]);
+    localStorage.removeItem('soft_cart');
+    if (user) {
+      await supabase.from('carrito').delete().eq('user_id', user.id);
+    }
+  };
+
+  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalPrice = cart.reduce((acc, item) => acc + (Number(item.precio) || 0) * item.quantity, 0);
+
+  return (
+    <CartContext.Provider value={{ 
+      cart, 
+      addToCart, 
+      updateQuantity, 
+      removeFromCart, 
+      clearCart, 
+      totalItems, 
+      totalPrice 
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export const useCart = () => useContext(CartContext);
+</file>
+
+<file path="middleware.ts">
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
+
+  // 1. EL CAMBIO CLAVE: Usar getUser() en lugar de getSession()
+  // Esto fuerza a Next.js a validar la sesión real con la base de datos
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // 2. Proteger las rutas de admin
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // Si no hay usuario logueado, al login
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // Si hay usuario, verificamos si es admin en la tabla perfiles
+    const { data: perfil } = await supabase
+      .from('perfiles')
+      .select('es_admin')
+      .eq('id', user.id)
+      .single()
+
+    // Si no es admin, lo mandamos a la página principal
+    if (!perfil?.es_admin) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  return response
+}
+
+export const config = {
+  // 3. EL OTRO CAMBIO: Asegurarnos de que proteja "/admin" y "/admin/cualquier-cosa"
+  matcher: ['/admin', '/admin/:path*'],
+}
+</file>
+
+<file path="scripts/test-supabase.mjs">
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing Supabase credentials");
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function getStructure() {
+  console.log("Checking structure...");
+  
+  // Try to get products to see its structure
+  const { data: pData, error: pError } = await supabase.from("productos").select("*").limit(1);
+  if(pError) {
+    console.log("Error querying productos:", pError.message)
+  } else if (pData && pData.length > 0) {
+    console.log("Structure of table \"productos\":", Object.keys(pData[0]));
+    console.log("Data sample:", pData[0]);
+  } else {
+      console.log("Table \"productos\" is empty or accessible but no rows returned.");
+  }
+}
+
+getStructure();
+</file>
+
+<file path="test-supabase.cjs">
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function getTables() {
+  const { data, error } = await supabase.from('pg_tables').select('*');
+  if (error) {
+    console.log('Direct query not allowed, trying to get products instead..');
+    const { data: pData, error: pError } = await supabase.from('productos').select('*').limit(1);
+    if(pError) {
+      console.log('Error querying productos:', pError.message)
+    } else {
+      console.log('Structure of a product:', Object.keys(pData[0]));
+    }
+  } else {
+    console.log(data);
+  }
+}
+
+getTables();
+</file>
+
+<file path="testsupabase.js">
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function getStructure() {
+  console.log('Checking structure...');
+  
+  // Try to get products to see its structure
+  const { data: pData, error: pError } = await supabase.from('productos').select('*').limit(1);
+  if(pError) {
+    console.log('Error querying productos:', pError.message)
+  } else if (pData && pData.length > 0) {
+    console.log('Structure of table \
+productos\:', Object.keys(pData[0]));
+    console.log('Data sample:', pData[0]);
+  } else {
+      console.log('Table \productos\ is empty or accessible but no rows returned.');
+  }
+}
+
+getStructure();
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="app/globals.css">
+@import "tailwindcss";
+
+@theme {
+  --color-brand-background: #FFEEFF;
+  --color-brand-primary: #E5BED7;
+  --color-brand-secondary: #D1ABC4;
+  --color-brand-accent: #FFD7F1;
+  --color-brand-dark: #64435A;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  /* Evita el rebote horizontal en iOS */
+  position: relative;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Ocultar barra de scroll en los filtros horizontales */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</file>
+
+<file path="app/layout.tsx">
+import type { Metadata, Viewport } from "next";
+import { Inter, Playfair_Display } from "next/font/google";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import DiscountModal from "@/components/DiscountModal";
+import { CartProvider } from "@/context/CartContext";
+import { Toaster } from "react-hot-toast";
+import Script from "next/script";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+
+export const metadata: Metadata = {
+  title: "Soft Lingerie | Boutique Online",
+  description: "Elegancia y seducción en cada prenda.",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="es">
+      <head>
+        <Script 
+          src="https://checkout.wompi.co/widget.js" 
+          strategy="beforeInteractive" 
+        />
+      </head>
+      <body 
+        className={`${inter.variable} ${playfair.variable} antialiased bg-[#fdf8f6] text-[#4a1d44]`}
+        suppressHydrationWarning={true}
+      >
+        <CartProvider>
+          <Toaster position="bottom-right" />
+          <Navbar />
+          <DiscountModal />
+          
+          {/* AJUSTE GLOBAL: 
+              pt-16 (para móviles) y md:pt-20 (para desktop) 
+              Esto evita que el Navbar tape el contenido de cualquier página.
+          */}
+          <div className="min-h-screen w-full overflow-x-hidden pt-16 md:pt-20">
+            {children}
+          </div>
+
+          <footer className="bg-[#4a1d44] text-white py-12 mt-20">
+            <div className="max-w-7xl mx-auto px-6 text-center md:text-left grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div>
+                <h3 className="font-playfair text-xl font-bold mb-4 tracking-widest uppercase">Soft Lingerie</h3>
+                <p className="text-white/60 text-sm italic">Resaltando tu belleza con la mejor calidad.</p>
+              </div>
+              <div>
+                <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-white/40">Menú</h4>
+                <ul className="text-sm space-y-2">
+                  <li><a href="/" className="hover:underline">Inicio</a></li>
+                  <li><a href="/productos" className="hover:underline">Catálogo</a></li>
+                  <li><a href="/contacto" className="hover:underline">Contacto</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-white/40">Soporte</h4>
+                <p className="text-sm text-white/60">Pagos seguros con PSE, Nequi y Bancolombia.</p>
+              </div>
+            </div>
+          </footer>
+        </CartProvider>
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="app/page.tsx">
+"use client";
+
+import { useEffect, useState } from 'react';
+import { supabase } from './lib/supabase';
+import Link from 'next/link';
+import { ArrowRight, Star, Clock, Loader2 } from 'lucide-react';
+
+export default function HomePage() {
+  const [novedades, setNovedades] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const fetchNovedades = async () => {
+      try {
+        const { data } = await supabase
+          .from('productos')
+          .select('*')
+          .eq('activo', true)
+          .order('created_at', { ascending: false })
+          .limit(4); // Traemos 4 para que el grid de 2x2 en móvil quede perfecto
+        setNovedades(data || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNovedades();
+  }, []);
+
+  return (
+    <div className="bg-[#fdf8f6] min-h-screen w-full overflow-x-hidden">
+      
+      {/* HERO SECTION - Ajustada para iPhone */}
+      <section className="relative h-[75vh] w-full bg-[#4a1d44] overflow-hidden flex items-center justify-center text-center px-4">
+  <div className="absolute inset-0 opacity-40">
+      <img 
+        // Solo pones la barra diagonal y el nombre exacto del archivo
+        src="/home.jpg" 
+        className="w-full h-full object-cover" 
+        alt="Nueva Colección Lencería" 
+      />
+  </div>
+        <div className="relative z-10 max-w-3xl">
+          <h1 className="text-4xl md:text-7xl font-bold text-white mb-4 tracking-tighter leading-tight font-playfair">
+            Siente la Elegancia
+          </h1>
+          <p className="text-white/80 text-sm md:text-xl mb-8 italic font-light">
+            Colecciones exclusivas diseñadas para resaltar tu confianza.
+          </p>
+          <Link href="/productos" className="bg-white text-[#4a1d44] px-8 py-4 rounded-full font-bold text-xs md:text-base hover:scale-105 transition shadow-xl inline-flex items-center gap-2 uppercase tracking-widest">
+            Explorar Colección <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+
+      {/* SECCIÓN NOVEDADES */}
+      <section className="max-w-7xl mx-auto py-16 md:py-24 px-4 md:px-6">
+        <div className="flex items-center justify-center md:justify-start gap-3 mb-10">
+          <Clock className="text-[#4a1d44]" size={20} />
+          <h2 className="text-2xl md:text-4xl font-bold text-[#4a1d44] font-playfair uppercase tracking-tight">Lo más Nuevo</h2>
+        </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-[#4a1d44]/20" size={40} />
+          </div>
+        ) : (
+          /* GRID RESPONSIVE: 2 columnas en móvil, 4 en desktop */
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {novedades.map(prod => {
+              // Lógica para detectar imagen
+              const fotoUrl = Array.isArray(prod.imagenes_urls) && prod.imagenes_urls.length > 0 
+                ? prod.imagenes_urls[0] 
+                : prod.imagen_url;
+
+              return (
+                <Link href="/productos" key={prod.id} className="group cursor-pointer flex flex-col h-full">
+                  {/* Contenedor de la imagen */}
+                  <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-3 shadow-md bg-white">
+                    {fotoUrl ? (
+                      <img 
+                        src={fotoUrl} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                        alt={prod.nombre} 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center opacity-10"><Star /></div>
+                    )}
+                    
+                    {/* Etiqueta de Categoría (Solo si existe) */}
+                    {prod.categoria && (
+                      <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[#4a1d44] text-[8px] md:text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-sm z-10">
+                        {typeof prod.categoria === 'object' ? prod.categoria.nombre : prod.categoria}
+                      </span>
+                    )}
+
+                    <div className="absolute bottom-2 left-2 bg-[#4a1d44] px-2 py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white z-10">
+                      NUEVO
+                    </div>
+                  </div>
+
+                  {/* Textos debajo de la foto */}
+                  <div className="text-center md:text-left">
+                    <h3 className="font-bold text-xs md:text-lg text-[#4a1d44] truncate px-1">{prod.nombre}</h3>
+                    <p className="text-[#4a1d44]/60 text-[10px] md:text-base font-black" suppressHydrationWarning>
+                      {mounted ? `$${Number(prod.precio).toLocaleString('es-CO')}` : `$${prod.precio}`}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* SECCIÓN MÁS VENDIDOS */}
+      <section className="bg-[#f2e1d9]/30 py-20 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="flex justify-center items-center gap-2 mb-4">
+             <Star className="text-yellow-500 fill-yellow-500" size={18} />
+             <span className="font-bold tracking-widest text-[#4a1d44]/50 text-[10px]">BEST SELLERS</span>
+          </div>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 font-playfair text-[#4a1d44]">Favoritos de nuestras clientes</h2>
+          <p className="text-[#4a1d44]/60 italic text-sm md:text-lg max-w-xl mx-auto">
+            Pronto verás aquí los conjuntos que están marcando tendencia en todo el país.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="package.json">
+{
+  "name": "soft-lingerie-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "lucide-react": "^0.575.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hot-toast": "^2.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

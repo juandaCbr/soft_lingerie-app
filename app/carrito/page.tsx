@@ -66,7 +66,7 @@ export default function CartPage() {
                 const imagenAShow = item.imagenes_urls?.[0] || item.imagen_url || "/placeholder.png";
 
                 return (
-                  <div key={item.id} className="relative group">
+                  <div key={`${item.id}-${item.talla_id}`} className="relative group">
                     {index > 0 && (
                       <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-[#4a1d44]/10 to-transparent" />
                     )}
@@ -81,14 +81,23 @@ export default function CartPage() {
                         <div className="flex justify-between items-start gap-2">
                           <div>
                             <h3 className="text-sm md:text-base font-bold leading-tight text-[#361531] group-hover:text-[#4a1d44] transition-colors">{item.nombre}</h3>
-                            <div className="inline-block px-2 py-0.5 mt-1 bg-[#4a1d44]/5 rounded-full border border-[#4a1d44]/10 text-center w-fit">
-                              <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-[#4a1d44]/70">
-                                {item.producto_colores?.[0]?.colores?.nombre || "Color unico"}
-                              </p>
+                            <div className="flex gap-2 mt-1">
+                              <div className="inline-block px-2 py-0.5 bg-[#4a1d44]/5 rounded-full border border-[#4a1d44]/10 text-center w-fit">
+                                <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-[#4a1d44]/70">
+                                  {item.producto_colores?.[0]?.colores?.nombre || "Color unico"}
+                                </p>
+                              </div>
+                              {item.talla && (
+                                <div className="inline-block px-2 py-0.5 bg-[#4a1d44] rounded-full text-center w-fit">
+                                  <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-white">
+                                    Talla: {item.talla.nombre}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <button
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.id, item.talla_id)}
                             className="p-1.5 md:p-2.5 text-[#4a1d44]/30 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-300 active:scale-90 flex-shrink-0"
                             title="Eliminar producto"
                             aria-label="Eliminar producto"
@@ -99,7 +108,7 @@ export default function CartPage() {
                         <div className="flex items-end justify-between mt-2">
                           <div className="flex items-center bg-white shadow-sm rounded-full p-0.5 md:p-1 border border-[#4a1d44]/10">
                             <button
-                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, -1); }}
+                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, -1, item.talla_id); }}
                               className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
                             >
                               <Minus size={12} />
@@ -108,7 +117,7 @@ export default function CartPage() {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, 1); }}
+                              onClick={(e) => { e.preventDefault(); updateQuantity(item.id, 1, item.talla_id); }}
                               className="p-1 hover:bg-[#f2e1d9]/50 rounded-full transition active:scale-90 text-[#4a1d44]"
                             >
                               <Plus size={12} />

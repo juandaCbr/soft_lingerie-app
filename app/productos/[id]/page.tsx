@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
-import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
@@ -16,6 +16,8 @@ export default function ProductoDetallePage() {
 
   const [variantes, setVariantes] = useState<any[]>([]);
   const [varianteActiva, setVarianteActiva] = useState<any>(null);
+  const [tallasDisponibles, setTallasDisponibles] = useState<any[]>([]);
+  const [tallaSeleccionada, setTallaSeleccionada] = useState<any>(null);
   const [relacionados, setRelacionados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
@@ -55,6 +57,9 @@ export default function ProductoDetallePage() {
 
         setVarianteActiva(productoPrincipal);
 
+        // Cargar tallas del producto activo
+        await fetchTallas(productoPrincipal.id);
+
         const { data: dataRelacionados } = await supabase
           .from('productos')
           .select(`*, producto_colores ( colores (hex, nombre) )`)
@@ -85,6 +90,36 @@ export default function ProductoDetallePage() {
     if (id) fetchProductoYVariantes();
   }, [id, router]);
 
+  const fetchTallas = async (productoId: any) => {
+    const { data: tallasRel, error: errorTallas } = await supabase
+      .from('producto_tallas')
+      .select('*, tallas(*)')
+      .eq('producto_id', productoId);
+    
+    if (!errorTallas && tallasRel) {
+      const tallas = tallasRel.map(r => r.tallas).sort((a, b) => a.orden - b.orden);
+      setTallasDisponibles(tallas);
+      // Seleccionar la primera talla por defecto si hay
+      if (tallas.length > 0) setTallaSeleccionada(tallas[0]);
+    }
+  };
+
+  const handleVarianteChange = async (v: any) => {
+    setVarianteActiva(v);
+    setCurrentImg(0);
+    setTallaSeleccionada(null);
+    await fetchTallas(v.id);
+  };
+
+  const handleAddToCart = () => {
+    if (tallasDisponibles.length > 0 && !tallaSeleccionada) {
+      toast.error("Por favor selecciona una talla");
+      return;
+    }
+    addToCart(varianteActiva, tallaSeleccionada);
+    toast.success('¡Añadido al carrito!');
+  };
+
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const { scrollLeft, clientWidth } = scrollRef.current;
@@ -113,13 +148,10 @@ export default function ProductoDetallePage() {
         </button>
       </div>
 
-      {/* CONTENEDOR EN DOS COLUMNAS CON MAX-W Y GAP REDUCIDO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-12 max-w-5xl mx-auto items-start">
 
-        {/* COLUMNA IZQUIERDA: GALERÍA Y TÍTULO EN MÓVIL (Alineado a la Izquierda) */}
+        {/* COLUMNA IZQUIERDA: GALERÍA */}
         <div className="space-y-4 w-full max-w-[360px] md:max-w-[420px] mx-auto md:mx-0 flex flex-col">
-
-          {/* Título visible SOLO en móvil (encima de la foto, alineado a la izquierda) */}
           <div className="md:hidden text-left mb-1.5 px-1">
             <span className="text-xs font-black uppercase tracking-[0.2em] opacity-40 block mb-1">
               {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
@@ -154,11 +186,9 @@ export default function ProductoDetallePage() {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: INFORMACIÓN (Todo alineado a la izquierda en móvil) */}
+        {/* COLUMNA DERECHA: INFORMACIÓN */}
         <div className="flex flex-col gap-6 md:sticky md:top-28 w-full max-w-[420px] mx-auto md:mx-0">
-
           <div className="space-y-2">
-            {/* Título y categoría originales: Ocultos en móvil */}
             <div className="hidden md:block">
               <span className="text-sm font-black uppercase tracking-[0.2em] opacity-40 block mb-2">
                 {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
@@ -167,14 +197,11 @@ export default function ProductoDetallePage() {
                 {varianteActiva.nombre}
               </h1>
             </div>
-
-            {/* Precio: Visible siempre, alineado a la izquierda en móvil */}
             <p className="text-2xl md:text-2xl font-black opacity-90 text-left">
               ${Number(varianteActiva.precio).toLocaleString('es-CO')} COP
             </p>
           </div>
 
-          {/* Descripción: Ahora movida arriba, debajo del precio */}
           <div className="text-left space-y-3">
             <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50">Descripción</h3>
             <p className="text-base leading-relaxed text-[#4a1d44]/80">
@@ -182,7 +209,31 @@ export default function ProductoDetallePage() {
             </p>
           </div>
 
-          {/* Selector de colores: Ahora movido abajo, después de la descripción */}
+          {/* Selector de Tallas */}
+          {tallasDisponibles.length > 0 && (
+            <div className="py-2 flex flex-col items-start">
+              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50 flex items-center gap-2">
+                <Ruler size={12} /> Tallas Disponibles
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {tallasDisponibles.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTallaSeleccionada(t)}
+                    className={`min-w-[45px] px-3 py-2 rounded-xl text-xs font-black transition-all duration-300 border ${
+                      tallaSeleccionada?.id === t.id
+                        ? 'bg-[#4a1d44] text-white border-[#4a1d44] shadow-lg scale-105'
+                        : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
+                    }`}
+                  >
+                    {t.nombre}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Selector de colores */}
           {variantes.length > 1 && (
             <div className="py-5 border-y border-[#4a1d44]/10 flex flex-col items-start">
               <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Colores Disponibles</h3>
@@ -193,7 +244,7 @@ export default function ProductoDetallePage() {
                   return (
                     <button
                       key={v.id}
-                      onClick={() => { setVarianteActiva(v); setCurrentImg(0); }}
+                      onClick={() => handleVarianteChange(v)}
                       className={`relative w-9 h-9 rounded-full border border-black/10 transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110' : 'hover:scale-110'}`}
                       style={{ backgroundColor: color?.hex || '#ccc' }}
                       title={color?.nombre}
@@ -204,7 +255,6 @@ export default function ProductoDetallePage() {
             </div>
           )}
 
-          {/* Checkmarks de Compra y Envíos: Alineados a la izquierda en una sola línea (flex-row) */}
           <div className="flex flex-row gap-6 pt-2 justify-start items-center">
             <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60">
               <Check size={14} className="text-[#4a1d44]" /> Compra Segura
@@ -215,15 +265,14 @@ export default function ProductoDetallePage() {
           </div>
 
           <button
-            onClick={() => { addToCart(varianteActiva); toast.success('Añadido al carrito'); }}
+            onClick={handleAddToCart}
             className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-2 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all"
           >
             <ShoppingCart size={18} /> AÑADIR AL CARRITO
           </button>
 
-          {/* Acordeones y Pagos */}
+          {/* Acordeones */}
           <div className="mt-4 border border-[#4a1d44]/10 rounded-2xl overflow-hidden bg-[#fdf8f6]/50">
-            {/* Acordeón 1: Cuidado */}
             <div className="border-b border-[#4a1d44]/10">
               <button
                 onClick={() => toggleAcordeon('cuidado')}
@@ -238,8 +287,6 @@ export default function ProductoDetallePage() {
                 </div>
               )}
             </div>
-
-            {/* Acordeón 2: Envíos */}
             <div className="border-b border-[#4a1d44]/10">
               <button
                 onClick={() => toggleAcordeon('envios')}
@@ -254,8 +301,6 @@ export default function ProductoDetallePage() {
                 </div>
               )}
             </div>
-
-            {/* Acordeón 3: Garantía */}
             <div>
               <button
                 onClick={() => toggleAcordeon('garantia')}
@@ -271,16 +316,6 @@ export default function ProductoDetallePage() {
               )}
             </div>
           </div>
-
-          <div className="flex flex-col items-center gap-3 mt-2 opacity-60">
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Pago Seguro y Protegido</span>
-            <div className="flex gap-4">
-              <span className="text-xs font-black italic">Wompi</span>
-              <span className="text-xs font-black italic">PSE</span>
-              <span className="text-xs font-black italic">Nequi</span>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -294,16 +329,9 @@ export default function ProductoDetallePage() {
               <button onClick={() => scroll('right')} className="p-2 bg-[#fdf8f6] hover:bg-[#4a1d44]/10 rounded-full transition"><ChevronRight size={20} /></button>
             </div>
           </div>
-
-          <div
-            ref={scrollRef}
-            className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-6 snap-x items-stretch"
-          >
+          <div ref={scrollRef} className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-6 snap-x items-stretch">
             {relacionados.map((prod) => (
-              <div
-                key={prod.id}
-                className="min-w-[200px] max-w-[200px] md:min-w-[250px] md:max-w-[250px] snap-start shrink-0 flex"
-              >
+              <div key={prod.id} className="min-w-[200px] max-w-[200px] md:min-w-[250px] md:max-w-[250px] snap-start shrink-0 flex">
                 <div className="transform md:scale-95 origin-top transition-transform hover:scale-100 w-full h-full [&>div]:h-full">
                   <ProductoCard producto={prod} />
                 </div>
@@ -312,7 +340,6 @@ export default function ProductoDetallePage() {
           </div>
         </div>
       )}
-
     </main>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List } from 'lucide-react';
+import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function NuevoProductoPage() {
@@ -14,9 +14,11 @@ export default function NuevoProductoPage() {
   const [archivosImagenes, setArchivosImagenes] = useState<File[]>([]);
   const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
   
-  // Estados para colores
+  // Estados para colores y tallas
   const [coloresDB, setColoresDB] = useState<any[]>([]);
+  const [tallasDB, setTallasDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
+  const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -27,14 +29,23 @@ export default function NuevoProductoPage() {
     grupo_id: '', // Crucial para agrupar colores
   });
 
-  // Cargar colores desde Supabase
+  // Cargar colores y tallas desde Supabase
   useEffect(() => {
-    const fetchColores = async () => {
-      const { data } = await supabase.from('colores').select('*').order('nombre');
-      if (data) setColoresDB(data);
+    const fetchDatos = async () => {
+      const { data: colores } = await supabase.from('colores').select('*').order('nombre');
+      if (colores) setColoresDB(colores);
+
+      const { data: tallas } = await supabase.from('tallas').select('*').order('orden');
+      if (tallas) setTallasDB(tallas);
     };
-    fetchColores();
+    fetchDatos();
   }, []);
+
+  const handleTallaToggle = (id: string) => {
+    setTallasSeleccionadas(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -60,6 +71,10 @@ export default function NuevoProductoPage() {
     }
     if (!colorSeleccionado) {
       toast.error('¡Selecciona un color para esta variante!');
+      return;
+    }
+    if (tallasSeleccionadas.length === 0) {
+      toast.error('¡Selecciona al menos una talla!');
       return;
     }
 
@@ -113,6 +128,19 @@ export default function NuevoProductoPage() {
         }]);
 
       if (colorError) throw colorError;
+
+      // 4. Vincular las tallas en la tabla intermedia 'producto_tallas'
+      const insertTallas = tallasSeleccionadas.map(tallaId => ({
+        producto_id: nuevoProducto.id,
+        talla_id: tallaId,
+        stock_talla: Math.floor(parseInt(formData.stock) / tallasSeleccionadas.length) || 1
+      }));
+
+      const { error: tallasError } = await supabase
+        .from('producto_tallas')
+        .insert(insertTallas);
+
+      if (tallasError) throw tallasError;
 
       toast.success('¡Producto publicado con éxito!');
       router.push('/admin');
@@ -194,6 +222,29 @@ export default function NuevoProductoPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+            </div>
+
+            {/* TALLAS */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
+                <Ruler size={14} /> Tallas Disponibles
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {tallasDB.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleTallaToggle(t.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      tallasSeleccionadas.includes(t.id)
+                        ? 'bg-[#4a1d44] text-white border-[#4a1d44]'
+                        : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
+                    }`}
+                  >
+                    {t.nombre}
+                  </button>
+                ))}
               </div>
             </div>
 

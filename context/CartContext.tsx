@@ -33,14 +33,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         const { data, error } = await supabase
           .from('carrito')
-          .select('*, productos(*)')
+          .select('*, productos(*), tallas(*)')
           .eq('user_id', user.id);
         
         if (!error && data) {
           const formattedCart = data.map(item => ({
             ...item.productos,
             quantity: item.cantidad,
-            cart_item_id: item.id // Guardamos el ID del registro en la tabla carrito
+            cart_item_id: item.id,
+            talla: item.tallas,
+            talla_id: item.talla_id
           }));
           setCart(formattedCart);
         }
@@ -62,36 +64,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, user, isLoaded]);
 
-  // --- FUNCIONES OPTIMIZADAS (Instantáneas) ---
+  // --- FUNCIONES OPTIMIZADAS ---
 
-  const addToCart = async (product: any) => {
+  const addToCart = async (product: any, talla?: any) => {
+    // Identificador único considerando la talla
+    const tallaId = talla?.id || null;
+
     // Actualización local inmediata
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => item.id === product.id && item.talla_id === tallaId);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => 
+          (item.id === product.id && item.talla_id === tallaId) 
+            ? { ...item, quantity: item.quantity + 1 } 
+            : item
+        );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, talla, talla_id: tallaId }];
     });
 
     // Sincronización en segundo plano si hay usuario
     if (user) {
-      const existing = cart.find(item => item.id === product.id);
+      const existing = cart.find(item => item.id === product.id && item.talla_id === tallaId);
       if (existing) {
-        await supabase.from('carrito').update({ cantidad: existing.quantity + 1 })
-          .eq('user_id', user.id).eq('producto_id', product.id);
+        await supabase.from('carrito')
+          .update({ cantidad: existing.quantity + 1 })
+          .eq('user_id', user.id)
+          .eq('producto_id', product.id)
+          .eq('talla_id', tallaId);
       } else {
-        await supabase.from('carrito').insert([{ user_id: user.id, producto_id: product.id, cantidad: 1 }]);
+        await supabase.from('carrito').insert([{ 
+          user_id: user.id, 
+          producto_id: product.id, 
+          cantidad: 1,
+          talla_id: tallaId
+        }]);
       }
     }
   };
 
-  const updateQuantity = async (id: number, delta: number) => {
+  const updateQuantity = async (id: number, delta: number, tallaId: any = null) => {
     let newQty = 0;
 
     // 1. Actualización visual instantánea
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === id && item.talla_id === tallaId) {
         newQty = Math.max(1, item.quantity + delta);
         return { ...item, quantity: newQty };
       }
@@ -100,22 +117,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Sincronización silenciosa con la DB
     if (user) {
-      // No usamos await aquí para no bloquear la UI
       supabase.from('carrito')
-        .update({ cantidad: Math.max(1, (cart.find(i => i.id === id)?.quantity || 0) + delta) })
+        .update({ cantidad: newQty })
         .eq('user_id', user.id)
         .eq('producto_id', id)
-        .then(); // Ejecuta en segundo plano
+        .eq('talla_id', tallaId)
+        .then();
     }
   };
 
-  const removeFromCart = async (id: number) => {
+  const removeFromCart = async (id: number, tallaId: any = null) => {
     // 1. Quitar de la vista inmediatamente
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => !(item.id === id && item.talla_id === tallaId)));
 
     // 2. Borrar de la DB en segundo plano
     if (user) {
-      await supabase.from('carrito').delete().eq('user_id', user.id).eq('producto_id', id);
+      await supabase.from('carrito')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('producto_id', id)
+        .eq('talla_id', tallaId);
     }
   };
 

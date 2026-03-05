@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
-import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Ruler } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-// 1. CATEGORÍAS ESPECÍFICAS DE LENCERÍA
+// CATEGORÍAS ESPECÍFICAS DE LENCERÍA
 const CATEGORIAS_LENCERIA = [
   "Conjuntos",
   "Bodys",
@@ -37,11 +37,15 @@ export default function EditarProductoPage() {
   const [nuevasImagenes, setNuevasImagenes] = useState<File[]>([]);
   const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
   
+  const [tallasDB, setTallasDB] = useState<any[]>([]);
+  const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
+  
   const [esCategoriaManual, setEsCategoriaManual] = useState(false);
 
   const cargarProducto = useCallback(async () => {
     if (!idProducto) return;
     try {
+      // Cargar producto
       const { data, error } = await supabase
         .from('productos')
         .select('*')
@@ -57,11 +61,25 @@ export default function EditarProductoPage() {
         setDescripcion(data.descripcion || ""); 
         setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
         
-        // Si la categoría no está en la lista de lencería, activamos modo manual
         if (data.categoria && !CATEGORIAS_LENCERIA.includes(data.categoria)) {
           setEsCategoriaManual(true);
         }
       }
+
+      // Cargar todas las tallas
+      const { data: tallas } = await supabase.from('tallas').select('*').order('orden');
+      if (tallas) setTallasDB(tallas);
+
+      // Cargar tallas seleccionadas para este producto
+      const { data: tallasRel } = await supabase
+        .from('producto_tallas')
+        .select('talla_id')
+        .eq('producto_id', idProducto);
+      
+      if (tallasRel) {
+        setTallasSeleccionadas(tallasRel.map(r => r.talla_id.toString()));
+      }
+
     } catch (error: any) {
       toast.error("Error al cargar datos");
     } finally {
@@ -80,6 +98,12 @@ export default function EditarProductoPage() {
     }
   };
 
+  const handleTallaToggle = (id: string) => {
+    setTallasSeleccionadas(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -95,6 +119,7 @@ export default function EditarProductoPage() {
 
       const listaFinalUrls = [...imagenesUrls, ...urlsNuevasSubidas];
 
+      // 1. Actualizar datos básicos del producto
       const { error } = await supabase.from('productos').update({
         nombre,
         precio: parseFloat(precio),
@@ -105,6 +130,24 @@ export default function EditarProductoPage() {
       }).eq('id', idProducto);
 
       if (error) throw error;
+
+      // 2. Actualizar tallas (Borrar anteriores e insertar nuevas)
+      await supabase.from('producto_tallas').delete().eq('producto_id', idProducto);
+
+      if (tallasSeleccionadas.length > 0) {
+        const insertTallas = tallasSeleccionadas.map(tallaId => ({
+          producto_id: idProducto,
+          talla_id: tallaId,
+          stock_talla: Math.floor(parseInt(stock) / tallasSeleccionadas.length) || 1
+        }));
+
+        const { error: tallasError } = await supabase
+          .from('producto_tallas')
+          .insert(insertTallas);
+
+        if (tallasError) throw tallasError;
+      }
+
       toast.success("¡Prenda de lencería actualizada!");
       router.push("/admin/productos");
       router.refresh();
@@ -162,12 +205,34 @@ export default function EditarProductoPage() {
                 <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase opacity-30 ml-2">Stock</label>
+                <label className="text-[10px] font-black uppercase opacity-30 ml-2">Stock Total</label>
                 <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" />
               </div>
             </div>
 
-            {/* --- DESPLEGABLE DE CATEGORÍA LENCERÍA --- */}
+            {/* TALLAS */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
+                <Ruler size={14} /> Tallas Disponibles
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {tallasDB.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleTallaToggle(t.id.toString())}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      tallasSeleccionadas.includes(t.id.toString())
+                        ? 'bg-[#4a1d44] text-white border-[#4a1d44]'
+                        : 'bg-white text-[#4a1d44] border-[#4a1d44]/10 hover:border-[#4a1d44]/30'
+                    }`}
+                  >
+                    {t.nombre}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Tipo de Prenda</label>
               {!esCategoriaManual ? (
@@ -205,12 +270,12 @@ export default function EditarProductoPage() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Descripción / Tallas / Material</label>
+              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Descripción / Material</label>
               <textarea 
                 value={descripcion} 
                 onChange={e => setDescripcion(e.target.value)} 
                 className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none h-32 resize-none mt-1 shadow-inner leading-relaxed" 
-                placeholder="Ej: Material encaje, disponible en Talla S, M y L..."
+                placeholder="Ej: Material encaje, detalles bordados..."
               />
             </div>
           </div>

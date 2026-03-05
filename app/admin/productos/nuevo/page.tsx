@@ -39,6 +39,20 @@ export default function NuevoProductoPage() {
     fetchDatos();
   }, []);
 
+  const resetFormulario = () => {
+    setFormData({
+      nombre: '',
+      descripcion: '',
+      precio: '',
+      categoria: '',
+      grupo_id: '',
+    });
+    setArchivosImagenes([]);
+    setPrevisualizaciones([]);
+    setColorSeleccionado("");
+    setStocksPorTalla({});
+  };
+
   const handleTallaToggle = (id: string) => {
     setStocksPorTalla(prev => {
       const newStocks = { ...prev };
@@ -52,8 +66,6 @@ export default function NuevoProductoPage() {
   };
 
   const handleStockChange = (id: string, value: string) => {
-    // Si esta vacio, lo dejamos como string vacio temporalmente para poder borrar el 0
-    // Al guardar se convertira a 0
     if (value === "") {
       setStocksPorTalla(prev => ({ ...prev, [id]: "" as any }));
       return;
@@ -116,7 +128,6 @@ export default function NuevoProductoPage() {
         urlsSubidas.push(publicUrlData.publicUrl);
       }
 
-      // Convertir stocks vacios a 0 antes de sumar
       const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => Number(a) + Number(b || 0), 0);
 
       const { data: nuevoProducto, error: dbError } = await supabase
@@ -156,9 +167,9 @@ export default function NuevoProductoPage() {
 
       if (tallasError) throw tallasError;
 
-      toast.success('¡Producto publicado con éxito!');
-      router.push('/admin');
-      router.refresh();
+      toast.success('¡Producto publicado con éxito! Formulario listo para el siguiente.', { duration: 4000 });
+      resetFormulario();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
       toast.error(error.message || 'Error al publicar');
@@ -170,7 +181,7 @@ export default function NuevoProductoPage() {
   return (
     <div className="min-h-screen bg-[#fdf8f6] p-4 md:p-8 text-[#4a1d44]">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => router.back()} className="flex items-center gap-3 mb-6 group">
+        <button onClick={() => router.push('/admin')} className="flex items-center gap-3 mb-6 group">
           <div className="p-2 bg-white rounded-full shadow-sm group-hover:shadow-md transition-all">
             <ArrowLeft size={18} />
           </div>

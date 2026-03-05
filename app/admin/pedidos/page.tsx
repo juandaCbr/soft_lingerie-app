@@ -174,14 +174,14 @@ export default function AdminPedidos() {
             </div>
 
             {/* FILTROS DE LOGÍSTICA SIEMPRE VISIBLES PARA EVITAR SALTOS */}
-            <div className={`flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner transition-all duration-500 ${filtroEstadoPago !== 'APROBADO' ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-              <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+            <div className={`flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner transition-all duration-500 overflow-x-auto scrollbar-hide md:overflow-visible ${filtroEstadoPago !== 'APROBADO' ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+              <button onClick={() => setFiltroLogistica('POR_DESPACHAR')} className={`flex-1 min-w-fit whitespace-nowrap flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'POR_DESPACHAR' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
                 <Inbox size={18} /> Por Despachar
               </button>
-              <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+              <button onClick={() => setFiltroLogistica('EN_CAMINO')} className={`flex-1 min-w-fit whitespace-nowrap flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'EN_CAMINO' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
                 <Truck size={18} /> En camino
               </button>
-              <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
+              <button onClick={() => setFiltroLogistica('ENTREGADOS')} className={`flex-1 min-w-fit whitespace-nowrap flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${filtroLogistica === 'ENTREGADOS' ? 'bg-[#4a1d44] text-white shadow-md' : 'text-[#4a1d44]/30 hover:bg-[#4a1d44]/5'}`}>
                 <CheckCircle2 size={18} /> Finalizados
               </button>
             </div>

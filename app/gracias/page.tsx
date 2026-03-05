@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle, ShoppingBag, Home, Search, ClipboardCheck } from "lucide-react";
+import { CheckCircle, ShoppingBag, Search, ClipboardCheck, Bike, Truck } from "lucide-react";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -10,6 +10,8 @@ function GraciasContent() {
     const [isMounted, setIsMounted] = useState(false);
     const searchParams = useSearchParams();
     const referencia = searchParams.get('ref') || '---';
+    const ciudad = searchParams.get('city') || '';
+    const esValledupar = ciudad.toLowerCase() === 'valledupar';
 
     useEffect(() => {
         setIsMounted(true);
@@ -39,19 +41,47 @@ function GraciasContent() {
                 </h1>
 
                 <p className="text-base md:text-lg opacity-70 mb-8 leading-relaxed max-w-lg mx-auto">
-                    Tu pago ha sido procesado con éxito. Hemos recibido tu pedido y estamos preparando todo para el envío.
+                    Tu pago ha sido procesado con éxito. Hemos recibido tu pedido correctamente.
                 </p>
 
+                {/* MENSAJE INTELIGENTE SEGÚN CIUDAD */}
+                <div className={`p-8 rounded-[2.5rem] mb-10 border transition-all duration-700 ${esValledupar ? 'bg-pink-50 border-pink-100 shadow-sm' : 'bg-[#fdf8f6] border-[#4a1d44]/5'}`}>
+                    {esValledupar ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="bg-white p-4 rounded-full shadow-md text-pink-600 animate-bounce">
+                                <Bike size={40} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-pink-700 uppercase tracking-tight">Prioridad Valledupar 💖</h3>
+                                <p className="text-sm text-pink-600/80 font-medium mt-2 leading-relaxed">
+                                    ¡Estás en nuestra ciudad! Un domiciliario saldrá en breve hacia tu dirección para entregarte <strong>hoy mismo</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="bg-white p-4 rounded-full shadow-sm text-[#4a1d44]/40">
+                                <Truck size={40} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-black uppercase tracking-widest opacity-40">Envío Nacional</h3>
+                                <p className="text-sm opacity-60 font-medium mt-2 leading-relaxed">
+                                    Estamos preparando tu paquete para entregarlo a la transportadora lo antes posible.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* CUADRO DE REFERENCIA */}
-                <div className="bg-[#fdf8f6] p-6 rounded-3xl border border-[#4a1d44]/5 mb-10">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Número de Pedido</p>
+                <div className="bg-white p-6 rounded-3xl border border-[#4a1d44]/10 mb-10 shadow-inner">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Referencia de Pedido</p>
                     <div className="flex items-center justify-center gap-3">
-                        <code className="text-xl md:text-2xl font-black tracking-tight text-[#4a1d44]">{referencia}</code>
-                        <button onClick={copiarReferencia} className="p-2 hover:bg-white rounded-full transition-all text-[#4a1d44]/40 hover:text-[#4a1d44]">
+                        <code className="text-xl font-black tracking-tight text-[#4a1d44]">{referencia}</code>
+                        <button onClick={copiarReferencia} className="p-2 hover:bg-[#fdf8f6] rounded-full transition-all text-[#4a1d44]/40 hover:text-[#4a1d44]">
                             <ClipboardCheck size={20} />
                         </button>
                     </div>
-                    <p className="text-[9px] mt-3 opacity-40 font-bold italic">Guarda este número para rastrear tu envío</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

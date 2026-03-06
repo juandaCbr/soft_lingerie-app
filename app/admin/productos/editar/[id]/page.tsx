@@ -7,18 +7,6 @@ import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Rul
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-const CATEGORIAS_LENCERIA = [
-  "Conjuntos",
-  "Bodys",
-  "Pijamas",
-  "Baby-dolls",
-  "Panties",
-  "Brasieres",
-  "Batas",
-  "Accesorios / Ligas",
-  "Cuidado Corporal"
-];
-
 export default function EditarProductoPage() {
   const params = useParams();
   const router = useRouter();
@@ -36,6 +24,7 @@ export default function EditarProductoPage() {
   const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
   
   const [tallasDB, setTallasDB] = useState<any[]>([]);
+  const [categoriasDB, setCategoriasDB] = useState<any[]>([]);
   // Ahora guardamos un objeto { talla_id: stock }
   const [stocksPorTalla, setStocksPorTalla] = useState<{[key: string]: number}>({});
   
@@ -44,6 +33,17 @@ export default function EditarProductoPage() {
   const cargarProducto = useCallback(async () => {
     if (!idProducto) return;
     try {
+      const { data: catData, error: catError } = await supabase.from('categorias').select('*').order('nombre');
+      let currentCats = [];
+      if (catData && !catError) {
+        setCategoriasDB(catData);
+        currentCats = catData.map(c => c.nombre);
+      } else {
+        const fallback = ["Conjuntos", "Bodys", "Pijamas", "Baby-dolls", "Panties", "Brasieres", "Batas", "Accesorios / Ligas", "Cuidado Corporal"];
+        setCategoriasDB(fallback.map(c => ({ nombre: c })));
+        currentCats = fallback;
+      }
+
       const { data, error } = await supabase
         .from('productos')
         .select('*')
@@ -58,7 +58,7 @@ export default function EditarProductoPage() {
         setDescripcion(data.descripcion || ""); 
         setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
         
-        if (data.categoria && !CATEGORIAS_LENCERIA.includes(data.categoria)) {
+        if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
         }
       }
@@ -272,7 +272,7 @@ export default function EditarProductoPage() {
               <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Tipo de Prenda</label>
               {!esCategoriaManual ? (
                 <div className="relative mt-1">
-                  <select 
+                    <select 
                     value={categoria}
                     onChange={(e) => {
                       if (e.target.value === "NUEVA") {
@@ -285,7 +285,7 @@ export default function EditarProductoPage() {
                     className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold appearance-none shadow-inner cursor-pointer"
                   >
                     <option value="">Selecciona una categoría...</option>
-                    {CATEGORIAS_LENCERIA.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categoriasDB.map(c => <option key={c.id || c.nombre} value={c.nombre}>{c.nombre}</option>)}
                     <option value="NUEVA">+ Otra categoría...</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" size={20} />

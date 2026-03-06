@@ -17,6 +17,7 @@ export default function NuevoProductoPage() {
   // Estados para colores y tallas
   const [coloresDB, setColoresDB] = useState<any[]>([]);
   const [tallasDB, setTallasDB] = useState<any[]>([]);
+  const [categoriasDB, setCategoriasDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
   const [stocksPorTalla, setStocksPorTalla] = useState<{[key: string]: number}>({});
 
@@ -35,6 +36,24 @@ export default function NuevoProductoPage() {
 
       const { data: tallas } = await supabase.from('tallas').select('*').order('orden');
       if (tallas) setTallasDB(tallas);
+
+      const { data: categorias, error: catError } = await supabase.from('categorias').select('*').order('nombre');
+      if (categorias && !catError) {
+        setCategoriasDB(categorias);
+      } else {
+        // Fallback en caso de que la tabla no exista o este vacia
+        setCategoriasDB([
+          { id: 'conjuntos', nombre: 'Conjuntos' },
+          { id: 'bodys', nombre: 'Bodys' },
+          { id: 'brasieres', nombre: 'Brasieres' },
+          { id: 'pantis', nombre: 'Pantis' },
+          { id: 'pijamas', nombre: 'Pijamas' },
+          { id: 'baby-dolls', nombre: 'Baby-dolls' },
+          { id: 'batas', nombre: 'Batas' },
+          { id: 'accesorios', nombre: 'Accesorios / Ligas' },
+          { id: 'cuidado', nombre: 'Cuidado Corporal' }
+        ]);
+      }
     };
     fetchDatos();
   }, []);
@@ -327,10 +346,9 @@ export default function NuevoProductoPage() {
                     onChange={e => setFormData({...formData, categoria: e.target.value})}
                   >
                     <option value="">Seleccionar...</option>
-                    <option value="conjuntos">Conjuntos</option>
-                    <option value="bodys">Bodys</option>
-                    <option value="brasieres">Brasieres</option>
-                    <option value="pantis">Pantis</option>
+                    {categoriasDB.map(cat => (
+                      <option key={cat.id || cat.nombre} value={cat.nombre}>{cat.nombre}</option>
+                    ))}
                   </select>
                 </div>
               </div>

@@ -22,6 +22,7 @@ export default function ProductoDetallePage() {
   const [cantidad, setCantidad] = useState(1);
   const [relacionados, setRelacionados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tallasLoading, setTallasLoading] = useState(false);
   const [currentImg, setCurrentImg] = useState(0);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
@@ -91,6 +92,7 @@ export default function ProductoDetallePage() {
   }, [id, router]);
 
   const fetchTallas = async (productoId: any) => {
+    setTallasLoading(true);
     const { data: tallasRel, error: errorTallas } = await supabase
       .from('producto_tallas')
       .select('*, tallas(*)')
@@ -108,9 +110,11 @@ export default function ProductoDetallePage() {
       setTallaSeleccionada(primeraDisponible || null);
       setCantidad(1);
     }
+    setTallasLoading(false);
   };
 
   const handleVarianteChange = async (v: any) => {
+    if (v.id === varianteActiva.id) return;
     setVarianteActiva(v);
     setCurrentImg(0);
     setTallaSeleccionada(null);
@@ -249,19 +253,26 @@ export default function ProductoDetallePage() {
           </div>
 
           {/* Selector de Tallas con Agotados */}
-          {tallasDisponibles.length > 0 && (
-            <div className="py-2 flex flex-col items-start w-full">
-              <div className="flex justify-between items-center w-full mb-3">
-                <h3 className="text-[9px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
-                  <Ruler size={12} /> Selecciona tu Talla
-                </h3>
-                <button 
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-[9px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all"
-                >
-                  Guía de Tallas
-                </button>
+          <div className="py-2 flex flex-col items-start w-full min-h-[110px]">
+            <div className="flex justify-between items-center w-full mb-3">
+              <h3 className="text-[9px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
+                <Ruler size={12} /> Selecciona tu Talla
+              </h3>
+              <button 
+                onClick={() => setIsSizeGuideOpen(true)}
+                className="text-[9px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all"
+              >
+                Guía de Tallas
+              </button>
+            </div>
+
+            {tallasLoading ? (
+              <div className="flex gap-2 animate-pulse">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-12 h-10 bg-gray-100 rounded-xl" />
+                ))}
               </div>
+            ) : tallasDisponibles.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {tallasDisponibles.map((t) => {
                   const agotado = t.stock <= 0;
@@ -288,37 +299,40 @@ export default function ProductoDetallePage() {
                   );
                 })}
               </div>
+            ) : (
+              <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Sin stock disponible</p>
+            )}
+
+            <div className="h-6 mt-3">
               {tallaSeleccionada && (
-                <p className="mt-3 text-[10px] font-bold text-[#4a1d44]/40 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-[#4a1d44]/40 uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
                   {tallaSeleccionada.stock <= 5 && tallaSeleccionada.stock > 0 
                     ? `¡Últimas ${tallaSeleccionada.stock} unidades!` 
                     : 'Disponible en stock'}
                 </p>
               )}
             </div>
-          )}
+          </div>
 
-          {/* Selector de Cantidad (NUEVO) */}
-          {tallaSeleccionada && tallaSeleccionada.stock > 0 && (
-            <div className="py-2 flex flex-col items-start">
-              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Cantidad</h3>
-              <div className="flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm">
-                <button 
-                  onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
-                  className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="w-12 text-center font-black text-sm">{cantidad}</span>
-                <button 
-                  onClick={() => setCantidad(prev => Math.min(tallaSeleccionada.stock, prev + 1))}
-                  className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
+          {/* Selector de Cantidad - Siempre presente para evitar saltos */}
+          <div className="py-2 flex flex-col items-start min-h-[80px]">
+            <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Cantidad</h3>
+            <div className={`flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm transition-opacity duration-300 ${!tallaSeleccionada || tallaSeleccionada.stock <= 0 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+              <button 
+                onClick={() => setCantidad(prev => Math.max(1, prev - 1))}
+                className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="w-12 text-center font-black text-sm">{cantidad}</span>
+              <button 
+                onClick={() => setCantidad(prev => Math.min(tallaSeleccionada?.stock || 1, prev + 1))}
+                className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"
+              >
+                <Plus size={16} />
+              </button>
             </div>
-          )}
+          </div>
 
           <div className="flex flex-row gap-6 pt-2 justify-start items-center">
             <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60">
@@ -329,13 +343,16 @@ export default function ProductoDetallePage() {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={tallasDisponibles.length > 0 && (!tallaSeleccionada || tallaSeleccionada.stock <= 0)}
-            className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 mt-2 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
-          >
-            <ShoppingCart size={18} /> AÑADIR AL CARRITO
-          </button>
+          <div className="pt-2 min-h-[64px]">
+            <button
+              onClick={handleAddToCart}
+              disabled={tallasLoading || !tallaSeleccionada || tallaSeleccionada.stock <= 0}
+              className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            >
+              {tallasLoading ? <Loader2 className="animate-spin" size={18} /> : <ShoppingCart size={18} />} 
+              AÑADIR AL CARRITO
+            </button>
+          </div>
 
           {/* Acordeones */}
           <div className="mt-4 border border-[#4a1d44]/10 rounded-2xl overflow-hidden bg-[#fdf8f6]/50">

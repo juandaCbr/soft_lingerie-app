@@ -112,6 +112,12 @@ export default function ProductoCard({ producto }: { producto: any }) {
                   const colorInfo = v.producto_colores?.[0]?.colores;
                   const isSelected = varianteActiva.id === v.id;
 
+                  // Override manual para asegurar que Vino Tinto no sea morado
+                  let colorHex = colorInfo?.hex || '#ccc';
+                  if (colorInfo?.nombre?.toLowerCase().includes('vino tinto')) {
+                    colorHex = '#6B1324';
+                  }
+
                   return (
                     <button
                       key={v.id}
@@ -122,7 +128,7 @@ export default function ProductoCard({ producto }: { producto: any }) {
                         : 'hover:scale-110'
                         }`}
                       style={{
-                        backgroundColor: colorInfo?.hex || '#ccc',
+                        backgroundColor: colorHex,
                         boxShadow: isSelected ? '0 0 0 1px rgba(0,0,0,0.05)' : 'none'
                       }}
                     >

@@ -210,6 +210,35 @@ export default function ProductoDetallePage() {
             <p className="text-2xl md:text-2xl font-black opacity-90 text-left">
               ${Number(varianteActiva.precio).toLocaleString('es-CO')} COP
             </p>
+
+            {/* Selector de colores movido aquí */}
+            {variantes.length > 1 && (
+              <div className="py-2 flex flex-col items-start">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Colores Disponibles</h3>
+                <div className="flex gap-3">
+                  {variantes.map((v) => {
+                    let color = v.producto_colores?.[0]?.colores;
+                    const isSelected = varianteActiva.id === v.id;
+                    
+                    // Override manual para asegurar que Vino Tinto no sea morado
+                    let colorHex = color?.hex || '#ccc';
+                    if (color?.nombre?.toLowerCase().includes('vino tinto')) {
+                      colorHex = '#6B1324';
+                    }
+
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => handleVarianteChange(v)}
+                        className={`relative w-9 h-9 rounded-full border border-black/10 transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: colorHex }}
+                        title={color?.nombre}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="text-left space-y-3">
@@ -287,28 +316,6 @@ export default function ProductoDetallePage() {
                 >
                   <Plus size={16} />
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Selector de colores */}
-          {variantes.length > 1 && (
-            <div className="py-5 border-y border-[#4a1d44]/10 flex flex-col items-start">
-              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Colores Disponibles</h3>
-              <div className="flex gap-3">
-                {variantes.map((v) => {
-                  const color = v.producto_colores?.[0]?.colores;
-                  const isSelected = varianteActiva.id === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={() => handleVarianteChange(v)}
-                      className={`relative w-9 h-9 rounded-full border border-black/10 transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110' : 'hover:scale-110'}`}
-                      style={{ backgroundColor: color?.hex || '#ccc' }}
-                      title={color?.nombre}
-                    />
-                  );
-                })}
               </div>
             </div>
           )}

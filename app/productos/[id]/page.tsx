@@ -7,6 +7,7 @@ import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, Che
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
+import SizeGuideModal from '@/components/SizeGuideModal';
 
 export default function ProductoDetallePage() {
   const { id } = useParams();
@@ -22,6 +23,7 @@ export default function ProductoDetallePage() {
   const [relacionados, setRelacionados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImg, setCurrentImg] = useState(0);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
 
@@ -219,10 +221,18 @@ export default function ProductoDetallePage() {
 
           {/* Selector de Tallas con Agotados */}
           {tallasDisponibles.length > 0 && (
-            <div className="py-2 flex flex-col items-start">
-              <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50 flex items-center gap-2">
-                <Ruler size={12} /> Selecciona tu Talla
-              </h3>
+            <div className="py-2 flex flex-col items-start w-full">
+              <div className="flex justify-between items-center w-full mb-3">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
+                  <Ruler size={12} /> Selecciona tu Talla
+                </h3>
+                <button 
+                  onClick={() => setIsSizeGuideOpen(true)}
+                  className="text-[9px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all"
+                >
+                  Guía de Tallas
+                </button>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {tallasDisponibles.map((t) => {
                   const agotado = t.stock <= 0;
@@ -389,6 +399,11 @@ export default function ProductoDetallePage() {
           </div>
         </div>
       )}
+      {/* Modal Guía de Tallas */}
+      <SizeGuideModal 
+        isOpen={isSizeGuideOpen} 
+        onClose={() => setIsSizeGuideOpen(false)} 
+      />
     </main>
   );
 }

@@ -47,9 +47,9 @@ export default function CatalogoPage() {
   const [ordenarPor, setOrdenarPor] = useState('novedades');
   const [busqueda, setBusqueda] = useState('');
 
-  const [isColorFilterOpen, setIsColorFilterOpen] = useState(true);
-  const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(true);
-  const [isCatFilterOpen, setIsCatFilterOpen] = useState(true);
+  const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
+  const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
+  const [isCatFilterOpen, setIsCatFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [productosVisibles, setProductosVisibles] = useState(12);
 

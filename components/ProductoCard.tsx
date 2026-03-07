@@ -7,7 +7,7 @@ import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'luc
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 
-export default function ProductoCard({ producto, colorFiltro }: { producto: any, colorFiltro?: string }) {
+export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: any, colorFiltro?: string, priority?: boolean }) {
   const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
   const [currentImg, setCurrentImg] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -83,9 +83,10 @@ export default function ProductoCard({ producto, colorFiltro }: { producto: any,
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'
                     }`}
-                  priority={index === 0}
-                  loading={index === 0 ? 'eager' : 'lazy'}
+                  priority={priority && index === 0}
+                  loading={priority && index === 0 ? 'eager' : 'lazy'}
                 />
+
               ))}
 
               {imagenes.length > 1 && (

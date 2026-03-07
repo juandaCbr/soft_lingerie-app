@@ -92,8 +92,10 @@ export default function EditarProductoPage() {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
+      reader.onerror = () => resolve(file);
       reader.onload = (event) => {
         const img = new Image();
+        img.onerror = () => resolve(file);
         img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -133,12 +135,21 @@ export default function EditarProductoPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
+      setSaving(true); // Bloqueamos para evitar acciones mientras procesa
       toast.loading('Optimizando imágenes...', { id: 'img-opt-edit' });
-      const optimizedFiles = await Promise.all(filesArray.map(file => compressImage(file)));
+      
+      const optimizedFiles: File[] = [];
+      for (const file of filesArray) {
+        const optimized = await compressImage(file);
+        optimizedFiles.push(optimized);
+      }
+
       setNuevasImagenes(prev => [...prev, ...optimizedFiles]);
       const newPreviews = optimizedFiles.map(file => URL.createObjectURL(file));
       setPrevisualizaciones(prev => [...prev, ...newPreviews]);
+      
       toast.success('Imágenes optimizadas', { id: 'img-opt-edit' });
+      setSaving(false);
     }
   };
 

@@ -145,11 +145,7 @@ export default function ProductoDetallePage() {
     }
   };
 
-  if (loading || !varianteActiva) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="animate-spin text-[#4a1d44]" size={40} />
-    </div>
-  );
+  if (loading || !varianteActiva) return <ProductoDetalleSkeleton />;
 
   const imagenes = Array.isArray(varianteActiva.imagenes_urls)
     ? varianteActiva.imagenes_urls

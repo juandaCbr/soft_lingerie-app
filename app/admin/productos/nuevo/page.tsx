@@ -99,8 +99,10 @@ export default function NuevoProductoPage() {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
+      reader.onerror = () => resolve(file); // Si falla, devolvemos el original para no trabar
       reader.onload = (event) => {
         const img = new Image();
+        img.onerror = () => resolve(file);
         img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -140,16 +142,29 @@ export default function NuevoProductoPage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      toast.loading('Optimizando imágenes...', { id: 'img-opt' });
-      const optimizedFiles = await Promise.all(files.map(file => compressImage(file)));
+      setLoading(true); // Bloqueamos el botón de publicar mientras procesa
+      toast.loading('Optimizando imágenes una a una...', { id: 'img-opt' });
+      
+      const optimizedFiles: File[] = [];
+      for (const file of files) {
+        const optimized = await compressImage(file);
+        optimizedFiles.push(optimized);
+      }
+
       setArchivosImagenes(prev => [...prev, ...optimizedFiles]);
       const nuevasPrev = optimizedFiles.map(file => URL.createObjectURL(file));
       setPrevisualizaciones(prev => [...prev, ...nuevasPrev]);
-      toast.success('Imágenes optimizadas', { id: 'img-opt' });
+      
+      toast.success('Imágenes listas', { id: 'img-opt' });
+      setLoading(false);
     }
   };
 
   const quitarImagen = (index: number) => {
+    // Liberar memoria del navegador
+    if (previsualizaciones[index]) {
+      URL.revokeObjectURL(previsualizaciones[index]);
+    }
     setArchivosImagenes(prev => prev.filter((_, i) => i !== index));
     setPrevisualizaciones(prev => prev.filter((_, i) => i !== index));
   };

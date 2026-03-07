@@ -177,7 +177,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                       <button
                         key={v.id}
                         onClick={() => handleVarianteChange(v)}
-                        className={`relative w-9 h-9 rounded-full border border-black/10 transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110' : 'hover:scale-110'}`}
+                        className={`relative w-9 h-9 rounded-full border transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20' : 'hover:scale-110 border-black/10'}`}
                         style={{ backgroundColor: colorHex }}
                         title={color?.nombre}
                       />

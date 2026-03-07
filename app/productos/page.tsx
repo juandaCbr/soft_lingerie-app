@@ -35,30 +35,26 @@ const fetcher = async () => {
 };
 
 export default function CatalogoPage() {
-  // SWR para caché global y revalidación automática
   const { data: rawData, mutate, isLoading } = useSWR('productos-activos', fetcher, {
     revalidateOnFocus: false,
-    dedupingInterval: 60000, // 1 minuto de cache
+    dedupingInterval: 60000,
   });
 
   const [productos, setProductos] = useState<any[]>([]);
-  
-  // Estados de configuracion
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [colorSeleccionado, setColorSeleccionado] = useState('Todos');
   const [tallaSeleccionada, setTallaSeleccionada] = useState('Todas');
   const [ordenarPor, setOrdenarPor] = useState('novedades');
   const [busqueda, setBusqueda] = useState('');
 
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
-  const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
+  const [isColorFilterOpen, setIsColorFilterOpen] = useState(true);
+  const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(true);
+  const [isCatFilterOpen, setIsCatFilterOpen] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [productosVisibles, setProductosVisibles] = useState(12);
 
   const numeroWhatsApp = "573118897646";
 
-  // Procesar datos cuando cambie el SWR
   useEffect(() => {
     if (rawData) {
       const tempGrupos: any = {};
@@ -75,25 +71,15 @@ export default function CatalogoPage() {
   }, [rawData]);
 
   useEffect(() => {
-    const canalCatalogo = supabase
-      .channel('catalogo-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, () => mutate())
-      .subscribe();
-
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      supabase.removeChannel(canalCatalogo);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [mutate]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     setProductosVisibles(12);
   }, [categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, busqueda, ordenarPor]);
 
-  // --- LÓGICA DE FILTROS DINÁMICOS ---
   const { categoriasDisponibles, coloresDisponibles, tallasDisponibles } = useMemo(() => {
     const cats = new Set<string>();
     const cols = new Map<string, string>();
@@ -160,56 +146,34 @@ export default function CatalogoPage() {
         </button>
       )}
 
-      <header className="text-center mb-16 px-4">
+      <header className="text-center mb-16">
         <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[#4a1d44]/20 mb-4 block">Colecciones de Lujo</span>
         <h1 className="text-5xl md:text-7xl font-black font-playfair uppercase italic leading-none">Catálogo Soft</h1>
         <div className="h-[2px] w-16 bg-[#4a1d44]/10 mx-auto mt-8" />
       </header>
-
-      {/* CATEGORÍAS TIPO PILLS - DISEÑO MODERNO */}
-      <div className="mb-12">
-        <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-4 px-2 -mx-2 md:mx-0 md:justify-center">
-          <button 
-            onClick={() => setCategoriaSeleccionada('Todas')} 
-            className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${categoriaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white border-[#4a1d44] scale-105 shadow-lg' : 'bg-white text-[#4a1d44]/60 border-[#4a1d44]/5 hover:border-[#4a1d44]/20'}`}
-          >
-            Ver Todo
-          </button>
-          {categoriasDisponibles.map(cat => (
-            <button 
-              key={cat} 
-              onClick={() => setCategoriaSeleccionada(cat)} 
-              className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${categoriaSeleccionada === cat ? 'bg-[#4a1d44] text-white border-[#4a1d44] scale-105 shadow-lg' : 'bg-white text-[#4a1d44]/60 border-[#4a1d44]/5 hover:border-[#4a1d44]/20'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white/40 p-6 rounded-[2.5rem] border border-[#4a1d44]/5 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-[#fdf8f6] rounded-2xl"><SlidersHorizontal size={18} className="opacity-40" /></div>
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest block opacity-30">Disponibilidad</span>
-            <span className="text-xs font-black uppercase tracking-widest">{productosFinales.length} Diseños Únicos</span>
+            <span className="text-xs font-black uppercase tracking-widest">{productosFinales.length} Diseños Disponibles</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          {/* BUSQUEDA INTEGRADA */}
           <div className="relative flex-grow md:min-w-[280px]">
             <input 
               type="text" 
-              placeholder="¿Qué buscas hoy?..." 
-              className="w-full bg-white/80 py-4 pl-6 pr-14 rounded-2xl outline-none text-xs font-bold border border-[#4a1d44]/5 focus:border-[#4a1d44]/20 transition-all shadow-sm" 
+              placeholder="Buscar..." 
+              className="w-full bg-white py-4 pl-6 pr-14 rounded-2xl outline-none text-xs font-bold border border-[#4a1d44]/5 focus:border-[#4a1d44]/20 transition-all shadow-sm" 
               value={busqueda} 
               onChange={(e) => setBusqueda(e.target.value)} 
             />
             <Search size={18} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20" />
           </div>
 
-          <div className="flex items-center gap-3 bg-white/80 px-6 py-4 rounded-2xl border border-[#4a1d44]/5 shadow-sm">
+          <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-2xl border border-[#4a1d44]/5 shadow-sm">
             <ArrowUpDown size={14} className="opacity-30" />
             <select value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)} className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer">
               <option value="novedades">Novedades</option>
@@ -221,12 +185,28 @@ export default function CatalogoPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-10 items-start relative mb-24">
-        <aside className="w-full lg:w-[240px] lg:sticky lg:top-24 space-y-6">
+        <aside className="w-full lg:w-[260px] lg:sticky lg:top-24 space-y-6">
           <div className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 p-8 shadow-sm">
             
+            {/* CATEGORÍAS */}
+            <div className="mb-10">
+              <button onClick={() => setIsCatFilterOpen(!isCatFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+                Categoría <ChevronDown size={14} className={isCatFilterOpen ? "rotate-180" : ""} />
+              </button>
+              {isCatFilterOpen && (
+                <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <button onClick={() => setCategoriaSeleccionada('Todas')} className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white font-bold' : 'hover:bg-[#fdf8f6]'}`}>Ver Todo</button>
+                  {categoriasDisponibles.map(cat => (
+                    <button key={cat} onClick={() => setCategoriaSeleccionada(cat)} className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === cat ? 'bg-[#4a1d44] text-white font-bold' : 'hover:bg-[#fdf8f6]'}`}>{cat}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* TALLAS */}
             <div className="mb-10">
               <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
-                FILTRAR POR TALLA <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
+                Talla <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
               </button>
               {isTallaFilterOpen && (
                 <div className="grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
@@ -238,13 +218,14 @@ export default function CatalogoPage() {
               )}
             </div>
 
+            {/* COLORES */}
             <div className="mb-6">
               <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
-                PALETA DE COLORES <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
+                Color <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
               </button>
               {isColorFilterOpen && (
                 <div className="grid grid-cols-4 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-500">
-                  <button onClick={() => setColorSeleccionado('Todos')} className={`w-10 h-10 rounded-full border text-[8px] font-black flex items-center justify-center ${colorSeleccionado === 'Todos' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white border-[#4a1d44]/10'}`}>TODO</button>
+                  <button onClick={() => setColorSeleccionado('Todos')} className={`w-10 h-10 rounded-full border text-[8px] font-black flex items-center justify-center border-[#4a1d44]/10 ${colorSeleccionado === 'Todos' ? 'bg-[#4a1d44] text-white' : 'bg-white'}`}>TODO</button>
                   {coloresDisponibles.map(col => {
                     let colorHex = col.hex;
                     const nombreBajo = col.nombre.toLowerCase();
@@ -253,14 +234,23 @@ export default function CatalogoPage() {
                     if (nombreBajo === 'azul celeste') colorHex = '#BAE6FD';
                     if (nombreBajo === 'lila') colorHex = '#D8B4FE';
                     if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
-                    return <button key={col.nombre} title={col.nombre} onClick={() => setColorSeleccionado(col.nombre)} className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] scale-110 shadow-lg' : 'border-transparent shadow-sm'}`} style={{ backgroundColor: colorHex }} />;
+                    
+                    return (
+                      <button 
+                        key={col.nombre} 
+                        title={col.nombre} 
+                        onClick={() => setColorSeleccionado(col.nombre)} 
+                        className={`w-10 h-10 rounded-full border transition-all hover:scale-110 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] ring-2 ring-offset-2 ring-[#4a1d44]/20 scale-110' : 'border-black/10'}`} 
+                        style={{ backgroundColor: colorHex }} 
+                      />
+                    );
                   })}
                 </div>
               )}
             </div>
 
             {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas') && (
-              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }} className="mt-12 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all active:scale-95">Limpiar Filtros</button>
+              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }} className="mt-12 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all">Limpiar</button>
             )}
           </div>
         </aside>

@@ -143,13 +143,12 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
                       key={v.id}
                       onClick={(e) => cambiarVariante(e, v)}
                       title={colorInfo?.nombre}
-                      className={`group/color relative w-4 h-4 md:w-5 md:h-5 rounded-full transition-all duration-300 border border-black/10 shadow-inner ${isSelected
-                        ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110'
-                        : 'hover:scale-110'
+                      className={`group/color relative w-4 h-4 md:w-5 md:h-5 rounded-full transition-all duration-300 border shadow-inner ${isSelected
+                        ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20'
+                        : 'hover:scale-110 border-black/10'
                         }`}
                       style={{
                         backgroundColor: colorHex,
-                        boxShadow: isSelected ? '0 0 0 1px rgba(0,0,0,0.05)' : 'none'
                       }}
                     >
                       <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#4a1d44] text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/color:opacity-100 transition-opacity pointer-events-none uppercase font-bold whitespace-nowrap z-50">

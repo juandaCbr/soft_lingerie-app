@@ -95,12 +95,57 @@ export default function NuevoProductoPage() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.8);
+        };
+      };
+    });
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setArchivosImagenes(prev => [...prev, ...files]);
-      const nuevasPrev = files.map(file => URL.createObjectURL(file));
+      toast.loading('Optimizando imágenes...', { id: 'img-opt' });
+      const optimizedFiles = await Promise.all(files.map(file => compressImage(file)));
+      setArchivosImagenes(prev => [...prev, ...optimizedFiles]);
+      const nuevasPrev = optimizedFiles.map(file => URL.createObjectURL(file));
       setPrevisualizaciones(prev => [...prev, ...nuevasPrev]);
+      toast.success('Imágenes optimizadas', { id: 'img-opt' });
     }
   };
 

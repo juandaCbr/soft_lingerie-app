@@ -88,12 +88,57 @@ export default function EditarProductoPage() {
 
   useEffect(() => { cargarProducto(); }, [cargarProducto]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.8);
+        };
+      };
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      setNuevasImagenes(prev => [...prev, ...filesArray]);
-      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
+      toast.loading('Optimizando imágenes...', { id: 'img-opt-edit' });
+      const optimizedFiles = await Promise.all(filesArray.map(file => compressImage(file)));
+      setNuevasImagenes(prev => [...prev, ...optimizedFiles]);
+      const newPreviews = optimizedFiles.map(file => URL.createObjectURL(file));
       setPrevisualizaciones(prev => [...prev, ...newPreviews]);
+      toast.success('Imágenes optimizadas', { id: 'img-opt-edit' });
     }
   };
 

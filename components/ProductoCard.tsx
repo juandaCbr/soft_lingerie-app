@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 
-export default function ProductoCard({ producto }: { producto: any }) {
+export default function ProductoCard({ producto, colorFiltro }: { producto: any, colorFiltro?: string }) {
   const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
   const [currentImg, setCurrentImg] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -18,12 +19,23 @@ export default function ProductoCard({ producto }: { producto: any }) {
 
   useEffect(() => {
     if (producto.variantes) {
+      // Si hay un filtro de color activo, buscamos la variante que coincida
+      if (colorFiltro && colorFiltro !== 'Todos') {
+        const varianteMatch = producto.variantes.find((v: any) => 
+          v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorFiltro)
+        );
+        if (varianteMatch) {
+          setVarianteActiva(varianteMatch);
+          setCurrentImg(0);
+          return;
+        }
+      }
       setVarianteActiva(producto.variantes[0]);
     } else {
       setVarianteActiva(producto);
     }
     setCurrentImg(0);
-  }, [producto]);
+  }, [producto, colorFiltro]);
 
   const obtenerListaDeFotos = () => {
     if (Array.isArray(varianteActiva.imagenes_urls) && varianteActiva.imagenes_urls.length > 0) {
@@ -63,12 +75,16 @@ export default function ProductoCard({ producto }: { producto: any }) {
           {imagenes.length > 0 ? (
             <>
               {imagenes.map((img: string, index: number) => (
-                <img
+                <Image
                   key={`${varianteActiva.id}-${index}`}
                   src={img}
                   alt={`${varianteActiva.nombre} - ${index}`}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'
                     }`}
+                  priority={index === 0}
+                  loading={index === 0 ? 'eager' : 'lazy'}
                 />
               ))}
 
@@ -112,11 +128,14 @@ export default function ProductoCard({ producto }: { producto: any }) {
                   const colorInfo = v.producto_colores?.[0]?.colores;
                   const isSelected = varianteActiva.id === v.id;
 
-                  // Override manual para asegurar que Vino Tinto no sea morado
+                  // Override manual para asegurar que los colores se vean bien
                   let colorHex = colorInfo?.hex || '#ccc';
-                  if (colorInfo?.nombre?.toLowerCase().includes('vino tinto')) {
-                    colorHex = '#6B1324';
-                  }
+                  const nombreBajo = colorInfo?.nombre?.toLowerCase() || "";
+                  if (nombreBajo.includes('vino tinto')) colorHex = '#6B1324';
+                  if (nombreBajo === 'amarillo') colorHex = '#FDE047';
+                  if (nombreBajo === 'azul celeste') colorHex = '#BAE6FD';
+                  if (nombreBajo === 'lila') colorHex = '#D8B4FE';
+                  if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
 
                   return (
                     <button

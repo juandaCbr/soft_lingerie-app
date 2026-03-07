@@ -12,7 +12,17 @@ const nextConfig = {
   experimental: {
     // Si el error es por el middleware, esta opcion podria ayudar
     appDir: true,
-  }
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

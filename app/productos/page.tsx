@@ -30,11 +30,13 @@ export default function CatalogoPage() {
   const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
   const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [productosVisibles, setProductosVisibles] = useState(12);
 
   const numeroWhatsApp = "573118897646";
 
   useEffect(() => {
     fetchData();
+    // ... (rest of useEffect remains same)
 
     const canalCatalogo = supabase
       .channel('catalogo-premium-realtime')
@@ -92,6 +94,10 @@ export default function CatalogoPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    setProductosVisibles(12);
+  }, [categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, busqueda, ordenarPor]);
 
   // --- LÓGICA DE FILTROS DINÁMICOS (SOLO LO DISPONIBLE) ---
   
@@ -245,9 +251,25 @@ export default function CatalogoPage() {
               {isColorFilterOpen && (
                 <div className="grid grid-cols-5 gap-2.5 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                   <button onClick={() => setColorSeleccionado('Todos')} className={`w-9 h-9 rounded-full border flex items-center justify-center text-[8px] font-black ${colorSeleccionado === 'Todos' ? 'border-[#4a1d44] bg-[#4a1d44] text-white shadow-lg' : 'border-gray-100 hover:bg-gray-50'}`}>TODO</button>
-                  {coloresDisponibles.map((col) => (
-                    <button key={col.nombre} title={col.nombre} onClick={() => setColorSeleccionado(col.nombre)} className={`w-9 h-9 rounded-full border-2 transition-all hover:scale-110 active:scale-90 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] scale-110 shadow-md' : 'border-transparent shadow-sm'}`} style={{ backgroundColor: col.hex }} />
-                  ))}
+                  {coloresDisponibles.map((col) => {
+                    let colorHex = col.hex;
+                    const nombreBajo = col.nombre.toLowerCase();
+                    if (nombreBajo.includes('vino tinto')) colorHex = '#6B1324';
+                    if (nombreBajo === 'amarillo') colorHex = '#FDE047';
+                    if (nombreBajo === 'azul celeste') colorHex = '#BAE6FD';
+                    if (nombreBajo === 'lila') colorHex = '#D8B4FE';
+                    if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
+                    
+                    return (
+                      <button 
+                        key={col.nombre} 
+                        title={col.nombre} 
+                        onClick={() => setColorSeleccionado(col.nombre)} 
+                        className={`w-9 h-9 rounded-full border-2 transition-all hover:scale-110 active:scale-90 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] scale-110 shadow-md' : 'border-transparent shadow-sm'}`} 
+                        style={{ backgroundColor: colorHex }} 
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -266,11 +288,24 @@ export default function CatalogoPage() {
               <p className="text-xs opacity-30">Prueba con otros filtros o busca un término general.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
-              {productosFinales.map((prod) => (
-                <ProductoCard key={prod.id} producto={prod} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
+                {productosFinales.slice(0, productosVisibles).map((prod) => (
+                  <ProductoCard key={prod.id} producto={prod} colorFiltro={colorSeleccionado} />
+                ))}
+              </div>
+              
+              {productosVisibles < productosFinales.length && (
+                <div className="mt-20 flex justify-center">
+                  <button 
+                    onClick={() => setProductosVisibles(prev => prev + 12)}
+                    className="px-10 py-4 bg-white border border-[#4a1d44]/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#4a1d44] hover:text-white transition-all shadow-sm active:scale-95"
+                  >
+                    Ver más diseños
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

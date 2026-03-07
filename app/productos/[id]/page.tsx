@@ -224,11 +224,14 @@ export default function ProductoDetallePage() {
                     let color = v.producto_colores?.[0]?.colores;
                     const isSelected = varianteActiva.id === v.id;
                     
-                    // Override manual para asegurar que Vino Tinto no sea morado
+                    // Override manual para asegurar que los colores se vean bien
                     let colorHex = color?.hex || '#ccc';
-                    if (color?.nombre?.toLowerCase().includes('vino tinto')) {
-                      colorHex = '#6B1324';
-                    }
+                    const nombreBajo = color?.nombre?.toLowerCase() || "";
+                    if (nombreBajo.includes('vino tinto')) colorHex = '#6B1324';
+                    if (nombreBajo === 'amarillo') colorHex = '#FDE047';
+                    if (nombreBajo === 'azul celeste') colorHex = '#BAE6FD';
+                    if (nombreBajo === 'lila') colorHex = '#D8B4FE';
+                    if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
 
                     return (
                       <button
@@ -306,9 +309,9 @@ export default function ProductoDetallePage() {
             <div className="h-6 mt-3">
               {tallaSeleccionada && (
                 <p className="text-[10px] font-bold text-[#4a1d44]/40 uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
-                  {tallaSeleccionada.stock <= 5 && tallaSeleccionada.stock > 0 
-                    ? `¡Últimas ${tallaSeleccionada.stock} unidades!` 
-                    : 'Disponible en stock'}
+                  {tallaSeleccionada.stock > 0 
+                    ? 'Disponible en stock' 
+                    : 'Agotado'}
                 </p>
               )}
             </div>

@@ -288,18 +288,23 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
 
       {/* Relacionados */}
       {relacionados.length > 0 && (
-        <div className="mt-20 md:mt-32 pt-10 border-t border-[#4a1d44]/10 w-full max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xs md:text-sm font-black uppercase tracking-widest opacity-50">También te puede gustar</h3>
+        <div className="mt-20 md:mt-32 pt-10 border-t border-[#4a1d44]/10 w-full max-w-7xl mx-auto px-1">
+          <div className="flex justify-between items-center mb-8 px-1">
+            <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-40 italic">También te puede gustar</h3>
             <div className="flex gap-2">
-              <button onClick={() => scroll('left')} className="p-2 bg-[#fdf8f6] hover:bg-[#4a1d44]/10 rounded-full transition"><ChevronLeft size={20} /></button>
-              <button onClick={() => scroll('right')} className="p-2 bg-[#fdf8f6] hover:bg-[#4a1d44]/10 rounded-full transition"><ChevronRight size={20} /></button>
+              <button onClick={() => scroll('left')} className="p-2.5 bg-white border border-[#4a1d44]/5 hover:bg-[#4a1d44] hover:text-white rounded-full transition-all shadow-sm active:scale-90"><ChevronLeft size={16} /></button>
+              <button onClick={() => scroll('right')} className="p-2.5 bg-white border border-[#4a1d44]/5 hover:bg-[#4a1d44] hover:text-white rounded-full transition-all shadow-sm active:scale-90"><ChevronRight size={16} /></button>
             </div>
           </div>
-          <div ref={scrollRef} className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-6 snap-x items-stretch">
+          <div 
+            ref={scrollRef} 
+            className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide pb-10 snap-x snap-mandatory items-stretch"
+          >
             {relacionados.map((prod) => (
-              <div key={prod.id} className="min-w-[200px] max-w-[200px] md:min-w-[250px] md:max-w-[250px] snap-start shrink-0 flex">
-                <ProductoCard producto={prod} />
+              <div key={prod.id} className="min-w-[190px] w-[190px] md:min-w-[280px] md:w-[280px] snap-start shrink-0">
+                <div className="h-full transition-transform duration-500 hover:translate-y-[-4px]">
+                  <ProductoCard producto={prod} />
+                </div>
               </div>
             ))}
           </div>

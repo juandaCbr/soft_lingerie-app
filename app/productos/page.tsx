@@ -160,69 +160,91 @@ export default function CatalogoPage() {
         </button>
       )}
 
-      <header className="text-center mb-12">
-        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#4a1d44]/30 mb-4 block">Colecciones Exclusivas</span>
-        <h1 className="text-4xl md:text-6xl font-black font-playfair uppercase italic">Catálogo Soft</h1>
+      <header className="text-center mb-16 px-4">
+        <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[#4a1d44]/20 mb-4 block">Colecciones de Lujo</span>
+        <h1 className="text-5xl md:text-7xl font-black font-playfair uppercase italic leading-none">Catálogo Soft</h1>
+        <div className="h-[2px] w-16 bg-[#4a1d44]/10 mx-auto mt-8" />
       </header>
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white/60 p-5 rounded-[2rem] border border-[#4a1d44]/5 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#f2e1d9] flex items-center justify-center"><SlidersHorizontal size={14} /></div>
-          <span className="text-[10px] font-black uppercase tracking-widest">{productosFinales.length} Diseños Disponibles</span>
-        </div>
-        <div className="flex items-center gap-2 bg-white px-5 py-2.5 rounded-2xl border border-[#4a1d44]/5 shadow-sm">
-          <ArrowUpDown size={14} className="opacity-40" />
-          <select value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)} className="bg-transparent text-xs font-bold outline-none cursor-pointer">
-            <option value="novedades">Ultimas Novedades</option>
-            <option value="precio-menor">Precio: Menor</option>
-            <option value="precio-mayor">Precio: Mayor</option>
-          </select>
+      {/* CATEGORÍAS TIPO PILLS - DISEÑO MODERNO */}
+      <div className="mb-12">
+        <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-4 px-2 -mx-2 md:mx-0 md:justify-center">
+          <button 
+            onClick={() => setCategoriaSeleccionada('Todas')} 
+            className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${categoriaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white border-[#4a1d44] scale-105 shadow-lg' : 'bg-white text-[#4a1d44]/60 border-[#4a1d44]/5 hover:border-[#4a1d44]/20'}`}
+          >
+            Ver Todo
+          </button>
+          {categoriasDisponibles.map(cat => (
+            <button 
+              key={cat} 
+              onClick={() => setCategoriaSeleccionada(cat)} 
+              className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border ${categoriaSeleccionada === cat ? 'bg-[#4a1d44] text-white border-[#4a1d44] scale-105 shadow-lg' : 'bg-white text-[#4a1d44]/60 border-[#4a1d44]/5 hover:border-[#4a1d44]/20'}`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start relative mb-20">
-        <aside className="w-full lg:w-[260px] lg:sticky lg:top-24 space-y-6">
-          <div className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 p-7 shadow-sm">
-            <div className="relative mb-8">
-              <input type="text" placeholder="Buscar..." className="w-full bg-[#fdf8f6] py-4 pl-5 pr-12 rounded-2xl outline-none text-sm transition-all" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-              <Search size={18} className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20" />
-            </div>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white/40 p-6 rounded-[2.5rem] border border-[#4a1d44]/5 backdrop-blur-md">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-[#fdf8f6] rounded-2xl"><SlidersHorizontal size={18} className="opacity-40" /></div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest block opacity-30">Disponibilidad</span>
+            <span className="text-xs font-black uppercase tracking-widest">{productosFinales.length} Diseños Únicos</span>
+          </div>
+        </div>
 
-            <div className="mb-8">
-              <button onClick={() => setIsFiltersOpen(!isFiltersOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">
-                Categoría <ChevronDown size={14} className={isFiltersOpen ? "rotate-180" : ""} />
-              </button>
-              {isFiltersOpen && (
-                <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2">
-                  <button onClick={() => setCategoriaSeleccionada('Todas')} className={`text-left px-4 py-2 rounded-xl text-xs ${categoriaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white font-bold' : 'hover:bg-[#fdf8f6]'}`}>Todas</button>
-                  {categoriasDisponibles.map(cat => (
-                    <button key={cat} onClick={() => setCategoriaSeleccionada(cat)} className={`text-left px-4 py-2 rounded-xl text-xs ${categoriaSeleccionada === cat ? 'bg-[#4a1d44] text-white font-bold' : 'hover:bg-[#fdf8f6]'}`}>{cat}</button>
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          {/* BUSQUEDA INTEGRADA */}
+          <div className="relative flex-grow md:min-w-[280px]">
+            <input 
+              type="text" 
+              placeholder="¿Qué buscas hoy?..." 
+              className="w-full bg-white/80 py-4 pl-6 pr-14 rounded-2xl outline-none text-xs font-bold border border-[#4a1d44]/5 focus:border-[#4a1d44]/20 transition-all shadow-sm" 
+              value={busqueda} 
+              onChange={(e) => setBusqueda(e.target.value)} 
+            />
+            <Search size={18} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20" />
+          </div>
 
-            <div className="mb-8">
-              <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">
-                Talla <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
+          <div className="flex items-center gap-3 bg-white/80 px-6 py-4 rounded-2xl border border-[#4a1d44]/5 shadow-sm">
+            <ArrowUpDown size={14} className="opacity-30" />
+            <select value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)} className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer">
+              <option value="novedades">Novedades</option>
+              <option value="precio-menor">Menor Precio</option>
+              <option value="precio-mayor">Mayor Precio</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-10 items-start relative mb-24">
+        <aside className="w-full lg:w-[240px] lg:sticky lg:top-24 space-y-6">
+          <div className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 p-8 shadow-sm">
+            
+            <div className="mb-10">
+              <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+                FILTRAR POR TALLA <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
               </button>
               {isTallaFilterOpen && (
-                <div className="grid grid-cols-4 gap-2 pt-2 animate-in fade-in slide-in-from-top-2">
-                  <button onClick={() => setTallaSeleccionada('Todas')} className={`py-2 rounded-xl text-[9px] font-black border ${tallaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white' : 'bg-white border-[#4a1d44]/10'}`}>ALL</button>
+                <div className="grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <button onClick={() => setTallaSeleccionada('Todas')} className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === 'Todas' ? 'bg-[#4a1d44] text-white border-[#4a1d44]' : 'bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30'}`}>ALL</button>
                   {tallasDisponibles.map(t => (
-                    <button key={t.nombre} onClick={() => setTallaSeleccionada(t.nombre)} className={`py-2 rounded-xl text-[9px] font-black border ${tallaSeleccionada === t.nombre ? 'bg-[#4a1d44] text-white' : 'bg-white border-[#4a1d44]/10'}`}>{t.nombre}</button>
+                    <button key={t.nombre} onClick={() => setTallaSeleccionada(t.nombre)} className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === t.nombre ? 'bg-[#4a1d44] text-white border-[#4a1d44]' : 'bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30'}`}>{t.nombre}</button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="mb-4">
-              <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">
-                Color <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
+            <div className="mb-6">
+              <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+                PALETA DE COLORES <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
               </button>
               {isColorFilterOpen && (
-                <div className="grid grid-cols-5 gap-2.5 pt-2 animate-in fade-in slide-in-from-top-2">
-                  <button onClick={() => setColorSeleccionado('Todos')} className={`w-9 h-9 rounded-full border text-[8px] font-black ${colorSeleccionado === 'Todos' ? 'bg-[#4a1d44] text-white' : 'hover:bg-gray-50'}`}>TODO</button>
+                <div className="grid grid-cols-4 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <button onClick={() => setColorSeleccionado('Todos')} className={`w-10 h-10 rounded-full border text-[8px] font-black flex items-center justify-center ${colorSeleccionado === 'Todos' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white border-[#4a1d44]/10'}`}>TODO</button>
                   {coloresDisponibles.map(col => {
                     let colorHex = col.hex;
                     const nombreBajo = col.nombre.toLowerCase();
@@ -231,14 +253,14 @@ export default function CatalogoPage() {
                     if (nombreBajo === 'azul celeste') colorHex = '#BAE6FD';
                     if (nombreBajo === 'lila') colorHex = '#D8B4FE';
                     if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
-                    return <button key={col.nombre} title={col.nombre} onClick={() => setColorSeleccionado(col.nombre)} className={`w-9 h-9 rounded-full border-2 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] scale-110 shadow-md' : 'border-transparent'}`} style={{ backgroundColor: colorHex }} />;
+                    return <button key={col.nombre} title={col.nombre} onClick={() => setColorSeleccionado(col.nombre)} className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 ${colorSeleccionado === col.nombre ? 'border-[#4a1d44] scale-110 shadow-lg' : 'border-transparent shadow-sm'}`} style={{ backgroundColor: colorHex }} />;
                   })}
                 </div>
               )}
             </div>
 
             {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas') && (
-              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }} className="mt-10 w-full py-3 text-[9px] font-black uppercase text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all">Limpiar</button>
+              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }} className="mt-12 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all active:scale-95">Limpiar Filtros</button>
             )}
           </div>
         </aside>

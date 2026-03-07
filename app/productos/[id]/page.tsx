@@ -434,3 +434,36 @@ export default function ProductoDetallePage() {
     </main>
   );
 }
+
+function ProductoDetalleSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 animate-pulse">
+      <div className="max-w-5xl mx-auto">
+        <div className="h-4 w-32 bg-gray-200 rounded-full mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* Gallery Skeleton */}
+          <div className="space-y-4">
+            <div className="aspect-[4/5] bg-gray-100 rounded-[2.5rem]" />
+            <div className="flex gap-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-16 h-20 bg-gray-100 rounded-lg" />
+              ))}
+            </div>
+          </div>
+          {/* Info Skeleton */}
+          <div className="space-y-6">
+            <div className="h-4 w-24 bg-gray-100 rounded-full" />
+            <div className="h-12 w-full bg-gray-200 rounded-2xl" />
+            <div className="h-8 w-32 bg-gray-100 rounded-xl" />
+            <div className="space-y-3">
+              <div className="h-4 w-full bg-gray-50 rounded-full" />
+              <div className="h-4 w-5/6 bg-gray-50 rounded-full" />
+            </div>
+            <div className="h-20 w-full bg-gray-100 rounded-2xl" />
+            <div className="h-16 w-full bg-gray-200 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

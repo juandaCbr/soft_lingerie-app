@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/app/lib/supabase';
 import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -177,10 +178,13 @@ export default function ProductoDetallePage() {
 
           <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden bg-[#fdf8f6] shadow-sm border border-[#4a1d44]/5 shrink-0">
             {imagenes.map((img: string, index: number) => (
-              <img
+              <Image
                 key={`${varianteActiva.id}-${index}`}
                 src={img}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority={index === 0}
+                className={`object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
                 alt={varianteActiva.nombre}
               />
             ))}
@@ -194,7 +198,7 @@ export default function ProductoDetallePage() {
           <div className="flex gap-3 overflow-x-auto py-2 px-1 scrollbar-hide items-center">
             {imagenes.map((img: string, i: number) => (
               <button key={i} onClick={() => setCurrentImg(i)} className={`relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${i === currentImg ? 'border-[#4a1d44] scale-105 shadow-md' : 'border-transparent opacity-40 hover:opacity-100'}`}>
-                <img src={img} className="w-full h-full object-cover" alt="miniatura" />
+                <Image src={img} fill sizes="64px" className="object-cover" alt="miniatura" />
               </button>
             ))}
           </div>

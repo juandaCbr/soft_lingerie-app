@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { COLOMBIA_COMPLETA } from '@/app/lib/colombia';
-import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2 } from 'lucide-react';
+import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2, Smartphone, Bike } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';

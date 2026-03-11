@@ -73,9 +73,9 @@ export async function POST(req: Request) {
     } else if (metodo === 'DAVIPLATA') {
       transactionPayload.payment_method = {
         type: "DAVIPLATA",
-        phone_number: paymentData.phoneDaviplata || paymentData.docNumber, // Usamos el dato disponible
+        phone_number: String(paymentData.phoneDaviplata || "").replace(/\D/g, ''),
         user_legal_id_type: "CC",
-        user_legal_id: String(paymentData.docNumber).replace(/\D/g, '')
+        user_legal_id: String(paymentData.docNumber || "").replace(/\D/g, '')
       };
     }
 
@@ -112,21 +112,21 @@ export async function POST(req: Request) {
        }, { status: 400 });
     }
 
-    const urlFinal = wompiData.data.payment_method?.extra?.async_payment_url || 
-                     wompiData.data.payment_method?.extra?.external_url ||
-                     wompiData.data.payment_method?.extra?.external_resource_url ||
-                     wompiData.data.payment_method?.extra?.async_url ||
-                     wompiData.data.extra?.async_payment_url ||
-                     wompiData.data.extra?.external_url ||
-                     wompiData.data.payment_method?.async_payment_url ||
-                     wompiData.data.payment_method?.external_url;
+    const urlFinal = wompiData.data?.payment_method?.extra?.async_payment_url || 
+                     wompiData.data?.payment_method?.extra?.external_url ||
+                     wompiData.data?.payment_method?.extra?.external_resource_url ||
+                     wompiData.data?.payment_method?.extra?.async_url ||
+                     wompiData.data?.extra?.async_payment_url ||
+                     wompiData.data?.extra?.external_url ||
+                     wompiData.data?.payment_method?.async_payment_url ||
+                     wompiData.data?.payment_method?.external_url;
 
     // Control del error de URL no generada
-    if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA') && !urlFinal) {
+    if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'DAVIPLATA') && !urlFinal) {
         const motivoExtra = wompiData.data?.status_message || "Wompi no entregó URL de redirección";
-        const bankCode = transactionPayload.payment_method?.financial_institution_code || "N/A";
+        const bankCode = transactionPayload.payment_method?.financial_institution_code || `Directo (${metodo})`;
         return NextResponse.json({ 
-            error: `El banco no generó el enlace. Motivo: ${motivoExtra}. (Banco: ${bankCode}). Verifica que el banco sea válido para el ambiente actual.`, 
+            error: `El banco no generó el enlace. Motivo: ${motivoExtra}. (Metodo: ${bankCode}). Verifica que el método esté ACTIVO en tu Dashboard de Wompi.`, 
             debug: wompiData 
         }, { status: 400 });
     }

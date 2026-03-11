@@ -170,36 +170,41 @@ export default function GestionProductosPage() {
             <div className="w-10" />
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch">
             <div className="relative group flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-30" size={18} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-20 group-focus-within:opacity-40 transition-opacity" size={18} />
               <input
                 type="text"
-                placeholder="Buscar prenda o categoria..."
+                placeholder="Buscar por nombre o categoría..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full bg-white border border-[#4a1d44]/10 py-4 pl-12 pr-10 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#4a1d44]/5 transition-all text-[#4a1d44] font-medium"
+                className="w-full bg-white border border-[#4a1d44]/5 py-4 pl-14 pr-12 rounded-2xl shadow-sm outline-none focus:border-[#4a1d44]/20 transition-all text-[#4a1d44] font-medium text-sm placeholder:text-[#4a1d44]/20"
               />
               {busqueda && (
-                <button onClick={() => setBusqueda("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-40 hover:opacity-100 transition-opacity">
+                <button onClick={() => setBusqueda("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30 hover:text-[#4a1d44] transition-colors p-1">
                   <X size={16} />
                 </button>
               )}
             </div>
 
-            <select 
-              value={filtroStock} 
-              onChange={(e) => setFiltroStock(e.target.value as any)}
-              className="bg-white border border-[#4a1d44]/10 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-xs text-[#4a1d44] cursor-pointer"
-            >
-              <option value="todos">📦 Todos los productos</option>
-              <option value="disponibles">✅ Con Stock</option>
-              <option value="agotados">❌ Agotados</option>
-            </select>
+            <div className="relative min-w-[180px]">
+              <select 
+                value={filtroStock} 
+                onChange={(e) => setFiltroStock(e.target.value as any)}
+                className="w-full h-full bg-white border border-[#4a1d44]/5 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-[10px] uppercase tracking-widest text-[#4a1d44] cursor-pointer appearance-none hover:border-[#4a1d44]/10 transition-colors"
+              >
+                <option value="todos">Todos los productos</option>
+                <option value="disponibles">En existencia</option>
+                <option value="agotados">Sin existencias</option>
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-30">
+                <ChevronDown size={14} />
+              </div>
+            </div>
           </div>
 
-          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-2 bg-[#4a1d44] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform hover:bg-[#5c2454]">
-            <Plus size={20} /> Nueva Prenda
+          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-3 bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#5c2454] transition-all active:scale-[0.98] mt-2">
+            <Plus size={18} /> Añadir nueva prenda
           </Link>
         </header>
 

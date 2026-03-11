@@ -57,17 +57,17 @@ export async function POST(req: Request) {
     } else if (metodo === 'PSE') {
       transactionPayload.payment_method = {
         type: "PSE",
-        user_type: parseInt(paymentData.userType || "0"), // Siempre 0 o 1 como entero
+        user_type: parseInt(paymentData.userType || "0"),
         user_legal_id_type: paymentData.docType,
         user_legal_id: String(paymentData.docNumber).trim(),
         financial_institution_code: String(paymentData.bankPSE),
-        payment_description: `Pedido Soft Lingerie Ref ${referencia}`.substring(0, 64)
+        payment_description: "Pedido Soft Lingerie" // Descripción corta y sin caracteres especiales
       };
     } else if (metodo === 'BANCOLOMBIA') {
       transactionPayload.payment_method = {
         type: "BANCOLOMBIA_TRANSFER",
         user_type: "PERSON",
-        payment_description: `Pedido Soft Lingerie Ref ${referencia}`.substring(0, 64)
+        payment_description: "Pedido Soft Lingerie"
       };
     }
 

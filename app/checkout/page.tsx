@@ -442,14 +442,16 @@ export default function CheckoutPage() {
                         {metodo.id === 'BANCOLOMBIA' && (
                           <div className="space-y-4">
                             <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
-                              <div className="bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 p-2 rounded-lg text-white font-black text-[10px]">B</div>
+                              <div className="bg-[#2c2c2c] p-2 rounded-lg text-white"><Bike size={20} /></div>
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Bancolombia Transferencia</p>
-                                <p className="text-[9px] opacity-60">Pago directo por la sucursal virtual</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Bancolombia Directo</p>
+                                <p className="text-[9px] opacity-60">Transferencia desde tu cuenta</p>
                               </div>
                             </div>
-                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-center">
-                              <p className="text-[10px] text-amber-800 font-bold">Serás redirigido al portal oficial de Bancolombia para finalizar el pago de forma segura.</p>
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                              <p className="text-[10px] text-amber-800 font-bold leading-tight">
+                                Al confirmar, se generará un enlace seguro de Bancolombia. Deberás hacer click en el botón de pago que aparecerá abajo.
+                              </p>
                             </div>
                           </div>
                         )}

@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     }
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
+    const personal_data_auth_token = merchantData.data.presigned_personal_data_auth?.acceptance_token;
 
     // 2. Firma de integridad
     const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET || process.env.WOMPI_INTEGRITY_SECRET;
@@ -30,20 +31,29 @@ export async function POST(req: Request) {
     const chainToHash = `${referencia}${amountInCents}COP${integritySecret}`;
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
 
-    // 3. Forzar origen HTTPS seguro para la redireccion en produccion
-    const redirectUrlValid = `https://soft-lingerie-app.vercel.app/gracias?ref=${referencia}`;
+    // 3. Determinar URL de redireccion dinamicamente
+    const origin = req.headers.get('origin') || 'https://soft-lingerie-app.vercel.app';
+    const redirectUrlValid = `${origin}/gracias?ref=${referencia}`;
+
+    // Limpieza de telefono para Colombia (10 digitos empezando por 3)
+    let rawPhone = (telefono || "3000000000").replace(/\D/g, '');
+    if (rawPhone.startsWith('57') && rawPhone.length > 10) {
+      rawPhone = rawPhone.substring(2);
+    }
+    const cleanPhone = rawPhone.substring(0, 10);
 
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
       currency: "COP",
-      customer_email: email || "cliente@softlingerie.com",
+      customer_email: email?.trim().toLowerCase() || "cliente@softlingerie.com",
       reference: referencia,
       signature: integrity_signature,
       acceptance_token: acceptance_token,
+      personal_data_auth_token: personal_data_auth_token,
       redirect_url: redirectUrlValid,
       customer_data: {
-        phone_number: (telefono || "3000000000").replace(/\D/g, '').substring(0, 10),
-        full_name: (nombre || "Cliente Soft").substring(0, 50)
+        phone_number: cleanPhone,
+        full_name: (nombre || "Cliente Soft").trim().substring(0, 50)
       }
     };
 

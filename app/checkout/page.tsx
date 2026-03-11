@@ -95,6 +95,22 @@ export default function CheckoutPage() {
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<'INCLUIDO' | 'CONTRAENTREGA'>('INCLUIDO');
+  const [bancosPSE, setBancosPSE] = useState<{value: string, label: string}[]>([]);
+
+  useEffect(() => {
+    const fetchBancos = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/pse/financial_institutions`, {
+          headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}` }
+        });
+        const { data } = await res.json();
+        if (data) {
+          setBancosPSE(data.map((b: any) => ({ value: b.code, label: b.description })));
+        }
+      } catch (e) { console.error("Error cargando bancos:", e); }
+    };
+    fetchBancos();
+  }, []);
 
   useEffect(() => {
     const ciudades = COLOMBIA_COMPLETA[formData.departamento] || [];

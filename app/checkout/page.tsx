@@ -142,9 +142,9 @@ export default function CheckoutPage() {
   const registrarPedidoPendiente = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validacion para asegurar que PSE tenga los datos en el frontend antes de bloquear la UI
-    if (metodoPagoSeleccionado === 'PSE' && (!paymentData.docNumber || paymentData.docNumber.trim() === '')) {
-      toast.error("Para PSE debes ingresar tu numero de documento.");
+    // Validacion para asegurar que datos basicos existan
+    if (metodoPagoSeleccionado === 'NEQUI' && (!paymentData.phoneNequi || paymentData.phoneNequi.trim() === '')) {
+      toast.error("Ingresa tu número de celular para Nequi.");
       return;
     }
 
@@ -393,33 +393,17 @@ export default function CheckoutPage() {
 
                         {metodo.id === 'PSE' && (
                           <div className="space-y-4">
-                            <select name="bankPSE" value={paymentData.bankPSE} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10">
-                              <option value="">Selecciona tu banco</option>
-                              {bancosPSE.length > 0 ? (
-                                bancosPSE.map(b => (
-                                  <option key={b.value} value={b.value}>{b.label}</option>
-                                ))
-                              ) : (
-                                <>
-                                  <option value="1007">Bancolombia</option>
-                                  <option value="1040">Banco Davivienda</option>
-                                  <option value="1013">BBVA Colombia</option>
-                                  <option value="1032">Banco de Bogota</option>
-                                  <option value="1051">Banco Popular</option>
-                                  <option value="1019">Banco de Occidente</option>
-                                  <option value="1001">Banco Agrario</option>
-                                  <option value="1558">Nequi</option>
-                                  <option value="1507">DaviPlata</option>
-                                </>
-                              )}
-                            </select>
-                            <div className="grid grid-cols-2 gap-4">
-                              <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold border border-transparent focus:border-[#4a1d44]/10">
-                                <option value="CC">C. de Ciudadania</option>
-                                <option value="CE">C. de Extranjeria</option>
-                                <option value="NIT">NIT</option>
-                              </select>
-                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Ingresa tu documento" />
+                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
+                              <div className="bg-[#4a1d44] p-2 rounded-lg text-white"><User size={20} /></div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">PSE / Transferencia</p>
+                                <p className="text-[9px] opacity-60">Paga con cualquier banco</p>
+                              </div>
+                            </div>
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                              <p className="text-[10px] text-blue-800 font-bold leading-tight">
+                                Al confirmar, serás redirigido al portal seguro de PSE para elegir tu banco y completar el pago.
+                              </p>
                             </div>
                           </div>
                         )}
@@ -435,7 +419,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                               <p className="text-[10px] text-amber-800 font-bold leading-tight">
-                                Al confirmar, se generara un enlace seguro de Bancolombia. Deberas hacer click en el boton de pago que aparecera abajo.
+                                Serás redirigido al portal seguro de Bancolombia para autorizar tu pago.
                               </p>
                             </div>
                           </div>

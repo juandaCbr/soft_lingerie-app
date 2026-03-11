@@ -62,16 +62,9 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE') {
-      // Se elimina el fallback de '123456789'. Si llega vacio, enviamos el error desde el backend.
-      if (!paymentData.docNumber) {
-        return NextResponse.json({ error: "PSE requiere el numero de documento del pagador." }, { status: 400 });
-      }
       transactionPayload.payment_method = {
         type: "PSE",
-        user_type: parseInt(paymentData.userType || "0"),
-        user_legal_id_type: paymentData.docType || "CC",
-        user_legal_id: String(paymentData.docNumber).replace(/\s/g, '').trim(),
-        financial_institution_code: String(paymentData.bankPSE).replace(/\s/g, '').trim(),
+        user_type: 0,
         payment_description: "Pedido Soft Lingerie"
       };
     } else if (metodo === 'BANCOLOMBIA') {
@@ -83,9 +76,7 @@ export async function POST(req: Request) {
     } else if (metodo === 'DAVIPLATA') {
       transactionPayload.payment_method = {
         type: "DAVIPLATA",
-        phone_number: String(paymentData.phoneDaviplata || "").replace(/\D/g, ''),
-        user_legal_id_type: "CC",
-        user_legal_id: String(paymentData.docNumber || "").replace(/\D/g, '')
+        payment_description: "Pedido Soft Lingerie"
       };
     }
 

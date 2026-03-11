@@ -52,16 +52,10 @@ export default function BotonWompi({
             return;
         }
 
-        // Comentario: Barrera de contencion. Garantiza que jamas se envien datos vacios al backend
-        if (metodo === 'PSE') {
-            if (!paymentData?.bankPSE) {
-                toast.error("Selecciona tu banco de la lista");
-                return;
-            }
-            if (!paymentData?.docNumber || paymentData.docNumber.trim() === '') {
-                toast.error("Ingresa tu número de documento para PSE");
-                return;
-            }
+        // Comentario: Barrera de contencion.
+        if (metodo === 'NEQUI' && (!paymentData?.phoneNequi)) {
+            toast.error("Ingresa tu número de celular para Nequi");
+            return;
         }
 
         setCargando(true);

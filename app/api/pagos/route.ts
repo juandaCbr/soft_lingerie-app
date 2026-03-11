@@ -66,7 +66,16 @@ export async function POST(req: Request) {
     const wompiData = await wompiRes.json();
 
     if (!wompiRes.ok) {
-      return NextResponse.json({ error: wompiData.error?.messages || 'Error en la pasarela' }, { status: 400 });
+      // Extraemos el mensaje de error de forma que sea una cadena simple para el frontend
+      let mensajeError = "Error en la pasarela";
+      if (wompiData.error?.messages) {
+        mensajeError = Object.entries(wompiData.error.messages)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(", ");
+      } else if (wompiData.error?.reason) {
+        mensajeError = wompiData.error.reason;
+      }
+      return NextResponse.json({ error: mensajeError }, { status: 400 });
     }
 
     return NextResponse.json({ data: wompiData.data });

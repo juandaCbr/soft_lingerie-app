@@ -27,9 +27,33 @@ export default function CheckoutPage() {
     docNumber: '',
   });
 
-  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setPaymentData({ ...paymentData, [e.target.name]: e.target.value });
+  const getCardBrand = (number: string) => {
+    const cleanNumber = number.replace(/\s/g, '');
+    if (cleanNumber.startsWith('4')) return 'VISA';
+    if (/^5[1-5]/.test(cleanNumber)) return 'MASTERCARD';
+    if (/^3[47]/.test(cleanNumber)) return 'AMEX';
+    return null;
   };
+
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = matches && matches[0] || '';
+    const parts = [];
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    if (parts.length) return parts.join(' ');
+    return v;
+  };
+
+  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    let { name, value } = e.target;
+    if (name === 'cardNumber') value = formatCardNumber(value);
+    setPaymentData({ ...paymentData, [name]: value });
+  };
+
+  const cardBrand = getCardBrand(paymentData.cardNumber);
 
   const router = useRouter();
 
@@ -278,40 +302,71 @@ export default function CheckoutPage() {
                         
                         {metodo.id === 'CARD' && (
                           <div className="space-y-4">
-                            <input name="cardHolder" value={paymentData.cardHolder} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold uppercase tracking-wider" placeholder="Nombre en la tarjeta" />
-                            <input name="cardNumber" value={paymentData.cardNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-sm font-mono" placeholder="0000 0000 0000 0000" maxLength={19} />
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">Datos de tarjeta</p>
+                              <div className="flex gap-2">
+                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'VISA' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'opacity-20'}`}>VISA</span>
+                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'MASTERCARD' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'opacity-20'}`}>MASTER</span>
+                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'AMEX' ? 'bg-cyan-50 border-cyan-200 text-cyan-600' : 'opacity-20'}`}>AMEX</span>
+                              </div>
+                            </div>
+                            <input name="cardHolder" value={paymentData.cardHolder} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold uppercase tracking-wider border border-transparent focus:border-[#4a1d44]/10" placeholder="Nombre en la tarjeta" />
+                            <input name="cardNumber" value={paymentData.cardNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-sm font-mono border border-transparent focus:border-[#4a1d44]/10" placeholder="0000 0000 0000 0000" maxLength={19} />
                             <div className="grid grid-cols-2 gap-4">
-                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="MM / YY" maxLength={5} />
-                              <input name="cvv" value={paymentData.cvv} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="CVV" maxLength={4} />
+                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="MM / YY" maxLength={5} />
+                              <input name="cvv" value={paymentData.cvv} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="CVV" maxLength={4} />
                             </div>
                           </div>
                         )}
 
                         {metodo.id === 'NEQUI' && (
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-2">Número de celular Nequi</p>
-                            <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-lg font-bold tracking-widest text-[#4a1d44]" placeholder="300 000 0000" maxLength={10} />
-                            <p className="text-[9px] opacity-40 italic mt-2">Recibirás una notificación en tu App Nequi para autorizar.</p>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
+                              <div className="bg-[#e6007e] p-2 rounded-lg text-white"><Smartphone size={20} /></div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Nequi Directo</p>
+                                <p className="text-[9px] opacity-60">Pago rápido desde tu celular</p>
+                              </div>
+                            </div>
+                            <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#4a1d44]/10 focus:border-[#4a1d44] text-center" placeholder="300 000 0000" maxLength={10} />
+                            <p className="text-[9px] opacity-40 italic text-center">Te llegará una notificación de pago de "Wompi" a tu App.</p>
                           </div>
                         )}
 
                         {metodo.id === 'PSE' && (
                           <div className="space-y-4">
-                            <select name="bankPSE" value={paymentData.bankPSE} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold">
+                            <select name="bankPSE" value={paymentData.bankPSE} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10">
                               <option value="">Selecciona tu banco</option>
                               <option value="1007">Bancolombia</option>
                               <option value="1040">Banco Davivienda</option>
                               <option value="1013">BBVA Colombia</option>
                               <option value="1032">Banco de Bogotá</option>
-                              {/* Estos bancos se cargarán dinámicamente luego */}
+                              <option value="1051">Banco Popular</option>
+                              <option value="1019">Banco de Occidente</option>
+                              <option value="1001">Banco Agrario</option>
+                              <option value="1002">Banco Procredit</option>
+                              <option value="1006">Banco Itaú</option>
+                              <option value="1014">Banco Sudameris</option>
+                              <option value="1052">Banco AV Villas</option>
+                              <option value="1061">Banco Coopcentral</option>
+                              <option value="1062">Banco Falabella</option>
+                              <option value="1063">Banco Finandina</option>
+                              <option value="1064">Banco Multibank</option>
+                              <option value="1065">Banco Pichincha</option>
+                              <option value="1066">Banco Santander</option>
+                              <option value="1067">Banco Scotiabank Colpatria</option>
+                              <option value="1068">Banco Serfinanza</option>
+                              <option value="1558">Nequi</option>
+                              <option value="1507">DaviPlata</option>
+                              <option value="1801">Lulo Bank</option>
                             </select>
                             <div className="grid grid-cols-2 gap-4">
-                              <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold">
-                                <option value="CC">Cédula de Ciudadanía</option>
-                                <option value="CE">Cédula de Extranjería</option>
+                              <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold border border-transparent focus:border-[#4a1d44]/10">
+                                <option value="CC">C. de Ciudadanía</option>
+                                <option value="CE">C. de Extranjería</option>
                                 <option value="NIT">NIT</option>
                               </select>
-                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="Número de documento" />
+                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Número" />
                             </div>
                           </div>
                         )}

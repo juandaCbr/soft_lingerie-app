@@ -96,8 +96,9 @@ export default function BotonWompi({
         try {
             let finalPaymentData = { ...paymentData };
 
+            // SOLUCIÓN: Solo tokenizamos si el método es tarjeta
             if (metodo === 'CARD') {
-                toast.loading("Tokenizando tarjeta...", { id: 'pago-loading' });
+                toast.loading("Validando tarjeta...", { id: 'pago-loading' });
                 const token = await obtenerTokenTarjeta();
                 finalPaymentData.token = token;
             }

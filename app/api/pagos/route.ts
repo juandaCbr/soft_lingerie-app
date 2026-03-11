@@ -57,9 +57,9 @@ export async function POST(req: Request) {
     } else if (metodo === 'PSE') {
       transactionPayload.payment_method = {
         type: "PSE",
-        user_type: Number(paymentData.userType),
+        user_type: Number(paymentData.userType || 0),
         user_legal_id_type: paymentData.docType,
-        user_legal_id: paymentData.docNumber,
+        user_legal_id: String(paymentData.docNumber),
         financial_institution_code: paymentData.bankPSE,
         payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
       };

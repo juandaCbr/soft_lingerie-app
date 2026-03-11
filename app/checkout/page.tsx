@@ -197,8 +197,22 @@ export default function CheckoutPage() {
 
   // Función para obtener el token de la tarjeta directamente desde Wompi
   const obtenerTokenTarjeta = async () => {
-    const cleanNumber = paymentData.cardNumber.replace(/\s/g, '');
-    const [month, year] = paymentData.expiry.split('/').map(s => s.trim());
+    // 1. Limpieza extrema de datos
+    const cleanNumber = paymentData.cardNumber.replace(/\D/g, '');
+    const expiryParts = paymentData.expiry.split('/').map(s => s.replace(/\D/g, '').trim());
+    
+    if (expiryParts.length < 2 || !expiryParts[0] || !expiryParts[1]) {
+      throw new Error("Formato de fecha inválido (MM / YY)");
+    }
+
+    const [month, year] = expiryParts;
+
+    console.log("Intentando tokenizar con:", { 
+      month, 
+      year, 
+      holder: paymentData.cardHolder,
+      cvcLength: paymentData.cvv.length 
+    });
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
       method: 'POST',
@@ -208,18 +222,24 @@ export default function CheckoutPage() {
       },
       body: JSON.stringify({
         number: cleanNumber,
-        cvc: paymentData.cvv,
+        cvc: paymentData.cvv.trim(),
         exp_month: month,
         exp_year: year,
-        card_holder: paymentData.cardHolder
+        card_holder: paymentData.cardHolder.trim()
       })
     });
 
     const result = await response.json();
+    
     if (!response.ok) {
-      console.error("Error Wompi Token:", result);
-      throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
+      // Si Wompi devuelve error, mostramos el detalle técnico en consola para arreglarlo
+      console.error("Detalle error Wompi:", result.error);
+      const detail = result.error?.messages 
+        ? Object.entries(result.error.messages).map(([k, v]) => `${k}: ${v}`).join(", ")
+        : result.error?.reason;
+      throw new Error(detail || "Datos de tarjeta rechazados por la pasarela");
     }
+
     return result.data.id;
   };
 

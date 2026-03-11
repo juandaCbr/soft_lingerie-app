@@ -235,26 +235,81 @@ export default function CheckoutPage() {
                 <p className="text-xs opacity-60 uppercase tracking-widest font-bold">Selecciona tu método preferido</p>
               </div>
 
-              {/* SELECTOR DE MÉTODOS DE PAGO ELEGANTES */}
               <div className="grid grid-cols-1 gap-3">
                 {metodosPago.map((metodo) => (
-                  <button
-                    key={metodo.id}
-                    onClick={() => setMetodoPagoSeleccionado(metodo.id as any)}
-                    className={`group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl transition-all ${metodoPagoSeleccionado === metodo.id ? 'bg-[#4a1d44] text-white' : 'bg-white text-[#4a1d44]'}`}>
-                        {metodo.icon}
+                  <div key={metodo.id} className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setMetodoPagoSeleccionado(metodo.id as any)}
+                      className={`w-full group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20'}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl transition-all ${metodoPagoSeleccionado === metodo.id ? 'bg-[#4a1d44] text-white' : 'bg-white text-[#4a1d44]'}`}>
+                          {metodo.icon}
+                        </div>
+                        <span className={`text-xs font-black uppercase tracking-widest ${metodoPagoSeleccionado === metodo.id ? 'text-[#4a1d44]' : 'opacity-60'}`}>
+                          {metodo.label}
+                        </span>
                       </div>
-                      <span className={`text-xs font-black uppercase tracking-widest ${metodoPagoSeleccionado === metodo.id ? 'text-[#4a1d44]' : 'opacity-60'}`}>
-                        {metodo.label}
-                      </span>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]' : 'border-[#4a1d44]/10'}`}>
-                      {metodoPagoSeleccionado === metodo.id && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                    </div>
-                  </button>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]' : 'border-[#4a1d44]/10'}`}>
+                        {metodoPagoSeleccionado === metodo.id && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                      </div>
+                    </button>
+
+                    {/* FORMULARIOS NATIVOS SEGÚN EL MÉTODO */}
+                    {metodoPagoSeleccionado === metodo.id && (
+                      <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
+                        
+                        {metodo.id === 'CARD' && (
+                          <div className="space-y-4">
+                            <input name="cardHolder" value={paymentData.cardHolder} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold uppercase tracking-wider" placeholder="Nombre en la tarjeta" />
+                            <input name="cardNumber" value={paymentData.cardNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-sm font-mono" placeholder="0000 0000 0000 0000" maxLength={19} />
+                            <div className="grid grid-cols-2 gap-4">
+                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="MM / YY" maxLength={5} />
+                              <input name="cvv" value={paymentData.cvv} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="CVV" maxLength={4} />
+                            </div>
+                          </div>
+                        )}
+
+                        {metodo.id === 'NEQUI' && (
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-2">Número de celular Nequi</p>
+                            <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-lg font-bold tracking-widest text-[#4a1d44]" placeholder="300 000 0000" maxLength={10} />
+                            <p className="text-[9px] opacity-40 italic mt-2">Recibirás una notificación en tu App Nequi para autorizar.</p>
+                          </div>
+                        )}
+
+                        {metodo.id === 'PSE' && (
+                          <div className="space-y-4">
+                            <select name="bankPSE" value={paymentData.bankPSE} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold">
+                              <option value="">Selecciona tu banco</option>
+                              <option value="1007">Bancolombia</option>
+                              <option value="1040">Banco Davivienda</option>
+                              <option value="1013">BBVA Colombia</option>
+                              <option value="1032">Banco de Bogotá</option>
+                              {/* Estos bancos se cargarán dinámicamente luego */}
+                            </select>
+                            <div className="grid grid-cols-2 gap-4">
+                              <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold">
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="NIT">NIT</option>
+                              </select>
+                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs" placeholder="Número de documento" />
+                            </div>
+                          </div>
+                        )}
+
+                        {metodo.id === 'BANCOLOMBIA' && (
+                          <div className="text-center py-4">
+                            <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">Pago con Transferencia Directa</p>
+                            <p className="text-xs mt-2 font-bold">Serás redirigido al portal de Bancolombia.</p>
+                          </div>
+                        )}
+
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
 
@@ -264,6 +319,9 @@ export default function CheckoutPage() {
                   referenciaPedido={referenciaUnica}
                   onExito={handlePagoConfirmadoVisual}
                   disabled={!metodoPagoSeleccionado}
+                  metodo={metodoPagoSeleccionado}
+                  paymentData={paymentData}
+                  email={formData.email}
                 />
               </div>
 

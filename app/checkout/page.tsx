@@ -15,6 +15,22 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [preparandoPago, setPreparandoPago] = useState(false);
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'BANCOLOMBIA' | null>(null);
+  const [paymentData, setPaymentData] = useState({
+    cardNumber: '',
+    cardHolder: '',
+    expiry: '',
+    cvv: '',
+    phoneNequi: '',
+    bankPSE: '',
+    userType: '0', // 0: Persona, 1: Empresa
+    docType: 'CC',
+    docNumber: '',
+  });
+
+  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setPaymentData({ ...paymentData, [e.target.name]: e.target.value });
+  };
+
   const router = useRouter();
 
   const [referenciaUnica, setReferenciaUnica] = useState('');

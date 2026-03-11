@@ -487,6 +487,8 @@ export default function CheckoutPage() {
                   metodo={metodoPagoSeleccionado}
                   paymentData={paymentData}
                   email={formData.email}
+                  nombre={formData.nombre}
+                  telefono={formData.telefono}
                 />
               </div>
 

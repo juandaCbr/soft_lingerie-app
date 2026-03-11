@@ -10,49 +10,46 @@ const supabaseAdmin = createClient(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { metodo, paymentData, referencia, monto, email } = body;
+    const { metodo, paymentData, referencia, monto, email, nombre, telefono } = body;
 
-    // Convertir monto a centavos para Wompi
     const amountInCents = Math.round(monto * 100);
 
-    // 1. Obtener la sesión de aceptación de Wompi
+    // 1. Get Acceptance Token
     const acceptanceResponse = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/merchants/${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`);
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
 
-    // 2. GENERAR FIRMA DE INTEGRIDAD
+    // 2. Generate Integrity Signature
     const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET;
-    const currency = "COP";
-    const chainToHash = `${referencia}${amountInCents}${currency}${integritySecret}`;
+    const chainToHash = `${referencia}${amountInCents}COP${integritySecret}`;
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
 
-    // URL de retorno automática para PSE/Bancolombia
     const redirectUrl = `${req.headers.get('origin')}/gracias?ref=${referencia}`;
 
+    // Base Payload according to standard Transacciones API
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
-      currency: currency,
+      currency: "COP",
       customer_email: email,
       reference: referencia,
       signature: integrity_signature,
-      redirect_url: redirectUrl, // <--- Esto garantiza el regreso a tu web
-      payment_method: {},
-      acceptance_token
+      acceptance_token: acceptance_token,
+      redirect_url: redirectUrl,
+      payment_method: {
+        type: ""
+      }
     };
 
-    // 2. Configurar el método de pago específico
     if (metodo === 'NEQUI') {
       transactionPayload.payment_method = {
         type: "NEQUI",
         phone_number: paymentData.phoneNequi
       };
     } else if (metodo === 'CARD') {
-      // Nota: En producción, el número de tarjeta debe ser tokenizado primero en el frontend
-      // Por ahora configuramos la estructura base para la API
       transactionPayload.payment_method = {
         type: "CARD",
         installments: 1,
-        token: paymentData.token // Este token vendrá del frontend
+        token: paymentData.token
       };
     } else if (metodo === 'PSE') {
       transactionPayload.payment_method = {
@@ -61,19 +58,24 @@ export async function POST(req: Request) {
         user_legal_id_type: paymentData.docType,
         user_legal_id: String(paymentData.docNumber).trim(),
         financial_institution_code: String(paymentData.bankPSE),
-        payment_description: "Pedido Soft Lingerie" // Descripción corta y sin caracteres especiales
+        payment_description: "Compra Soft Lingerie"
       };
     } else if (metodo === 'BANCOLOMBIA') {
       transactionPayload.payment_method = {
         type: "BANCOLOMBIA_TRANSFER",
         user_type: "PERSON",
-        payment_description: "Pedido Soft Lingerie"
+        payment_description: "Compra Soft Lingerie"
       };
     }
 
-    console.log("Enviando a Wompi:", JSON.stringify(transactionPayload));
+    // According to docs, for some methods customer_data might be required
+    transactionPayload.customer_data = {
+      phone_number: telefono.replace(/\D/g, '').substring(0, 10),
+      full_name: nombre.substring(0, 50)
+    };
 
-    // 3. Enviar transacción a Wompi
+    console.log("FINAL PAYLOAD:", JSON.stringify(transactionPayload));
+
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {
       method: 'POST',
       headers: {
@@ -86,22 +88,22 @@ export async function POST(req: Request) {
     const wompiData = await wompiRes.json();
 
     if (!wompiRes.ok) {
-      // Extraemos el mensaje de error de forma que sea una cadena simple para el frontend
-      let mensajeError = "Error en la pasarela";
+      console.error("WOMPI ERROR RESPONSE:", JSON.stringify(wompiData));
+      let msg = "Error en la pasarela";
       if (wompiData.error?.messages) {
-        mensajeError = Object.entries(wompiData.error.messages)
-          .map(([field, msg]) => `${field}: ${msg}`)
+        msg = Object.entries(wompiData.error.messages)
+          .map(([f, m]) => `${f}: ${m}`)
           .join(", ");
       } else if (wompiData.error?.reason) {
-        mensajeError = wompiData.error.reason;
+        msg = wompiData.error.reason;
       }
-      return NextResponse.json({ error: mensajeError }, { status: 400 });
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
 
     return NextResponse.json({ data: wompiData.data });
 
   } catch (error: any) {
-    console.error('Error procesando pago:', error);
+    console.error("CATCH ERROR:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

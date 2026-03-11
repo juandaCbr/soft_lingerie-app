@@ -20,10 +20,10 @@ function RastreoContent() {
     setError('');
     setPedido(null);
 
-    try {
-      const queryTerm = termino.trim();
+    const buscar = async (t: string) => {
+      const queryTerm = t.trim();
       
-      // Intentamos buscar primero por referencia exacta o parcial
+      // 1. Intentamos por referencia de Wompi (lo que viene en la URL)
       let { data, error: dbError } = await supabase
         .from('ventas_realizadas')
         .select('*')
@@ -32,24 +32,34 @@ function RastreoContent() {
         .limit(1)
         .maybeSingle();
 
-      // Si no encontramos por referencia, intentamos por email exacto
+      // 2. Si no, por email exacto
       if (!data && !dbError) {
-        const { data: dataEmail, error: errorEmail } = await supabase
+        const { data: dataEmail } = await supabase
           .from('ventas_realizadas')
           .select('*')
           .eq('email_cliente', queryTerm)
           .order('fecha', { ascending: false })
           .limit(1)
           .maybeSingle();
-        
         data = dataEmail;
-        dbError = errorEmail;
       }
 
-      if (dbError || !data) {
-        setError('No encontramos ningún pedido con esos datos. Verifica que la referencia o el correo sean correctos.');
+      return data;
+    };
+
+    try {
+      let resultado = await buscar(termino);
+
+      // Si no aparece a la primera (reintento por si la DB está lenta tras el pago)
+      if (!resultado) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        resultado = await buscar(termino);
+      }
+
+      if (!resultado) {
+        setError('No encontramos tu pedido aún. Si acabas de pagar, espera unos segundos y recarga la página.');
       } else {
-        setPedido(data);
+        setPedido(resultado);
       }
     } catch (err) {
       setError('Hubo un error al buscar. Intenta de nuevo.');

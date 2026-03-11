@@ -22,6 +22,7 @@ export default function GestionProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [filtroStock, setFiltroStock] = useState<"todos" | "disponibles" | "agotados">("todos");
 
   // Estados para el manejo del modal de eliminacion
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -56,10 +57,11 @@ export default function GestionProductosPage() {
 
   const fetchProductos = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('productos')
         .select('*')
-        .order('id', { ascending: false });
+        .order('id', { ascending: false }); // Ordenar por ID para que los nuevos y de prueba salgan primero
 
       if (error) throw error;
       setProductos(data || []);
@@ -101,7 +103,7 @@ export default function GestionProductosPage() {
     }
   };
 
-  // Filtro reactivo para la barra de busqueda
+  // Filtro reactivo para la barra de busqueda y estado de stock
   const productosFiltrados = useMemo(() => {
     return productos.filter((p) => {
       const nombre = p.nombre.toLowerCase();
@@ -112,9 +114,17 @@ export default function GestionProductosPage() {
       const cat = String(catStr || "").toLowerCase();
       const query = busqueda.toLowerCase();
 
-      return nombre.includes(query) || cat.includes(query);
+      // Filtro por nombre/categoria
+      const coincideBusqueda = nombre.includes(query) || cat.includes(query);
+
+      // Filtro por estado de stock
+      let coincideStock = true;
+      if (filtroStock === "disponibles") coincideStock = p.stock > 0;
+      if (filtroStock === "agotados") coincideStock = p.stock <= 0;
+
+      return coincideBusqueda && coincideStock;
     });
-  }, [productos, busqueda]);
+  }, [productos, busqueda, filtroStock]);
 
   // Alterna el estado de visibilidad del producto en la tienda
   const toggleActivo = async (id: string, estadoActual: boolean) => {
@@ -160,20 +170,32 @@ export default function GestionProductosPage() {
             <div className="w-10" />
           </div>
 
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-30" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar prenda o categoria..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full bg-white border border-[#4a1d44]/10 py-4 pl-12 pr-10 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#4a1d44]/5 transition-all text-[#4a1d44] font-medium"
-            />
-            {busqueda && (
-              <button onClick={() => setBusqueda("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-40 hover:opacity-100 transition-opacity">
-                <X size={16} />
-              </button>
-            )}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative group flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-30" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar prenda o categoria..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full bg-white border border-[#4a1d44]/10 py-4 pl-12 pr-10 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#4a1d44]/5 transition-all text-[#4a1d44] font-medium"
+              />
+              {busqueda && (
+                <button onClick={() => setBusqueda("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4a1d44] opacity-40 hover:opacity-100 transition-opacity">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            <select 
+              value={filtroStock} 
+              onChange={(e) => setFiltroStock(e.target.value as any)}
+              className="bg-white border border-[#4a1d44]/10 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-xs text-[#4a1d44] cursor-pointer"
+            >
+              <option value="todos">📦 Todos los productos</option>
+              <option value="disponibles">✅ Con Stock</option>
+              <option value="agotados">❌ Agotados</option>
+            </select>
           </div>
 
           <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-2 bg-[#4a1d44] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform hover:bg-[#5c2454]">

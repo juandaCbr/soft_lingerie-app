@@ -45,9 +45,11 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   };
 
   const imagenes = obtenerListaDeFotos();
+  const isAgotado = (varianteActiva.stock || 0) <= 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isAgotado) return;
     addToCart(varianteActiva);
     toast.success(`¡${varianteActiva.nombre} añadido!`);
   };
@@ -59,11 +61,20 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   };
 
   return (
-    <Link href={`/productos/${varianteActiva.id}`} className="block h-full">
-      <div className="group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5">
+    <Link href={`/productos/${varianteActiva.id}`} className={`block h-full ${isAgotado ? 'pointer-events-auto' : ''}`}>
+      <div className={`group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${isAgotado ? 'opacity-80' : ''}`}>
 
         {/* Contenedor de Imagen */}
         <div className="relative w-full pt-[125%] overflow-hidden bg-[#fdf8f6] flex-shrink-0">
+          
+          {/* OVERLAY AGOTADO */}
+          {isAgotado && (
+            <div className="absolute inset-0 z-40 bg-white/40 backdrop-blur-[2px] flex items-center justify-center p-4">
+              <div className="bg-[#4a1d44] text-white px-6 py-2 rounded-full shadow-2xl transform -rotate-12 border-2 border-white/20">
+                <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em]">Agotado</span>
+              </div>
+            </div>
+          )}
 
           {/* Tag de Categoría Flotante */}
           <div className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-black/5" suppressHydrationWarning>
@@ -81,12 +92,10 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
                   alt={`${varianteActiva.nombre} - ${index}`}
                   fill
                   sizes="(max-width: 768px) 50vw, 33vw"
-                  className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'
-                    }`}
+                  className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.8]' : ''}`}
                   priority={priority && index === 0}
                   loading={priority && index === 0 ? 'eager' : 'lazy'}
                 />
-
               ))}
 
               {imagenes.length > 1 && (

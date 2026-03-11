@@ -90,16 +90,15 @@ export default function CatalogoPage() {
       if (catNombre) cats.add(String(catNombre).trim());
 
       p.variantes.forEach((v: any) => {
-        if ((v.stock || 0) > 0) {
-          v.producto_colores?.forEach((pc: any) => {
-            if (pc.colores) cols.set(pc.colores.nombre, pc.colores.hex);
-          });
-          v.producto_tallas?.forEach((pt: any) => {
-            if (pt.tallas && pt.stock_talla > 0) {
-              tals.set(pt.tallas.nombre, { nombre: pt.tallas.nombre, orden: pt.tallas.orden || 0 });
-            }
-          });
-        }
+        // Quitamos la restricción de stock > 0 para que los filtros muestren todo lo activo
+        v.producto_colores?.forEach((pc: any) => {
+          if (pc.colores) cols.set(pc.colores.nombre, pc.colores.hex);
+        });
+        v.producto_tallas?.forEach((pt: any) => {
+          if (pt.tallas) {
+            tals.set(pt.tallas.nombre, { nombre: pt.tallas.nombre, orden: pt.tallas.orden || 0 });
+          }
+        });
       });
     });
 

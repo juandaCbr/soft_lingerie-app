@@ -21,18 +21,17 @@ function RastreoContent() {
     setPedido(null);
 
     try {
-      // Búsqueda más robusta: buscamos por referencia o por email por separado para evitar conflictos de tipos
+      // Búsqueda más robusta: quitamos el filtro de APROBADO para encontrar también pendientes
       const { data, error: dbError } = await supabase
         .from('ventas_realizadas')
         .select('*')
         .or(`referencia_wompi.ilike.%${termino.trim()}%,email_cliente.eq.${termino.trim()}`)
-        .eq('estado_pago', 'APROBADO')
         .order('fecha', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       if (dbError || !data) {
-        setError('No encontramos ningún pedido pagado con esos datos.');
+        setError('No encontramos ningún pedido con esos datos.');
       } else {
         setPedido(data);
       }
@@ -112,9 +111,16 @@ function RastreoContent() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Estado del envío</span>
-                <h2 className="text-2xl font-black text-[#4a1d44] uppercase tracking-tight">
-                  {pedido.estado_logistico || 'PREPARANDO'}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-[#4a1d44] uppercase tracking-tight">
+                    {pedido.estado_logistico || 'PREPARANDO'}
+                  </h2>
+                  {pedido.estado_pago === 'PENDIENTE' && (
+                    <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight animate-pulse">
+                      Pago Pendiente
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="text-left md:text-right">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Referencia</span>

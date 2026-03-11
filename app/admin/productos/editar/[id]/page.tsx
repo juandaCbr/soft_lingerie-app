@@ -214,8 +214,8 @@ export default function EditarProductoPage() {
 
       const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
         producto_id: idProducto,
-        talla_id: tallaId,
-        stock_talla: stockVal
+        talla_id: parseInt(tallaId),
+        stock_talla: Number(stockVal || 0)
       }));
 
       const { error: tallasError } = await supabase

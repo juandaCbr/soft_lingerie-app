@@ -99,15 +99,22 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchBancos = async () => {
+      const url = `${process.env.NEXT_PUBLIC_WOMPI_API_URL}/pse/financial_institutions`;
+      console.log("Intentando cargar bancos de:", url);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/pse/financial_institutions`, {
+        const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}` }
         });
-        const { data } = await res.json();
-        if (data) {
-          setBancosPSE(data.map((b: any) => ({ value: b.code, label: b.description })));
+        const json = await res.json();
+        console.log("Respuesta bancos Wompi:", json);
+        if (json.data && Array.isArray(json.data)) {
+          setBancosPSE(json.data.map((b: any) => ({ value: b.code, label: b.description })));
+        } else {
+          console.error("Formato de bancos inesperado:", json);
         }
-      } catch (e) { console.error("Error cargando bancos:", e); }
+      } catch (e) { 
+        console.error("Error FATAL cargando bancos:", e);
+      }
     };
     fetchBancos();
   }, []);

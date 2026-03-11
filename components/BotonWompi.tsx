@@ -82,7 +82,10 @@ export default function BotonWompi({
             });
 
             const result = await res.json();
-            if (!res.ok) throw new Error(result.error || "Error al procesar el pago");
+            if (!res.ok) {
+                console.error("DETALLE ERROR API PAGOS:", result);
+                throw new Error(result.error || "Error al procesar el pago");
+            }
 
             if (result.url) {
                 setUrlRedireccion(result.url);

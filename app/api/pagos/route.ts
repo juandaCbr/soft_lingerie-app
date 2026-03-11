@@ -12,9 +12,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { metodo, paymentData, referencia, monto, email, nombre, telefono } = body;
 
-    // Comentario: PSE y Bancolombia exigen montos reales. Si haces pruebas, intenta con productos de 15.000 COP o mas.
     const amountInCents = Math.round(monto * 100);
 
+    // Comentario: 1. Obtencion del token de aceptacion de Wompi
     const acceptanceResponse = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/merchants/${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`);
     if (!acceptanceResponse.ok) {
       throw new Error("No se pudo conectar con Wompi para obtener el token de aceptacion.");
@@ -22,12 +22,12 @@ export async function POST(req: Request) {
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
 
+    // Comentario: 2. Generacion de la firma de integridad
     const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET || process.env.WOMPI_INTEGRITY_SECRET;
     const chainToHash = `${referencia}${amountInCents}COP${integritySecret}`;
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
 
-    // Comentario: Al usar llaves de PRODUCCION, Wompi exige estrictamente que la redirect_url sea HTTPS.
-    // Forzamos el dominio de Vercel para asegurar que si pruebas en localhost, Wompi genere la URL del banco.
+    // Comentario: 3. Construccion del Payload para Wompi
     const redirectUrlValid = `https://soft-lingerie-app.vercel.app/gracias?ref=${referencia}`;
 
     let transactionPayload: any = {
@@ -49,7 +49,6 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE') {
-      // Comentario: PSE falla silenciosamente si envias campos de cedula vacios. Añadimos fallbacks.
       transactionPayload.payment_method = {
         type: "PSE",
         user_type: parseInt(paymentData.userType || "0"),
@@ -66,6 +65,7 @@ export async function POST(req: Request) {
       };
     }
 
+    // Comentario: 4. Envio de la peticion a Wompi
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {
       method: 'POST',
       headers: {
@@ -77,6 +77,7 @@ export async function POST(req: Request) {
 
     const wompiData = await wompiRes.json();
 
+    // Comentario: Filtro 1 - Error general de peticion
     if (!wompiRes.ok) {
       let errorMessage = "Error en la pasarela";
       if (wompiData.error && wompiData.error.messages) {
@@ -90,22 +91,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: errorMessage, debug: wompiData }, { status: 400 });
     }
 
-    // Comentario: Caza de Errores Silenciosos. Wompi devuelve codigo HTTP 200, pero la transaccion nace en estado ERROR.
-    // Esto captura la razon exacta del banco y te la envia a la pantalla.
+    // Comentario: Filtro 2 - Transaccion rechazada instantaneamente por el banco
     if (wompiData.data && (wompiData.data.status === 'ERROR' || wompiData.data.status === 'DECLINED')) {
       const statusMsg = wompiData.data.status_message || "La pasarela declino la transaccion al instante.";
       return NextResponse.json({ error: `Wompi rechazo el pago: ${statusMsg}`, debug: wompiData }, { status: 400 });
     }
 
-    // Comentario: Extraccion de la URL del banco
-    const urlFinal = wompiData.data.payment_method?.extra?.async_payment_url ||
-      wompiData.data.extra?.async_payment_url ||
-      wompiData.data.payment_method?.extra?.external_url ||
-      wompiData.data.payment_method?.extra?.async_url;
+    // Comentario: 5. Busqueda profunda de la URL de redireccion
+    const urlFinal = wompiData.data?.payment_method?.extra?.async_payment_url ||
+      wompiData.data?.extra?.async_payment_url ||
+      wompiData.data?.payment_method?.extra?.external_url ||
+      wompiData.data?.payment_method?.extra?.async_url;
 
+    // Comentario: Filtro 3 - Transaccion "Exitosa" pero sin URL (El error que te esta saliendo)
     if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA') && !urlFinal) {
+      // Extraemos los datos exactos que devolvio Wompi para mostrarlos en pantalla
+      const detalleBanco = JSON.stringify(wompiData.data?.payment_method || wompiData.data || {});
+
       return NextResponse.json({
-        error: `Transaccion PENDIENTE pero sin URL. Revisa la consola o los logs del dashboard de Wompi.`,
+        error: `ERROR URL: Wompi no generó enlace. Respuesta del banco: ${detalleBanco}`,
         debug: wompiData
       }, { status: 400 });
     }

@@ -102,7 +102,6 @@ export default function CheckoutPage() {
         });
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {
-          // Comentario: Wompi retorna 'financial_institution_code' y 'financial_institution_name'
           setBancosPSE(json.data.map((b: any) => ({
             value: b.financial_institution_code || b.code,
             label: b.financial_institution_name || b.description || b.name
@@ -141,6 +140,13 @@ export default function CheckoutPage() {
 
   const registrarPedidoPendiente = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validacion para asegurar que PSE tenga los datos en el frontend antes de bloquear la UI
+    if (metodoPagoSeleccionado === 'PSE' && (!paymentData.docNumber || paymentData.docNumber.trim() === '')) {
+      toast.error("Para PSE debes ingresar tu numero de documento.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -211,44 +217,6 @@ export default function CheckoutPage() {
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
     { id: 'BANCOLOMBIA', label: 'Bancolombia', icon: <Bike size={18} /> },
   ];
-
-  const obtenerTokenTarjeta = async () => {
-    const cleanNumber = paymentData.cardNumber.replace(/\D/g, '');
-    const expiryParts = paymentData.expiry.split('/').map(s => s.replace(/\D/g, '').trim());
-
-    if (expiryParts.length < 2 || !expiryParts[0] || !expiryParts[1]) {
-      throw new Error("Formato de fecha invalido (MM / YY)");
-    }
-
-    const [month, year] = expiryParts;
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`
-      },
-      body: JSON.stringify({
-        number: cleanNumber,
-        cvc: paymentData.cvv.trim(),
-        exp_month: month,
-        exp_year: year,
-        card_holder: paymentData.cardHolder.trim()
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Detalle error Wompi:", result.error);
-      const detail = result.error?.messages
-        ? Object.entries(result.error.messages).map(([k, v]) => `${k}: ${v}`).join(", ")
-        : result.error?.reason;
-      throw new Error(detail || "Datos de tarjeta rechazados por la pasarela");
-    }
-
-    return result.data.id;
-  };
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">
@@ -432,7 +400,7 @@ export default function CheckoutPage() {
                                 <option value="CE">C. de Extranjeria</option>
                                 <option value="NIT">NIT</option>
                               </select>
-                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Numero" />
+                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Ingresa tu documento" />
                             </div>
                           </div>
                         )}

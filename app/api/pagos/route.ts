@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const amountInCents = Math.round(monto * 100);
 
-    // Comentario: 1. Obtencion del token de aceptacion de Wompi
+    // 1. Obtener token de aceptacion
     const acceptanceResponse = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/merchants/${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`);
     if (!acceptanceResponse.ok) {
       throw new Error("No se pudo conectar con Wompi para obtener el token de aceptacion.");
@@ -22,18 +22,21 @@ export async function POST(req: Request) {
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
 
-    // Comentario: 2. Generacion de la firma de integridad
+    // 2. Firma de integridad
     const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET || process.env.WOMPI_INTEGRITY_SECRET;
+    if (!integritySecret) {
+      console.warn("ADVERTENCIA: WOMPI_INTEGRITY_SECRET no esta configurado.");
+    }
     const chainToHash = `${referencia}${amountInCents}COP${integritySecret}`;
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
 
-    // Comentario: 3. Construccion del Payload para Wompi
+    // 3. Forzar origen HTTPS seguro para la redireccion en produccion
     const redirectUrlValid = `https://soft-lingerie-app.vercel.app/gracias?ref=${referencia}`;
 
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
       currency: "COP",
-      customer_email: email || "correo@pordefecto.com",
+      customer_email: email || "cliente@softlingerie.com",
       reference: referencia,
       signature: integrity_signature,
       acceptance_token: acceptance_token,
@@ -49,11 +52,15 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE') {
+      // Se elimina el fallback de '123456789'. Si llega vacio, enviamos el error desde el backend.
+      if (!paymentData.docNumber) {
+        return NextResponse.json({ error: "PSE requiere el numero de documento del pagador." }, { status: 400 });
+      }
       transactionPayload.payment_method = {
         type: "PSE",
         user_type: parseInt(paymentData.userType || "0"),
         user_legal_id_type: paymentData.docType || "CC",
-        user_legal_id: String(paymentData.docNumber || "123456789").trim(),
+        user_legal_id: String(paymentData.docNumber).trim(),
         financial_institution_code: String(paymentData.bankPSE),
         payment_description: "Pedido Soft Lingerie"
       };
@@ -65,7 +72,6 @@ export async function POST(req: Request) {
       };
     }
 
-    // Comentario: 4. Envio de la peticion a Wompi
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {
       method: 'POST',
       headers: {
@@ -77,46 +83,43 @@ export async function POST(req: Request) {
 
     const wompiData = await wompiRes.json();
 
-    // Comentario: Filtro 1 - Error general de peticion
     if (!wompiRes.ok) {
       let errorMessage = "Error en la pasarela";
       if (wompiData.error && wompiData.error.messages) {
         const detailedMessages = Object.entries(wompiData.error.messages)
           .map(([field, msgs]: [string, any]) => `${field}: ${msgs.join(', ')}`)
           .join(' | ');
-        errorMessage = `Error de validacion Wompi: ${detailedMessages}`;
-      } else if (wompiData.error && wompiData.error.reason) {
-        errorMessage = wompiData.error.reason;
+        errorMessage = `Error de validacion: ${detailedMessages}`;
+      } else {
+        errorMessage = wompiData.error?.reason || wompiData.error?.type || errorMessage;
       }
       return NextResponse.json({ error: errorMessage, debug: wompiData }, { status: 400 });
     }
 
-    // Comentario: Filtro 2 - Transaccion rechazada instantaneamente por el banco
+    // Evaluacion de estados silenciosos de rechazo
     if (wompiData.data && (wompiData.data.status === 'ERROR' || wompiData.data.status === 'DECLINED')) {
-      const statusMsg = wompiData.data.status_message || "La pasarela declino la transaccion al instante.";
-      return NextResponse.json({ error: `Wompi rechazo el pago: ${statusMsg}`, debug: wompiData }, { status: 400 });
+       return NextResponse.json({ 
+           error: `Wompi declino la transaccion. Motivo: ${wompiData.data.status_message || 'Rechazo del banco'}`, 
+           debug: wompiData 
+       }, { status: 400 });
     }
 
-    // Comentario: 5. Busqueda profunda de la URL de redireccion
-    const urlFinal = wompiData.data?.payment_method?.extra?.async_payment_url ||
-      wompiData.data?.extra?.async_payment_url ||
-      wompiData.data?.payment_method?.extra?.external_url ||
-      wompiData.data?.payment_method?.extra?.async_url;
+    const urlFinal = wompiData.data.payment_method?.extra?.async_payment_url || 
+                     wompiData.data.extra?.async_payment_url ||
+                     wompiData.data.payment_method?.extra?.external_url ||
+                     wompiData.data.payment_method?.extra?.async_url;
 
-    // Comentario: Filtro 3 - Transaccion "Exitosa" pero sin URL (El error que te esta saliendo)
+    // Control del error de URL no generada
     if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA') && !urlFinal) {
-      // Extraemos los datos exactos que devolvio Wompi para mostrarlos en pantalla
-      const detalleBanco = JSON.stringify(wompiData.data?.payment_method || wompiData.data || {});
-
-      return NextResponse.json({
-        error: `ERROR URL: Wompi no generó enlace. Respuesta del banco: ${detalleBanco}`,
-        debug: wompiData
-      }, { status: 400 });
+        return NextResponse.json({ 
+            error: "El banco no genero el enlace. Verifica: 1. Monto mayor a $10.000. 2. Cedula real. 3. Que PSE/Bancolombia esten ACTIVOS en tu dashboard de Wompi.", 
+            debug: wompiData 
+        }, { status: 400 });
     }
 
-    return NextResponse.json({
-      data: wompiData.data,
-      url: urlFinal
+    return NextResponse.json({ 
+        data: wompiData.data,
+        url: urlFinal 
     });
 
   } catch (error: any) {

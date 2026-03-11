@@ -16,13 +16,14 @@ interface BotonWompiProps {
     telefono?: string;
 }
 
-export default function BotonWompi({ 
-    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono 
+export default function BotonWompi({
+    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
     const [verificando, setVerificando] = useState(false);
     const [urlRedireccion, setUrlRedireccion] = useState<string | null>(null);
 
+    // Comentario: Sistema de polling para Nequi y transferencias asincronas
     const iniciarPolling = (transactionId: string) => {
         setVerificando(true);
         const interval = setInterval(async () => {
@@ -38,24 +39,45 @@ export default function BotonWompi({
                     onExito(data);
                 } else if (['DECLINED', 'VOIDED', 'ERROR'].includes(data.status)) {
                     clearInterval(interval);
-                    toast.error("El pago no pudo completarse.");
+                    toast.error("El pago no pudo completarse. Wompi declinó la transacción.");
                     setVerificando(false);
                 }
-            } catch (e) { /* silent */ }
+            } catch (e) { /* Captura silenciosa para no ensuciar la consola */ }
         }, 4000);
     };
 
     const procesarPagoNativo = async () => {
-        if (!metodo) { toast.error("Elige un método de pago"); return; }
-        if (metodo === 'PSE' && !paymentData.bankPSE) { toast.error("Selecciona tu banco"); return; }
+        if (!metodo) {
+            toast.error("Elige un método de pago");
+            return;
+        }
+
+        // Comentario: Barrera de contencion. Garantiza que jamas se envien datos vacios al backend
+        if (metodo === 'PSE') {
+            if (!paymentData?.bankPSE) {
+                toast.error("Selecciona tu banco de la lista");
+                return;
+            }
+            if (!paymentData?.docNumber || paymentData.docNumber.trim() === '') {
+                toast.error("Ingresa tu número de documento para PSE");
+                return;
+            }
+        }
 
         setCargando(true);
         setUrlRedireccion(null);
+
         try {
             let finalPaymentData = { ...paymentData };
-            
+
+            // Comentario: Tokenizacion para tarjeta
             if (metodo === 'CARD') {
-                const parts = paymentData.expiry.split('/').map((s:string) => s.replace(/\D/g, '').trim());
+                if (!paymentData?.cardNumber || !paymentData?.expiry || !paymentData?.cvv) {
+                    toast.error("Completa todos los datos de la tarjeta");
+                    setCargando(false);
+                    return;
+                }
+                const parts = paymentData.expiry.split('/').map((s: string) => s.replace(/\D/g, '').trim());
                 const resToken = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}` },
@@ -72,36 +94,50 @@ export default function BotonWompi({
                 finalPaymentData.token = tokenRes.data.id;
             }
 
+            // Comentario: Llamada a tu API centralizada
             const res = await fetch('/api/pagos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    metodo, paymentData: finalPaymentData, referencia: referenciaPedido, 
-                    monto: montoTotal, email, nombre, telefono 
+                body: JSON.stringify({
+                    metodo,
+                    paymentData: finalPaymentData,
+                    referencia: referenciaPedido,
+                    monto: montoTotal,
+                    email,
+                    nombre,
+                    telefono
                 })
             });
 
             const result = await res.json();
+
             if (!res.ok) {
                 console.error("DETALLE ERROR API PAGOS:", result);
                 throw new Error(result.error || "Error al procesar el pago");
             }
 
+            // Comentario: Redireccion automatica y manejo de respuestas
             if (result.url) {
                 setUrlRedireccion(result.url);
-                toast.success("Enlace de pago generado");
+                toast.success("Redirigiendo al portal bancario...");
+
+                // Redireccion forzada al banco (Evita la friccion de hacer clic)
+                setTimeout(() => {
+                    window.location.href = result.url;
+                }, 1000);
+
             } else if (metodo === 'NEQUI' && result.data?.status === 'PENDING') {
-                toast.success("Notificación enviada");
+                toast.success("Revisa tu app Nequi para aprobar el pago");
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
                 onExito(result.data);
             } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {
-                throw new Error("Wompi no devolvió una URL de redirección válida.");
+                throw new Error("El banco no generó el enlace. Asegúrate de tener las opciones aprobadas y activas en el Dashboard de Wompi.");
             } else {
                 iniciarPolling(result.data.id);
             }
         } catch (error: any) {
-            toast.error(error.message || "Fallo en la pasarela");
+            toast.error(error.message || "Fallo en la pasarela de pagos");
         } finally {
             setCargando(false);
         }
@@ -110,7 +146,7 @@ export default function BotonWompi({
     if (urlRedireccion) {
         return (
             <a href={urlRedireccion} className="w-full bg-green-600 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-green-700 transition-all border-4 border-white animate-in zoom-in">
-                <ExternalLink size={20} /> ¡IR AL BANCO AHORA!
+                <ExternalLink size={20} /> ABRIENDO PORTAL SEGURO...
             </a>
         );
     }
@@ -126,7 +162,7 @@ export default function BotonWompi({
 
     return (
         <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-            {cargando ? "Generando pago..." : "Finalizar pedido ahora"}
+            {cargando ? "Procesando de forma segura..." : "Finalizar pedido ahora"}
         </button>
     );
 }

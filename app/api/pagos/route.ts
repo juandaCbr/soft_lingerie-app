@@ -32,8 +32,8 @@ export async function POST(req: Request) {
       redirect_url: `${req.headers.get('origin')}/gracias?ref=${referencia}`,
       payment_method: { type: "" },
       customer_data: {
-        phone_number: telefono.replace(/\D/g, '').substring(0, 10),
-        full_name: nombre.substring(0, 50)
+        phone_number: (telefono || "3000000000").replace(/\D/g, '').substring(0, 10),
+        full_name: (nombre || "Cliente Soft").substring(0, 50)
       }
     };
 
@@ -45,16 +45,16 @@ export async function POST(req: Request) {
       transactionPayload.payment_method = {
         type: "PSE",
         user_type: parseInt(paymentData.userType || "0"),
-        user_legal_id_type: paymentData.docType,
-        user_legal_id: String(paymentData.docNumber).trim(),
+        user_legal_id_type: paymentData.docType || "CC",
+        user_legal_id: String(paymentData.docNumber || "").trim(),
         financial_institution_code: String(paymentData.bankPSE),
-        payment_description: "Compra Soft Lingerie"
+        payment_description: "Pedido Soft Lingerie"
       };
     } else if (metodo === 'BANCOLOMBIA') {
       transactionPayload.payment_method = {
         type: "BANCOLOMBIA_TRANSFER",
         user_type: "PERSON",
-        payment_description: "Compra Soft Lingerie"
+        payment_description: "Pedido Soft Lingerie"
       };
     }
 
@@ -70,18 +70,18 @@ export async function POST(req: Request) {
     const wompiData = await wompiRes.json();
 
     if (!wompiRes.ok) {
-      console.error("DETALLE ERROR WOMPI:", JSON.stringify(wompiData));
-      return NextResponse.json({ error: wompiData.error?.reason || "Error en Wompi" }, { status: 400 });
+      console.error("ERROR REAL WOMPI:", JSON.stringify(wompiData));
+      return NextResponse.json({ error: wompiData.error?.reason || "Error en la pasarela" }, { status: 400 });
     }
 
-    // EXTRAEMOS LA URL AQUÍ MISMO PARA EL FRONTEND
-    const urlFinal = wompiData.data.extra?.async_payment_url || 
-                     wompiData.data.payment_method?.extra?.async_payment_url ||
+    // Busqueda agresiva de la URL
+    const urlFinal = wompiData.data.payment_method?.extra?.async_payment_url || 
+                     wompiData.data.extra?.async_payment_url ||
                      wompiData.data.payment_method?.extra?.external_url;
 
     return NextResponse.json({ 
         data: wompiData.data,
-        url: urlFinal // <--- El frontend ahora solo lee esto
+        url: urlFinal 
     });
 
   } catch (error: any) {

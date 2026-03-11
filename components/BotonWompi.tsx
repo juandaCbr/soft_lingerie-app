@@ -43,6 +43,8 @@ export default function BotonWompi({
 
     const procesarPagoNativo = async () => {
         if (!metodo) { toast.error("Elige un método de pago"); return; }
+        if (metodo === 'PSE' && !paymentData.bankPSE) { toast.error("Selecciona tu banco"); return; }
+
         setCargando(true);
         setUrlRedireccion(null);
         try {
@@ -80,12 +82,14 @@ export default function BotonWompi({
 
             if (result.url) {
                 setUrlRedireccion(result.url);
-                toast.success("Enlace de pago listo");
+                toast.success("Enlace de pago generado");
             } else if (metodo === 'NEQUI' && result.data?.status === 'PENDING') {
-                toast.success("Revisa tu celular");
+                toast.success("Notificación enviada");
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
                 onExito(result.data);
+            } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {
+                throw new Error("Wompi no devolvió una URL de redirección válida.");
             } else {
                 iniciarPolling(result.data.id);
             }
@@ -114,8 +118,8 @@ export default function BotonWompi({
     }
 
     return (
-        <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50">
-            {cargando ? "Cargando..." : "Finalizar pedido ahora"}
+        <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
+            {cargando ? "Generando pago..." : "Finalizar pedido ahora"}
         </button>
     );
 }

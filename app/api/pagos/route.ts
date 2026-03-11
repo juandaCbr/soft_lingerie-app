@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       currency: currency,
       customer_email: email,
       reference: referencia,
-      signature: { integrity: integrity_signature },
+      signature: integrity_signature, // Enviamos directamente el string
       payment_method: {},
       acceptance_token
     };

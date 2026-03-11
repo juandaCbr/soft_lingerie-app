@@ -48,17 +48,29 @@ export default function CheckoutPage() {
   };
 
   const formatExpiry = (value: string) => {
-    let v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    // Solo números
+    let v = value.replace(/\D/g, '');
     if (v.length > 2) {
-      v = v.substring(0, 2) + ' / ' + v.substring(2, 4);
+      return v.substring(0, 2) + ' / ' + v.substring(2, 4);
     }
-    return v.substring(0, 7);
+    return v;
   };
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
-    if (name === 'cardNumber') value = formatCardNumber(value);
-    if (name === 'expiry') value = formatExpiry(value);
+    
+    if (name === 'cardNumber') {
+      value = value.replace(/\D/g, '').substring(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+    }
+    
+    if (name === 'expiry') {
+      // Si el usuario está borrando, permitimos que borre el formato
+      const isDeleting = (e.nativeEvent as any).inputType === 'deleteContentBackward';
+      if (!isDeleting) {
+        value = formatExpiry(value);
+      }
+    }
+    
     setPaymentData({ ...paymentData, [name]: value });
   };
 

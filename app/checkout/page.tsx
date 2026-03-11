@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [preparandoPago, setPreparandoPago] = useState(false);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'BANCOLOMBIA' | null>(null);
   const router = useRouter();
 
   const [referenciaUnica, setReferenciaUnica] = useState('');
@@ -127,6 +128,13 @@ export default function CheckoutPage() {
     }
   };
 
+  const metodosPago = [
+    { id: 'CARD', label: 'Tarjeta de Crédito', icon: <CreditCard size={18} /> },
+    { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
+    { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
+    { id: 'BANCOLOMBIA', label: 'Boton Bancolombia', icon: <Bike size={18} /> },
+  ];
+
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">
       <div className="flex items-center gap-4 mb-10">
@@ -218,20 +226,44 @@ export default function CheckoutPage() {
               </button>
             </form>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 space-y-8 animate-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                <CreditCard size={48} />
-              </div>
+            <div className="flex flex-col items-stretch py-10 space-y-8 animate-in zoom-in duration-500">
               <div className="text-center space-y-2">
-                <h2 className="text-2xl font-black italic font-playfair">Información Verificada</h2>
-                <p className="text-sm opacity-60">Selecciona tu método de pago para finalizar el pedido.</p>
+                <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto mb-4">
+                   <Lock size={32} />
+                </div>
+                <h2 className="text-2xl font-black italic font-playfair">Finalizar Pago</h2>
+                <p className="text-xs opacity-60 uppercase tracking-widest font-bold">Selecciona tu método preferido</p>
               </div>
 
-              <div className="w-full">
+              {/* SELECTOR DE MÉTODOS DE PAGO ELEGANTES */}
+              <div className="grid grid-cols-1 gap-3">
+                {metodosPago.map((metodo) => (
+                  <button
+                    key={metodo.id}
+                    onClick={() => setMetodoPagoSeleccionado(metodo.id as any)}
+                    className={`group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-xl transition-all ${metodoPagoSeleccionado === metodo.id ? 'bg-[#4a1d44] text-white' : 'bg-white text-[#4a1d44]'}`}>
+                        {metodo.icon}
+                      </div>
+                      <span className={`text-xs font-black uppercase tracking-widest ${metodoPagoSeleccionado === metodo.id ? 'text-[#4a1d44]' : 'opacity-60'}`}>
+                        {metodo.label}
+                      </span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]' : 'border-[#4a1d44]/10'}`}>
+                      {metodoPagoSeleccionado === metodo.id && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-full pt-4">
                 <BotonWompi
                   montoTotal={totalConEnvio}
                   referenciaPedido={referenciaUnica}
                   onExito={handlePagoConfirmadoVisual}
+                  disabled={!metodoPagoSeleccionado}
                 />
               </div>
 
@@ -240,7 +272,7 @@ export default function CheckoutPage() {
                   setPreparandoPago(false);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20"
+                className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 self-center"
               >
                 ← Corregir datos de envío
               </button>

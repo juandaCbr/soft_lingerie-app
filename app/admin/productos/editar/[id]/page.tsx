@@ -198,6 +198,8 @@ export default function EditarProductoPage() {
       const listaFinalUrls = [...imagenesUrls, ...urlsNuevasSubidas];
       const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + Number(b || 0), 0);
 
+      const cleanId = parseInt(idProducto);
+      
       const { error } = await supabase.from('productos').update({
         nombre,
         precio: Math.round(parseFloat(precio)),
@@ -205,26 +207,33 @@ export default function EditarProductoPage() {
         categoria,
         descripcion,
         imagenes_urls: listaFinalUrls
-      }).eq('id', idProducto);
+      }).eq('id', cleanId);
 
       if (error) throw error;
 
-      const { error: deleteError } = await supabase.from('producto_tallas').delete().eq('producto_id', idProducto);
-      if (deleteError) throw deleteError;
+      // Intentar actualizar tallas, pero atrapar el error específicamente aquí
+      try {
+        const { error: deleteError } = await supabase.from('producto_tallas').delete().eq('producto_id', cleanId);
+        if (deleteError) throw deleteError;
 
-      const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
-        producto_id: idProducto,
-        talla_id: parseInt(tallaId),
-        stock_talla: Number(stockVal || 0)
-      }));
+        const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
+          producto_id: cleanId,
+          talla_id: parseInt(tallaId),
+          stock_talla: Number(stockVal || 0)
+        }));
 
-      const { error: tallasError } = await supabase
-        .from('producto_tallas')
-        .insert(insertTallas);
+        const { error: tallasError } = await supabase
+          .from('producto_tallas')
+          .insert(insertTallas);
 
-      if (tallasError) throw tallasError;
+        if (tallasError) throw tallasError;
+        
+        toast.success("¡Producto e inventario actualizados!");
+      } catch (tallaErr: any) {
+        console.error("Error en tallas:", tallaErr);
+        toast.error("Precio actualizado, pero hubo un error de permisos al guardar el desglose de tallas. Revisa el SQL de RLS.");
+      }
 
-      toast.success("¡Prenda actualizada con stocks por talla!");
       router.push("/admin/productos");
       router.refresh();
     } catch (error: any) {

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,18 +13,25 @@ export async function POST(req: Request) {
     const { metodo, paymentData, referencia, monto, email } = body;
 
     // Convertir monto a centavos para Wompi
-    const amountInCents = monto * 100;
+    const amountInCents = Math.round(monto * 100);
 
-    // 1. Obtener la sesión de aceptación de Wompi (obligatorio legalmente)
+    // 1. Obtener la sesión de aceptación de Wompi
     const acceptanceResponse = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/merchants/${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`);
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
 
+    // 2. GENERAR FIRMA DE INTEGRIDAD (Requerida por Wompi para API directa)
+    const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET;
+    const currency = "COP";
+    const chainToHash = `${referencia}${amountInCents}${currency}${integritySecret}`;
+    const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
+
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
-      currency: "COP",
+      currency: currency,
       customer_email: email,
       reference: referencia,
+      signature: { integrity: integrity_signature },
       payment_method: {},
       acceptance_token
     };

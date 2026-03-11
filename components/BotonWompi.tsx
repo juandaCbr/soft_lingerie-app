@@ -24,30 +24,53 @@ export default function BotonWompi({
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
 
+    const obtenerTokenTarjeta = async () => {
+        const cleanNumber = paymentData.cardNumber.replace(/\s/g, '');
+        const [month, year] = paymentData.expiry.split('/');
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`
+            },
+            body: JSON.stringify({
+                number: cleanNumber,
+                cvc: paymentData.cvv,
+                exp_month: month.trim(),
+                exp_year: year.trim().length === 2 ? `20${year.trim()}` : year.trim(),
+                card_holder: paymentData.cardHolder
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
+        return result.data.id;
+    };
+
     const procesarPagoNativo = async () => {
         if (!metodo) {
             toast.error("Selecciona un método de pago");
             return;
         }
 
-        // Validaciones básicas antes de enviar
-        if (metodo === 'NEQUI' && !paymentData.phoneNequi) {
-            toast.error("Ingresa tu número de Nequi");
-            return;
-        }
-        if (metodo === 'PSE' && (!paymentData.bankPSE || !paymentData.docNumber)) {
-            toast.error("Completa los datos de PSE");
-            return;
-        }
-
         setCargando(true);
         try {
+            let finalPaymentData = { ...paymentData };
+
+            // Si es tarjeta, primero tokenizamos
+            if (metodo === 'CARD') {
+                toast.loading("Validando tarjeta...", { id: 'pago-loading' });
+                const token = await obtenerTokenTarjeta();
+                finalPaymentData.token = token;
+            }
+
             const res = await fetch('/api/pagos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     metodo,
-                    paymentData,
+                    paymentData: finalPaymentData,
                     referencia: referenciaPedido,
                     monto: montoTotal,
                     email
@@ -55,6 +78,7 @@ export default function BotonWompi({
             });
 
             const result = await res.json();
+            toast.dismiss('pago-loading');
 
             if (!res.ok || result.error) {
                 toast.error(result.error || "Error al procesar el pago");
@@ -63,20 +87,18 @@ export default function BotonWompi({
 
             const data = result.data;
 
-            // Manejo de flujos específicos
             if (metodo === 'PSE' && data.extra?.async_payment_url) {
-                toast.loading("Redirigiendo al banco...");
                 window.location.href = data.extra.async_payment_url;
             } else if (metodo === 'NEQUI' && data.status === 'PENDING') {
-                toast.success("¡Listo! Revisa tu App Nequi y acepta el pago.", { duration: 6000 });
+                toast.success("Notificación enviada a tu Nequi");
                 onExito(data);
             } else {
                 onExito(data);
             }
 
-        } catch (error) {
-            console.error("Error nativo:", error);
-            toast.error("Error de conexión con la pasarela");
+        } catch (error: any) {
+            toast.dismiss('pago-loading');
+            toast.error(error.message || "Error en la pasarela");
         } finally {
             setCargando(false);
         }

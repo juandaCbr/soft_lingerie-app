@@ -47,9 +47,18 @@ export default function CheckoutPage() {
     return v;
   };
 
+  const formatExpiry = (value: string) => {
+    let v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length > 2) {
+      v = v.substring(0, 2) + ' / ' + v.substring(2, 4);
+    }
+    return v.substring(0, 7);
+  };
+
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
     if (name === 'cardNumber') value = formatCardNumber(value);
+    if (name === 'expiry') value = formatExpiry(value);
     setPaymentData({ ...paymentData, [name]: value });
   };
 
@@ -169,11 +178,36 @@ export default function CheckoutPage() {
   };
 
   const metodosPago = [
-    { id: 'CARD', label: 'Tarjeta de Crédito', icon: <CreditCard size={18} /> },
+    { id: 'CARD', label: 'Tarjeta Crédito / Débito', icon: <CreditCard size={18} /> },
     { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
-    { id: 'BANCOLOMBIA', label: 'Boton Bancolombia', icon: <Bike size={18} /> },
+    { id: 'BANCOLOMBIA', label: 'Botón Bancolombia', icon: <Bike size={18} /> },
   ];
+
+  // Función para obtener el token de la tarjeta directamente desde Wompi
+  const obtenerTokenTarjeta = async () => {
+    const cleanNumber = paymentData.cardNumber.replace(/\s/g, '');
+    const [month, year] = paymentData.expiry.split('/');
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`
+      },
+      body: JSON.stringify({
+        number: cleanNumber,
+        cvc: paymentData.cvv,
+        exp_month: month.trim(),
+        exp_year: year.trim().length === 2 ? `20${year.trim()}` : year.trim(),
+        card_holder: paymentData.cardHolder
+      })
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
+    return result.data.id;
+  };
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">

@@ -20,18 +20,22 @@ export async function POST(req: Request) {
     const merchantData = await acceptanceResponse.json();
     const acceptance_token = merchantData.data.presigned_acceptance.acceptance_token;
 
-    // 2. GENERAR FIRMA DE INTEGRIDAD (Requerida por Wompi para API directa)
+    // 2. GENERAR FIRMA DE INTEGRIDAD
     const integritySecret = process.env.NEXT_PUBLIC_WOMPI_INTEGRITY_SECRET;
     const currency = "COP";
     const chainToHash = `${referencia}${amountInCents}${currency}${integritySecret}`;
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
+
+    // URL de retorno automática para PSE/Bancolombia
+    const redirectUrl = `${req.headers.get('origin')}/gracias?ref=${referencia}`;
 
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
       currency: currency,
       customer_email: email,
       reference: referencia,
-      signature: integrity_signature, // Enviamos directamente el string
+      signature: integrity_signature,
+      redirect_url: redirectUrl, // <--- Esto garantiza el regreso a tu web
       payment_method: {},
       acceptance_token
     };

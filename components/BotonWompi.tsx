@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { ExternalLink, ArrowRight } from 'lucide-react';
 
 interface BotonWompiProps {
     montoTotal: number;
@@ -24,6 +25,7 @@ export default function BotonWompi({
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
     const [verificando, setVerificando] = useState(false);
+    const [urlRedireccion, setUrlRedireccion] = useState<string | null>(null);
 
     const revisarEstadoTransaccion = async (transactionId: string) => {
         try {
@@ -47,14 +49,14 @@ export default function BotonWompi({
         setVerificando(true);
         const interval = setInterval(async () => {
             if (await revisarEstadoTransaccion(transactionId)) clearInterval(interval);
-        }, 3500);
+        }, 4000);
         setTimeout(() => {
             clearInterval(interval);
             if (verificando) {
                 setVerificando(false);
                 toast.error("Tiempo de espera agotado.");
             }
-        }, 120000);
+        }, 180000);
     };
 
     const obtenerTokenTarjeta = async () => {
@@ -86,18 +88,14 @@ export default function BotonWompi({
 
     const procesarPagoNativo = async () => {
         if (!metodo) { toast.error("Selecciona un método de pago"); return; }
-        
-        // Validación extra para PSE
-        if (metodo === 'PSE' && !paymentData.bankPSE) {
-            toast.error("Por favor selecciona un banco");
-            return;
-        }
+        if (metodo === 'PSE' && !paymentData.bankPSE) { toast.error("Selecciona tu banco"); return; }
 
         setCargando(true);
+        setUrlRedireccion(null);
         try {
             let finalPaymentData = { ...paymentData };
             if (metodo === 'CARD') {
-                toast.loading("Validando con el banco...", { id: 'pago-loading' });
+                toast.loading("Validando tarjeta...", { id: 'pago-loading' });
                 finalPaymentData.token = await obtenerTokenTarjeta();
             }
 
@@ -110,21 +108,18 @@ export default function BotonWompi({
             const result = await res.json();
             toast.dismiss('pago-loading');
 
-            if (!res.ok) throw new Error(result.error || "Error al procesar");
+            if (!res.ok) {
+                toast.error(result.error || "Error en el pago");
+                return;
+            }
 
             const data = result.data;
-            
-            // Búsqueda inteligente de URL de redirección (PSE / Bancolombia)
-            const asyncUrl = 
-                data.extra?.async_payment_url || 
-                data.payment_method?.extra?.async_payment_url ||
-                (data.payment_method_type === 'PSE' || data.payment_method_type === 'BANCOLOMBIA_TRANSFER' ? data.extra?.async_payment_url : null);
+            const asyncUrl = data.extra?.async_payment_url || data.payment_method?.extra?.async_payment_url;
 
             if (asyncUrl) {
-                toast.loading("Redirigiendo al portal seguro...", { duration: 2000 });
-                setTimeout(() => {
-                    window.location.href = asyncUrl;
-                }, 1000);
+                // En lugar de redirigir automático, mostramos el botón manual para mayor seguridad
+                setUrlRedireccion(asyncUrl);
+                toast.success("Enlace de pago generado con éxito");
             } else if (metodo === 'NEQUI' && data.status === 'PENDING') {
                 toast.success("¡Revisa tu celular!");
                 iniciarPolling(data.id);
@@ -141,26 +136,36 @@ export default function BotonWompi({
         }
     };
 
+    // VISTA CUANDO EL ENLACE ESTÁ LISTO (PSE / BANCOLOMBIA)
+    if (urlRedireccion) {
+        return (
+            <div className="w-full space-y-4 animate-in zoom-in duration-300">
+                <a 
+                    href={urlRedireccion}
+                    className="w-full bg-green-600 text-white py-8 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] flex flex-col items-center justify-center gap-2 shadow-2xl hover:bg-green-700 transition-all border-4 border-white"
+                >
+                    <ExternalLink size={24} />
+                    ¡CLICK AQUÍ PARA IR AL BANCO!
+                </a>
+                <p className="text-[9px] text-center opacity-50 font-bold uppercase tracking-widest">
+                    Haz click arriba para finalizar el pago de forma segura
+                </p>
+            </div>
+        );
+    }
+
     if (verificando) {
         return (
             <div className="w-full bg-[#fdf8f6] p-8 rounded-[2rem] border-2 border-[#4a1d44]/10 text-center space-y-4">
                 <div className="w-10 h-10 border-4 border-[#4a1d44]/20 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
                 <p className="text-xs font-black uppercase tracking-widest text-[#4a1d44]">Verificando tu pago...</p>
-                <p className="text-[9px] opacity-50 italic">No cierres esta ventana hasta que confirmemos el éxito del pago.</p>
             </div>
         );
     }
 
     return (
         <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-            {cargando ? (
-                <>
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Procesando...
-                </>
-            ) : (
-                "Finalizar pedido ahora"
-            )}
+            {cargando ? "Generando pago..." : "Finalizar pedido ahora"}
         </button>
     );
 }

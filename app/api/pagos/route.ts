@@ -57,19 +57,21 @@ export async function POST(req: Request) {
     } else if (metodo === 'PSE') {
       transactionPayload.payment_method = {
         type: "PSE",
-        user_type: Number(paymentData.userType || 0),
+        user_type: parseInt(paymentData.userType || "0"), // Siempre 0 o 1 como entero
         user_legal_id_type: paymentData.docType,
-        user_legal_id: String(paymentData.docNumber),
-        financial_institution_code: paymentData.bankPSE,
-        payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
+        user_legal_id: String(paymentData.docNumber).trim(),
+        financial_institution_code: String(paymentData.bankPSE),
+        payment_description: `Pedido Soft Lingerie Ref ${referencia}`.substring(0, 64)
       };
     } else if (metodo === 'BANCOLOMBIA') {
       transactionPayload.payment_method = {
         type: "BANCOLOMBIA_TRANSFER",
         user_type: "PERSON",
-        payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
+        payment_description: `Pedido Soft Lingerie Ref ${referencia}`.substring(0, 64)
       };
     }
+
+    console.log("Enviando a Wompi:", JSON.stringify(transactionPayload));
 
     // 3. Enviar transacción a Wompi
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {

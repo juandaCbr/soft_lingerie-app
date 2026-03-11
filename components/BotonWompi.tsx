@@ -60,10 +60,7 @@ export default function BotonWompi({
     const obtenerTokenTarjeta = async () => {
         const cleanNumber = paymentData.cardNumber.replace(/\D/g, '');
         const expiryParts = paymentData.expiry.split('/').map(s => s.replace(/\D/g, '').trim());
-        
-        if (expiryParts.length < 2) throw new Error("Fecha de expiración incompleta");
-
-        // FORMATO ESTRICTO WOMPI: Mes (2 dígitos) y Año (2 dígitos)
+        if (expiryParts.length < 2) throw new Error("Fecha incompleta");
         const exp_month = expiryParts[0].padStart(2, '0');
         const exp_year = expiryParts[1].slice(-2);
 
@@ -83,17 +80,19 @@ export default function BotonWompi({
         });
 
         const result = await response.json();
-        if (!response.ok) {
-            const msg = result.error?.messages 
-                ? Object.values(result.error.messages).flat().join(", ") 
-                : (result.error?.reason || "Datos de tarjeta inválidos");
-            throw new Error(msg);
-        }
+        if (!response.ok) throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
         return result.data.id;
     };
 
     const procesarPagoNativo = async () => {
         if (!metodo) { toast.error("Selecciona un método de pago"); return; }
+        
+        // Validación extra para PSE
+        if (metodo === 'PSE' && !paymentData.bankPSE) {
+            toast.error("Por favor selecciona un banco");
+            return;
+        }
+
         setCargando(true);
         try {
             let finalPaymentData = { ...paymentData };
@@ -114,11 +113,18 @@ export default function BotonWompi({
             if (!res.ok) throw new Error(result.error || "Error al procesar");
 
             const data = result.data;
-            const asyncUrl = data.extra?.async_payment_url || data.payment_method?.extra?.async_payment_url;
+            
+            // Búsqueda inteligente de URL de redirección (PSE / Bancolombia)
+            const asyncUrl = 
+                data.extra?.async_payment_url || 
+                data.payment_method?.extra?.async_payment_url ||
+                (data.payment_method_type === 'PSE' || data.payment_method_type === 'BANCOLOMBIA_TRANSFER' ? data.extra?.async_payment_url : null);
 
             if (asyncUrl) {
-                toast.loading("Redirigiendo...");
-                window.location.href = asyncUrl;
+                toast.loading("Redirigiendo al portal seguro...", { duration: 2000 });
+                setTimeout(() => {
+                    window.location.href = asyncUrl;
+                }, 1000);
             } else if (metodo === 'NEQUI' && data.status === 'PENDING') {
                 toast.success("¡Revisa tu celular!");
                 iniciarPolling(data.id);
@@ -140,13 +146,21 @@ export default function BotonWompi({
             <div className="w-full bg-[#fdf8f6] p-8 rounded-[2rem] border-2 border-[#4a1d44]/10 text-center space-y-4">
                 <div className="w-10 h-10 border-4 border-[#4a1d44]/20 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
                 <p className="text-xs font-black uppercase tracking-widest text-[#4a1d44]">Verificando tu pago...</p>
+                <p className="text-[9px] opacity-50 italic">No cierres esta ventana hasta que confirmemos el éxito del pago.</p>
             </div>
         );
     }
 
     return (
         <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-            {cargando ? "Procesando..." : "Finalizar pedido ahora"}
+            {cargando ? (
+                <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Procesando...
+                </>
+            ) : (
+                "Finalizar pedido ahora"
+            )}
         </button>
     );
 }

@@ -66,19 +66,24 @@ export default function CheckoutPage() {
       const referencia = referenciaUnica || `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.departamento})`;
 
+      const infoEnvio = {
+        nombre: `ENVÍO (${metodoPagoEnvio})`,
+        precio: metodoPagoEnvio === 'INCLUIDO' ? costoEnvio : 0,
+        quantity: 1,
+        es_envio: true,
+        metodo: metodoPagoEnvio
+      };
+
       const datosPedido = {
         nombre_cliente: formData.nombre,
         email_cliente: formData.email,
         telefono_cliente: formData.telefono,
-        direccion_envio: direccionCompleta,
+        direccion_envio: `${direccionCompleta} | ENVÍO: ${metodoPagoEnvio}`,
         ciudad: formData.ciudad,
         monto_total: totalConEnvio,
-        subtotal: totalPrice,
-        costo_envio: costoEnvio,
-        metodo_pago_envio: metodoPagoEnvio,
         estado_pago: 'PENDIENTE',
         referencia_wompi: referencia,
-        detalle_compra: cart
+        detalle_compra: [...cart, infoEnvio]
       };
 
       if (pedidoIdExistente) {

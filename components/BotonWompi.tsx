@@ -39,7 +39,8 @@ export default function BotonWompi({
                     onExito(data);
                 } else if (['DECLINED', 'VOIDED', 'ERROR'].includes(data.status)) {
                     clearInterval(interval);
-                    toast.error("El pago no pudo completarse. Wompi declinó la transacción.");
+                    const motivo = data.status_message || "Wompi declinó la transacción.";
+                    toast.error(`Pago fallido: ${motivo}`);
                     setVerificando(false);
                 }
             } catch (e) { /* Captura silenciosa para no ensuciar la consola */ }
@@ -113,20 +114,16 @@ export default function BotonWompi({
             // Comentario: Redireccion automatica y manejo de respuestas
             if (result.url) {
                 setUrlRedireccion(result.url);
-                toast.success("Redirigiendo al portal bancario...");
-
-                // Redireccion forzada al banco (Evita la friccion de hacer clic)
-                setTimeout(() => {
-                    window.location.href = result.url;
-                }, 1000);
+                // Redireccion instantanea para mejorar la experiencia (friccion cero)
+                window.location.href = result.url;
 
             } else if (metodo === 'NEQUI' && result.data?.status === 'PENDING') {
                 toast.success("Revisa tu app Nequi para aprobar el pago");
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
                 onExito(result.data);
-            } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {
-                throw new Error("El banco no generó el enlace. Asegúrate de tener las opciones aprobadas y activas en el Dashboard de Wompi.");
+            } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'DAVIPLATA') {
+                throw new Error(result.error || "El banco no generó el enlace. Revisa tu Dashboard de Wompi.");
             } else {
                 iniciarPolling(result.data.id);
             }

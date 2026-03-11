@@ -31,6 +31,8 @@ export default function CheckoutPage() {
   });
 
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
+  const [costoEnvio, setCostoEnvio] = useState(0);
+  const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<'INCLUIDO' | 'CONTRAENTREGA'>('INCLUIDO');
 
   useEffect(() => {
     const ciudades = COLOMBIA_COMPLETA[formData.departamento] || [];
@@ -39,6 +41,18 @@ export default function CheckoutPage() {
       setFormData(prev => ({ ...prev, ciudad: ciudades[0] || '' }));
     }
   }, [formData.departamento, formData.ciudad]);
+
+  useEffect(() => {
+    if (formData.ciudad === 'Valledupar') {
+      setCostoEnvio(6000);
+    } else if (formData.ciudad) {
+      setCostoEnvio(18000);
+    } else {
+      setCostoEnvio(0);
+    }
+  }, [formData.ciudad]);
+
+  const totalConEnvio = totalPrice + (metodoPagoEnvio === 'INCLUIDO' ? costoEnvio : 0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -58,7 +72,10 @@ export default function CheckoutPage() {
         telefono_cliente: formData.telefono,
         direccion_envio: direccionCompleta,
         ciudad: formData.ciudad,
-        monto_total: totalPrice,
+        monto_total: totalConEnvio,
+        subtotal: totalPrice,
+        costo_envio: costoEnvio,
+        metodo_pago_envio: metodoPagoEnvio,
         estado_pago: 'PENDIENTE',
         referencia_wompi: referencia,
         detalle_compra: cart
@@ -165,6 +182,31 @@ export default function CheckoutPage() {
                 <input name="apartamento" value={formData.apartamento} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Apto, Torre o Casa (Opcional)" />
               </div>
 
+              {/* OPCIONES DE PAGO DE ENVÍO */}
+              <div className="space-y-4 pt-6 border-t border-gray-50">
+                <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
+                  <Truck size={14} /> Método de pago del envío
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPagoEnvio('INCLUIDO')}
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${metodoPagoEnvio === 'INCLUIDO' ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-transparent bg-[#fdf8f6]'}`}
+                  >
+                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envío ahora</span>
+                    <span className="text-[10px] opacity-60">Se suma al total de tu compra</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPagoEnvio('CONTRAENTREGA')}
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${metodoPagoEnvio === 'CONTRAENTREGA' ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-transparent bg-[#fdf8f6]'}`}
+                  >
+                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envío al recibir</span>
+                    <span className="text-[10px] opacity-60">Pagas el domicilio cuando te llegue</span>
+                  </button>
+                </div>
+              </div>
+
               <button type="submit" disabled={loading || cart.length === 0} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
                 {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />} 
                 {loading ? 'Preparando pedido...' : 'Confirmar información'}
@@ -182,7 +224,7 @@ export default function CheckoutPage() {
 
               <div className="w-full">
                 <BotonWompi
-                  montoTotal={totalPrice}
+                  montoTotal={totalConEnvio}
                   referenciaPedido={referenciaUnica}
                   onExito={handlePagoConfirmadoVisual}
                 />
@@ -251,13 +293,27 @@ export default function CheckoutPage() {
               })}
             </div>
 
-            <div className="pt-8 border-t-2 border-dashed border-[#4a1d44]/10">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-2">Total a pagar</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-[#4a1d44]">
-                  ${totalPrice.toLocaleString('es-CO')}
+            <div className="pt-8 border-t-2 border-dashed border-[#4a1d44]/10 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="opacity-60">Subtotal</span>
+                <span className="font-bold">${totalPrice.toLocaleString('es-CO')}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="opacity-60 flex items-center gap-2">
+                  Envío {metodoPagoEnvio === 'CONTRAENTREGA' && <span className="text-[10px] font-black bg-[#4a1d44]/10 px-2 py-0.5 rounded-full">Contraentrega</span>}
                 </span>
-                <span className="text-sm font-black opacity-30 tracking-[0.1em]">COP</span>
+                <span className="font-bold">
+                  {metodoPagoEnvio === 'INCLUIDO' ? `$${costoEnvio.toLocaleString('es-CO')}` : 'Por pagar'}
+                </span>
+              </div>
+              <div className="pt-4 border-t border-[#4a1d44]/5">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-2">Total a pagar ahora</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-[#4a1d44]">
+                    ${totalConEnvio.toLocaleString('es-CO')}
+                  </span>
+                  <span className="text-sm font-black opacity-30 tracking-[0.1em]">COP</span>
+                </div>
               </div>
             </div>
           </div>

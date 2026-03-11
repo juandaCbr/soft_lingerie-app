@@ -267,6 +267,21 @@ export default function AdminPedidos() {
                       <div className="text-left md:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
                         <p className="text-4xl font-black text-[#4a1d44]">${Number(venta.monto_total).toLocaleString('es-CO')}</p>
+                        
+                        <div className="mt-2 space-y-1">
+                          {venta.metodo_pago_envio === 'CONTRAENTREGA' ? (
+                            <div className="flex flex-col items-start md:items-end">
+                              <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">⚠️ Cobrar Envío al entregar</span>
+                              <p className="text-[10px] font-bold opacity-40 mt-1">Costo estimado: ${Number(venta.costo_envio).toLocaleString('es-CO')}</p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-start md:items-end">
+                              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">✓ Envío Pagado</span>
+                              <p className="text-[10px] font-bold opacity-40 mt-1">Incluye: ${Number(venta.costo_envio).toLocaleString('es-CO')}</p>
+                            </div>
+                          )}
+                        </div>
+
                         {venta.numero_guia && (
                           <div className="mt-4 p-3.5 bg-blue-50 rounded-2xl border border-blue-100 text-left">
                             <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Estado: {venta.estado_logistico}</p>

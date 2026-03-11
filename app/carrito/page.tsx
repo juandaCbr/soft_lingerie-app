@@ -157,6 +157,9 @@ export default function CartPage() {
                     </p>
                     <span className="text-sm font-black opacity-30 tracking-widest">COP</span>
                   </div>
+                  <p className="text-[10px] font-bold italic opacity-40 mt-2 text-[#4a1d44]">
+                    * El costo de envío se calculará en el siguiente paso.
+                  </p>
                 </div>
 
                 {/* Boton para ir al Checkout */}

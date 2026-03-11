@@ -14,13 +14,14 @@ export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [preparandoPago, setPreparandoPago] = useState(false);
-  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'BANCOLOMBIA' | null>(null);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA' | null>(null);
   const [paymentData, setPaymentData] = useState({
     cardNumber: '',
     cardHolder: '',
     expiry: '',
     cvv: '',
     phoneNequi: '',
+    phoneDaviplata: '',
     bankPSE: '',
     userType: '0',
     docType: 'CC',
@@ -215,6 +216,7 @@ export default function CheckoutPage() {
     { id: 'CARD', label: 'Tarjeta Credito / Debito', icon: <CreditCard size={18} /> },
     { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
+    { id: 'DAVIPLATA', label: 'Daviplata', icon: <Smartphone size={18} /> },
     { id: 'BANCOLOMBIA', label: 'Bancolombia', icon: <Bike size={18} /> },
   ];
 
@@ -369,6 +371,23 @@ export default function CheckoutPage() {
                             </div>
                             <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#4a1d44]/10 focus:border-[#4a1d44] text-center" placeholder="300 000 0000" maxLength={10} />
                             <p className="text-[9px] opacity-40 italic text-center">Te llegara una notificacion de pago de Wompi a tu App.</p>
+                          </div>
+                        )}
+
+                        {metodo.id === 'DAVIPLATA' && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
+                              <div className="bg-[#ff0000] p-2 rounded-lg text-white"><Smartphone size={20} /></div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Daviplata Directo</p>
+                                <p className="text-[9px] opacity-60">Pago desde tu App Daviplata</p>
+                              </div>
+                            </div>
+                            <input name="phoneDaviplata" value={paymentData.phoneDaviplata} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#ff0000]/10 focus:border-[#ff0000] text-center" placeholder="300 000 0000" maxLength={10} />
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Documento del titular</p>
+                                <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#ff0000]/10" placeholder="Cédula para Daviplata" />
+                            </div>
                           </div>
                         )}
 

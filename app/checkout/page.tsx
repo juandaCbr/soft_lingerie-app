@@ -22,7 +22,7 @@ export default function CheckoutPage() {
     cvv: '',
     phoneNequi: '',
     bankPSE: '',
-    userType: '0', // 0: Persona, 1: Empresa
+    userType: '0',
     docType: 'CC',
     docNumber: '',
   });
@@ -48,7 +48,6 @@ export default function CheckoutPage() {
   };
 
   const formatExpiry = (value: string) => {
-    // Solo números
     let v = value.replace(/\D/g, '');
     if (v.length > 2) {
       return v.substring(0, 2) + ' / ' + v.substring(2, 4);
@@ -58,26 +57,23 @@ export default function CheckoutPage() {
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
-    
+
     if (name === 'cardNumber') {
       value = value.replace(/\D/g, '').substring(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
     }
-    
+
     if (name === 'expiry') {
-      // Si el usuario está borrando, permitimos que borre el formato
       const isDeleting = (e.nativeEvent as any).inputType === 'deleteContentBackward';
       if (!isDeleting) {
         value = formatExpiry(value);
       }
     }
-    
+
     setPaymentData({ ...paymentData, [name]: value });
   };
 
   const cardBrand = getCardBrand(paymentData.cardNumber);
-
   const router = useRouter();
-
   const [referenciaUnica, setReferenciaUnica] = useState('');
   const [pedidoIdExistente, setPedidoIdExistente] = useState<string | null>(null);
 
@@ -95,25 +91,25 @@ export default function CheckoutPage() {
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<'INCLUIDO' | 'CONTRAENTREGA'>('INCLUIDO');
-  const [bancosPSE, setBancosPSE] = useState<{value: string, label: string}[]>([]);
+  const [bancosPSE, setBancosPSE] = useState<{ value: string, label: string }[]>([]);
 
   useEffect(() => {
     const fetchBancos = async () => {
       const url = `${process.env.NEXT_PUBLIC_WOMPI_API_URL}/pse/financial_institutions`;
-      console.log("Intentando cargar bancos de:", url);
       try {
         const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}` }
         });
         const json = await res.json();
-        console.log("Respuesta bancos Wompi:", json);
         if (json.data && Array.isArray(json.data)) {
-          setBancosPSE(json.data.map((b: any) => ({ value: b.code, label: b.description })));
-        } else {
-          console.error("Formato de bancos inesperado:", json);
+          // Comentario: Wompi retorna 'financial_institution_code' y 'financial_institution_name'
+          setBancosPSE(json.data.map((b: any) => ({
+            value: b.financial_institution_code || b.code,
+            label: b.financial_institution_name || b.description || b.name
+          })));
         }
-      } catch (e) { 
-        console.error("Error FATAL cargando bancos:", e);
+      } catch (e) {
+        console.error("Error cargando bancos:", e);
       }
     };
     fetchBancos();
@@ -148,14 +144,13 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Generamos una referencia nueva en cada confirmación para evitar el error de "Referencia ya usada"
       const nuevaReferencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       setReferenciaUnica(nuevaReferencia);
-      
+
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.departamento})`;
 
       const infoEnvio = {
-        nombre: `ENVÍO (${metodoPagoEnvio})`,
+        nombre: `ENVIO (${metodoPagoEnvio})`,
         precio: metodoPagoEnvio === 'INCLUIDO' ? costoEnvio : 0,
         quantity: 1,
         es_envio: true,
@@ -166,7 +161,7 @@ export default function CheckoutPage() {
         nombre_cliente: formData.nombre,
         email_cliente: formData.email,
         telefono_cliente: formData.telefono,
-        direccion_envio: `${direccionCompleta} | ENVÍO: ${metodoPagoEnvio}`,
+        direccion_envio: `${direccionCompleta} | ENVIO: ${metodoPagoEnvio}`,
         ciudad: formData.ciudad,
         monto_total: totalConEnvio,
         estado_pago: 'PENDIENTE',
@@ -175,7 +170,6 @@ export default function CheckoutPage() {
       };
 
       if (pedidoIdExistente) {
-        // Actualizamos el registro existente pero con la NUEVA referencia
         await supabase
           .from('ventas_realizadas')
           .update(datosPedido)
@@ -193,7 +187,7 @@ export default function CheckoutPage() {
 
       setPreparandoPago(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      toast.success('Información confirmada.');
+      toast.success('Informacion confirmada.');
 
     } catch (error: any) {
       console.error("Error registro inicial:", error);
@@ -205,38 +199,29 @@ export default function CheckoutPage() {
 
   const handlePagoConfirmadoVisual = async (transaccion: any) => {
     if (transaccion.status === 'APPROVED') {
-      toast.success('¡Pago exitoso detectado!');
+      toast.success('Pago exitoso detectado!');
       clearCart();
       router.push(`/gracias?ref=${referenciaUnica}&city=${encodeURIComponent(formData.ciudad)}`);
     }
   };
 
   const metodosPago = [
-    { id: 'CARD', label: 'Tarjeta Crédito / Débito', icon: <CreditCard size={18} /> },
+    { id: 'CARD', label: 'Tarjeta Credito / Debito', icon: <CreditCard size={18} /> },
     { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
     { id: 'BANCOLOMBIA', label: 'Bancolombia', icon: <Bike size={18} /> },
   ];
 
-  // Función para obtener el token de la tarjeta directamente desde Wompi
   const obtenerTokenTarjeta = async () => {
-    // 1. Limpieza extrema de datos
     const cleanNumber = paymentData.cardNumber.replace(/\D/g, '');
     const expiryParts = paymentData.expiry.split('/').map(s => s.replace(/\D/g, '').trim());
-    
+
     if (expiryParts.length < 2 || !expiryParts[0] || !expiryParts[1]) {
-      throw new Error("Formato de fecha inválido (MM / YY)");
+      throw new Error("Formato de fecha invalido (MM / YY)");
     }
 
     const [month, year] = expiryParts;
 
-    console.log("Intentando tokenizar con:", { 
-      month, 
-      year, 
-      holder: paymentData.cardHolder,
-      cvcLength: paymentData.cvv.length 
-    });
-    
     const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
       method: 'POST',
       headers: {
@@ -253,11 +238,10 @@ export default function CheckoutPage() {
     });
 
     const result = await response.json();
-    
+
     if (!response.ok) {
-      // Si Wompi devuelve error, mostramos el detalle técnico en consola para arreglarlo
       console.error("Detalle error Wompi:", result.error);
-      const detail = result.error?.messages 
+      const detail = result.error?.messages
         ? Object.entries(result.error.messages).map(([k, v]) => `${k}: ${v}`).join(", ")
         : result.error?.reason;
       throw new Error(detail || "Datos de tarjeta rechazados por la pasarela");
@@ -276,25 +260,23 @@ export default function CheckoutPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-
         <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
           {!preparandoPago ? (
             <form onSubmit={registrarPedidoPendiente} className="space-y-6 animate-in fade-in duration-500">
-
               <div className="space-y-4">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
                   <User size={14} /> Datos de contacto
                 </h2>
                 <input required name="nombre" value={formData.nombre} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="Nombre completo" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="Correo electrónico" />
+                  <input required type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="Correo electronico" />
                   <input required type="tel" name="telefono" value={formData.telefono} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="WhatsApp / Celular" />
                 </div>
               </div>
 
               <div className="space-y-4 pt-6 border-t border-gray-50">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
-                  <MapPin size={14} /> Dirección de envío
+                  <MapPin size={14} /> Direccion de envio
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <select name="departamento" value={formData.departamento} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none cursor-pointer">
@@ -313,23 +295,22 @@ export default function CheckoutPage() {
                   <div className="bg-green-50 border border-green-100 p-5 rounded-3xl flex items-center gap-4 animate-in zoom-in duration-500">
                     <div className="bg-green-500 p-2 rounded-full text-white"><Truck size={20} /></div>
                     <div>
-                      <p className="text-sm font-black text-green-900 leading-none">Envío Local</p>
+                      <p className="text-sm font-black text-green-900 leading-none">Envio Local</p>
                       <p className="text-xs text-green-700 mt-1">Recibe hoy mismo en Valledupar.</p>
                     </div>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required name="direccion" value={formData.direccion} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Dirección (Calle y Número)" />
+                  <input required name="direccion" value={formData.direccion} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Direccion (Calle y Numero)" />
                   <input required name="barrio" value={formData.barrio} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Barrio" />
                 </div>
                 <input name="apartamento" value={formData.apartamento} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none" placeholder="Apto, Torre o Casa (Opcional)" />
               </div>
 
-              {/* OPCIONES DE PAGO DE ENVÍO */}
               <div className="space-y-4 pt-6 border-t border-gray-50">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
-                  <Truck size={14} /> Método de pago del envío
+                  <Truck size={14} /> Metodo de pago del envio
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
@@ -337,7 +318,7 @@ export default function CheckoutPage() {
                     onClick={() => setMetodoPagoEnvio('INCLUIDO')}
                     className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${metodoPagoEnvio === 'INCLUIDO' ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-transparent bg-[#fdf8f6]'}`}
                   >
-                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envío ahora</span>
+                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envio ahora</span>
                     <span className="text-[10px] opacity-60">Se suma al total de tu compra</span>
                   </button>
                   <button
@@ -345,25 +326,25 @@ export default function CheckoutPage() {
                     onClick={() => setMetodoPagoEnvio('CONTRAENTREGA')}
                     className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${metodoPagoEnvio === 'CONTRAENTREGA' ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-transparent bg-[#fdf8f6]'}`}
                   >
-                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envío al recibir</span>
+                    <span className="text-sm font-bold text-[#4a1d44]">Pagar envio al recibir</span>
                     <span className="text-[10px] opacity-60">Pagas el domicilio cuando te llegue</span>
                   </button>
                 </div>
               </div>
 
               <button type="submit" disabled={loading || cart.length === 0} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50">
-                {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />} 
-                {loading ? 'Preparando pedido...' : 'Confirmar información'}
+                {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />}
+                {loading ? 'Preparando pedido...' : 'Confirmar informacion'}
               </button>
             </form>
           ) : (
             <div className="flex flex-col items-stretch py-10 space-y-8 animate-in zoom-in duration-500">
               <div className="text-center space-y-2">
                 <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto mb-4">
-                   <Lock size={32} />
+                  <Lock size={32} />
                 </div>
                 <h2 className="text-2xl font-black italic font-playfair">Finalizar Pago</h2>
-                <p className="text-xs opacity-60 uppercase tracking-widest font-bold">Selecciona tu método preferido</p>
+                <p className="text-xs opacity-60 uppercase tracking-widest font-bold">Selecciona tu metodo preferido</p>
               </div>
 
               <div className="grid grid-cols-1 gap-3">
@@ -387,10 +368,9 @@ export default function CheckoutPage() {
                       </div>
                     </button>
 
-                    {/* FORMULARIOS NATIVOS SEGÚN EL MÉTODO */}
                     {metodoPagoSeleccionado === metodo.id && (
                       <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
-                        
+
                         {metodo.id === 'CARD' && (
                           <div className="space-y-4">
                             <div className="flex justify-between items-center mb-2">
@@ -416,11 +396,11 @@ export default function CheckoutPage() {
                               <div className="bg-[#e6007e] p-2 rounded-lg text-white"><Smartphone size={20} /></div>
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Nequi Directo</p>
-                                <p className="text-[9px] opacity-60">Pago rápido desde tu celular</p>
+                                <p className="text-[9px] opacity-60">Pago rapido desde tu celular</p>
                               </div>
                             </div>
                             <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#4a1d44]/10 focus:border-[#4a1d44] text-center" placeholder="300 000 0000" maxLength={10} />
-                            <p className="text-[9px] opacity-40 italic text-center">Te llegará una notificación de pago de "Wompi" a tu App.</p>
+                            <p className="text-[9px] opacity-40 italic text-center">Te llegara una notificacion de pago de Wompi a tu App.</p>
                           </div>
                         )}
 
@@ -437,7 +417,7 @@ export default function CheckoutPage() {
                                   <option value="1007">Bancolombia</option>
                                   <option value="1040">Banco Davivienda</option>
                                   <option value="1013">BBVA Colombia</option>
-                                  <option value="1032">Banco de Bogotá</option>
+                                  <option value="1032">Banco de Bogota</option>
                                   <option value="1051">Banco Popular</option>
                                   <option value="1019">Banco de Occidente</option>
                                   <option value="1001">Banco Agrario</option>
@@ -448,11 +428,11 @@ export default function CheckoutPage() {
                             </select>
                             <div className="grid grid-cols-2 gap-4">
                               <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold border border-transparent focus:border-[#4a1d44]/10">
-                                <option value="CC">C. de Ciudadanía</option>
-                                <option value="CE">C. de Extranjería</option>
+                                <option value="CC">C. de Ciudadania</option>
+                                <option value="CE">C. de Extranjeria</option>
                                 <option value="NIT">NIT</option>
                               </select>
-                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Número" />
+                              <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="Numero" />
                             </div>
                           </div>
                         )}
@@ -468,7 +448,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                               <p className="text-[10px] text-amber-800 font-bold leading-tight">
-                                Al confirmar, se generará un enlace seguro de Bancolombia. Deberás hacer click en el botón de pago que aparecerá abajo.
+                                Al confirmar, se generara un enlace seguro de Bancolombia. Deberas hacer click en el boton de pago que aparecera abajo.
                               </p>
                             </div>
                           </div>
@@ -501,7 +481,7 @@ export default function CheckoutPage() {
                 }}
                 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 self-center"
               >
-                ← Corregir datos de envío
+                ← Corregir datos de envio
               </button>
             </div>
           )}
@@ -516,7 +496,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="space-y-8 lg:sticky lg:top-10 h-fit">
-          <h2 className="text-xl font-bold font-playfair uppercase tracking-widest opacity-40">Tu selección</h2>
+          <h2 className="text-xl font-bold font-playfair uppercase tracking-widest opacity-40">Tu seleccion</h2>
           <div className="bg-[#f2e1d9]/20 p-8 rounded-[2.5rem] border border-[#4a1d44]/5">
             <div className="space-y-6 mb-8">
               {cart.map((item: any) => {
@@ -564,7 +544,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="opacity-60 flex items-center gap-2">
-                  Envío {metodoPagoEnvio === 'CONTRAENTREGA' && <span className="text-[10px] font-black bg-[#4a1d44]/10 px-2 py-0.5 rounded-full">Contraentrega</span>}
+                  Envio {metodoPagoEnvio === 'CONTRAENTREGA' && <span className="text-[10px] font-black bg-[#4a1d44]/10 px-2 py-0.5 rounded-full">Contraentrega</span>}
                 </span>
                 <span className="font-bold">
                   {metodoPagoEnvio === 'INCLUIDO' ? `$${costoEnvio.toLocaleString('es-CO')}` : 'Por pagar'}

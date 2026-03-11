@@ -62,11 +62,13 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE') {
-      transactionPayload.payment_method = {
-        type: "PSE",
-        user_type: 0,
-        payment_description: "Pedido Soft Lingerie"
-      };
+      // Para PSE, usamos el Web Checkout (Hosted) para que el usuario elija todo en la plataforma de Wompi
+      const checkoutUrl = `https://checkout.wompi.co/p/?public-key=${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}&amount-in-cents=${amountInCents}&reference=${referencia}&currency=COP&signature:integrity=${integrity_signature}&redirect-url=${encodeURIComponent(redirectUrlValid)}`;
+      
+      return NextResponse.json({ 
+          url: checkoutUrl,
+          data: { status: 'PENDING' } 
+      });
     } else if (metodo === 'BANCOLOMBIA') {
       transactionPayload.payment_method = {
         type: "BANCOLOMBIA_TRANSFER",
@@ -96,7 +98,10 @@ export async function POST(req: Request) {
       let errorMessage = "Error en la pasarela";
       if (wompiData.error && wompiData.error.messages) {
         const detailedMessages = Object.entries(wompiData.error.messages)
-          .map(([field, msgs]: [string, any]) => `${field}: ${msgs.join(', ')}`)
+          .map(([field, msgs]: [string, any]) => {
+            const msgStr = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+            return `${field}: ${msgStr}`;
+          })
           .join(' | ');
         errorMessage = `Error de validacion: ${detailedMessages}`;
       } else {

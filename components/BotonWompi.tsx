@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface BotonWompiProps {
@@ -23,6 +23,44 @@ export default function BotonWompi({
     email 
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
+    const [verificando, setVerificando] = useState(false);
+
+    // Función para revisar el estado de una transacción (Polling)
+    const revisarEstadoTransaccion = async (transactionId: string) => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions/${transactionId}`);
+            const { data } = await res.json();
+            
+            if (data.status === 'APPROVED') {
+                onExito(data);
+                return true;
+            } else if (data.status === 'DECLINED' || data.status === 'VOIDED' || data.status === 'ERROR') {
+                toast.error("El pago no pudo ser completado.");
+                setVerificando(false);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            return false;
+        }
+    };
+
+    const iniciarPolling = (transactionId: string) => {
+        setVerificando(true);
+        const interval = setInterval(async () => {
+            const finalizado = await revisarEstadoTransaccion(transactionId);
+            if (finalizado) clearInterval(interval);
+        }, 3500);
+
+        // Limite de 2 minutos para el polling
+        setTimeout(() => {
+            clearInterval(interval);
+            if (verificando) {
+                setVerificando(false);
+                toast.error("Tiempo de espera agotado. Si ya pagaste, verifica tu correo en unos minutos.");
+            }
+        }, 120000);
+    };
 
     const obtenerTokenTarjeta = async () => {
         const cleanNumber = paymentData.cardNumber.replace(/\s/g, '');
@@ -58,9 +96,8 @@ export default function BotonWompi({
         try {
             let finalPaymentData = { ...paymentData };
 
-            // Si es tarjeta, primero tokenizamos
             if (metodo === 'CARD') {
-                toast.loading("Validando tarjeta...", { id: 'pago-loading' });
+                toast.loading("Tokenizando tarjeta...", { id: 'pago-loading' });
                 const token = await obtenerTokenTarjeta();
                 finalPaymentData.token = token;
             }
@@ -87,13 +124,18 @@ export default function BotonWompi({
 
             const data = result.data;
 
-            if (metodo === 'PSE' && data.extra?.async_payment_url) {
+            // Manejo de redirecciones
+            if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA') && data.extra?.async_payment_url) {
+                toast.loading("Redirigiendo al portal bancario...");
                 window.location.href = data.extra.async_payment_url;
             } else if (metodo === 'NEQUI' && data.status === 'PENDING') {
-                toast.success("Notificación enviada a tu Nequi");
+                toast.success("Notificación enviada. Por favor autoriza en tu App Nequi.");
+                iniciarPolling(data.id);
+            } else if (data.status === 'APPROVED') {
                 onExito(data);
             } else {
-                onExito(data);
+                // Para otros estados pendientes, también iniciamos polling
+                iniciarPolling(data.id);
             }
 
         } catch (error: any) {
@@ -103,6 +145,16 @@ export default function BotonWompi({
             setCargando(false);
         }
     };
+
+    if (verificando) {
+        return (
+            <div className="w-full bg-[#fdf8f6] p-8 rounded-[2rem] border-2 border-[#4a1d44]/10 text-center space-y-4 animate-pulse">
+                <div className="w-10 h-10 border-4 border-[#4a1d44]/20 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
+                <p className="text-xs font-black uppercase tracking-widest text-[#4a1d44]">Verificando tu pago...</p>
+                <p className="text-[10px] opacity-60">No cierres esta ventana mientras confirmamos la transacción.</p>
+            </div>
+        );
+    }
 
     return (
         <button

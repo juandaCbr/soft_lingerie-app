@@ -59,6 +59,12 @@ export async function POST(req: Request) {
         financial_institution_code: paymentData.bankPSE,
         payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
       };
+    } else if (metodo === 'BANCOLOMBIA') {
+      transactionPayload.payment_method = {
+        type: "BANCOLOMBIA_TRANSFER",
+        user_type: "PERSON",
+        payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
+      };
     }
 
     // 3. Enviar transacción a Wompi

@@ -193,7 +193,7 @@ export default function CheckoutPage() {
     { id: 'CARD', label: 'Tarjeta Crédito / Débito', icon: <CreditCard size={18} /> },
     { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
-    { id: 'BANCOLOMBIA', label: 'Botón Bancolombia', icon: <Bike size={18} /> },
+    { id: 'BANCOLOMBIA', label: 'Bancolombia', icon: <Bike size={18} /> },
   ];
 
   // Función para obtener el token de la tarjeta directamente desde Wompi

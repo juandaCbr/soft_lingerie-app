@@ -69,17 +69,6 @@ export async function POST(req: Request) {
           url: checkoutUrl,
           data: { status: 'PENDING' } 
       });
-    } else if (metodo === 'BANCOLOMBIA') {
-      transactionPayload.payment_method = {
-        type: "BANCOLOMBIA_TRANSFER",
-        user_type: "PERSON",
-        payment_description: "Pedido Soft Lingerie"
-      };
-    } else if (metodo === 'DAVIPLATA') {
-      transactionPayload.payment_method = {
-        type: "DAVIPLATA",
-        payment_description: "Pedido Soft Lingerie"
-      };
     }
 
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {

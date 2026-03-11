@@ -216,8 +216,6 @@ export default function CheckoutPage() {
     { id: 'CARD', label: 'Tarjeta Credito / Debito', icon: <CreditCard size={18} /> },
     { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
     { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
-    { id: 'DAVIPLATA', label: 'Daviplata', icon: <Smartphone size={18} /> },
-    { id: 'BANCOLOMBIA', label: 'Bancolombia', icon: <Bike size={18} /> },
   ];
 
   return (

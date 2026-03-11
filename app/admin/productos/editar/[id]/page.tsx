@@ -189,14 +189,14 @@ export default function EditarProductoPage() {
       const urlsNuevasSubidas = [];
       for (const file of nuevasImagenes) {
         const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-        const { data, error } = await supabase.storage.from('productos').upload(`public/${fileName}`, file);
+        const { data, error } = await supabase.storage.from('productos').upload(`lenceria/${fileName}`, file);
         if (error) throw error;
         const { data: { publicUrl } } = supabase.storage.from('productos').getPublicUrl(data.path);
         urlsNuevasSubidas.push(publicUrl);
       }
 
       const listaFinalUrls = [...imagenesUrls, ...urlsNuevasSubidas];
-      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + b, 0);
+      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + Number(b || 0), 0);
 
       const { error } = await supabase.from('productos').update({
         nombre,
@@ -209,7 +209,8 @@ export default function EditarProductoPage() {
 
       if (error) throw error;
 
-      await supabase.from('producto_tallas').delete().eq('producto_id', idProducto);
+      const { error: deleteError } = await supabase.from('producto_tallas').delete().eq('producto_id', idProducto);
+      if (deleteError) throw deleteError;
 
       const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
         producto_id: idProducto,
@@ -227,7 +228,8 @@ export default function EditarProductoPage() {
       router.push("/admin/productos");
       router.refresh();
     } catch (error: any) {
-      toast.error("Error al guardar cambios");
+      console.error("Error al guardar producto:", error);
+      toast.error(`Error al guardar cambios: ${error.message || "Error desconocido"}`);
     } finally {
       setSaving(false);
     }

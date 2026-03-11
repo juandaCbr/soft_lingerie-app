@@ -27,7 +27,11 @@ export default function BotonWompi({
         setVerificando(true);
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions/${transactionId}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions/${transactionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`
+                    }
+                });
                 const { data } = await res.json();
                 if (data.status === 'APPROVED') {
                     clearInterval(interval);

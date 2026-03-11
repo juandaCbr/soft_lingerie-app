@@ -421,28 +421,23 @@ export default function CheckoutPage() {
                           <div className="space-y-4">
                             <select name="bankPSE" value={paymentData.bankPSE} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10">
                               <option value="">Selecciona tu banco</option>
-                              <option value="1007">Bancolombia</option>
-                              <option value="1040">Banco Davivienda</option>
-                              <option value="1013">BBVA Colombia</option>
-                              <option value="1032">Banco de Bogotá</option>
-                              <option value="1051">Banco Popular</option>
-                              <option value="1019">Banco de Occidente</option>
-                              <option value="1001">Banco Agrario</option>
-                              <option value="1002">Banco Procredit</option>
-                              <option value="1006">Banco Itaú</option>
-                              <option value="1014">Banco Sudameris</option>
-                              <option value="1052">Banco AV Villas</option>
-                              <option value="1061">Banco Coopcentral</option>
-                              <option value="1062">Banco Falabella</option>
-                              <option value="1063">Banco Finandina</option>
-                              <option value="1064">Banco Multibank</option>
-                              <option value="1065">Banco Pichincha</option>
-                              <option value="1066">Banco Santander</option>
-                              <option value="1067">Banco Scotiabank Colpatria</option>
-                              <option value="1068">Banco Serfinanza</option>
-                              <option value="1558">Nequi</option>
-                              <option value="1507">DaviPlata</option>
-                              <option value="1801">Lulo Bank</option>
+                              {bancosPSE.length > 0 ? (
+                                bancosPSE.map(b => (
+                                  <option key={b.value} value={b.value}>{b.label}</option>
+                                ))
+                              ) : (
+                                <>
+                                  <option value="1007">Bancolombia</option>
+                                  <option value="1040">Banco Davivienda</option>
+                                  <option value="1013">BBVA Colombia</option>
+                                  <option value="1032">Banco de Bogotá</option>
+                                  <option value="1051">Banco Popular</option>
+                                  <option value="1019">Banco de Occidente</option>
+                                  <option value="1001">Banco Agrario</option>
+                                  <option value="1558">Nequi</option>
+                                  <option value="1507">DaviPlata</option>
+                                </>
+                              )}
                             </select>
                             <div className="grid grid-cols-2 gap-4">
                               <select name="docType" value={paymentData.docType} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold border border-transparent focus:border-[#4a1d44]/10">

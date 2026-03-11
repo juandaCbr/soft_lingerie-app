@@ -125,7 +125,10 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const referencia = referenciaUnica || `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      // Generamos una referencia nueva en cada confirmación para evitar el error de "Referencia ya usada"
+      const nuevaReferencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      setReferenciaUnica(nuevaReferencia);
+      
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ', Apto: ' + formData.apartamento : ''} (${formData.departamento})`;
 
       const infoEnvio = {
@@ -144,18 +147,17 @@ export default function CheckoutPage() {
         ciudad: formData.ciudad,
         monto_total: totalConEnvio,
         estado_pago: 'PENDIENTE',
-        referencia_wompi: referencia,
+        referencia_wompi: nuevaReferencia,
         detalle_compra: [...cart, infoEnvio]
       };
 
       if (pedidoIdExistente) {
-        // Si ya se creó un registro en esta sesión, lo actualizamos en lugar de crear otro
+        // Actualizamos el registro existente pero con la NUEVA referencia
         await supabase
           .from('ventas_realizadas')
           .update(datosPedido)
           .eq('id', pedidoIdExistente);
       } else {
-        // Primera vez que confirma en esta sesión
         const { data, error } = await supabase
           .from('ventas_realizadas')
           .insert([datosPedido])
@@ -163,10 +165,7 @@ export default function CheckoutPage() {
           .single();
 
         if (error) throw error;
-        if (data) {
-          setPedidoIdExistente(data.id);
-          setReferenciaUnica(referencia);
-        }
+        if (data) setPedidoIdExistente(data.id);
       }
 
       setPreparandoPago(true);
@@ -199,7 +198,7 @@ export default function CheckoutPage() {
   // Función para obtener el token de la tarjeta directamente desde Wompi
   const obtenerTokenTarjeta = async () => {
     const cleanNumber = paymentData.cardNumber.replace(/\s/g, '');
-    const [month, year] = paymentData.expiry.split('/');
+    const [month, year] = paymentData.expiry.split('/').map(s => s.trim());
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/tokens/cards`, {
       method: 'POST',
@@ -210,14 +209,17 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         number: cleanNumber,
         cvc: paymentData.cvv,
-        exp_month: month.trim(),
-        exp_year: year.trim().length === 2 ? `20${year.trim()}` : year.trim(),
+        exp_month: month,
+        exp_year: year,
         card_holder: paymentData.cardHolder
       })
     });
 
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
+    if (!response.ok) {
+      console.error("Error Wompi Token:", result);
+      throw new Error(result.error?.reason || "Datos de tarjeta inválidos");
+    }
     return result.data.id;
   };
 

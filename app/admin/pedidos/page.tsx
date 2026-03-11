@@ -281,8 +281,17 @@ export default function AdminPedidos() {
                               </div>
                             ) : (
                               <div className="flex flex-col items-start md:items-end">
-                                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">✓ Envío Pagado</span>
-                                {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Incluye: ${Number(costo).toLocaleString('es-CO')}</p>}
+                                {venta.estado_pago === 'APROBADO' ? (
+                                  <>
+                                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">✓ Envío Pagado</span>
+                                    {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Incluye: ${Number(costo).toLocaleString('es-CO')}</p>}
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">⌛ Envío se pagará con el pedido</span>
+                                    {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Monto: ${Number(costo).toLocaleString('es-CO')}</p>}
+                                  </>
+                                )}
                               </div>
                             );
                           })()}

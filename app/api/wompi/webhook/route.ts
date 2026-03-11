@@ -75,6 +75,9 @@ export async function POST(request: Request) {
       let resumenArticulos = "";
       if (Array.isArray(pedido.detalle_compra)) {
         for (const item of pedido.detalle_compra) {
+          // Si es un ítem de envío, lo saltamos para no intentar reducir stock de un producto inexistente
+          if (item.es_envio) continue;
+
           resumenArticulos += `• ${item.nombre} (Talla: ${item.talla?.nombre || 'Única'}) x${item.quantity}\n`;
           
           // Stock General

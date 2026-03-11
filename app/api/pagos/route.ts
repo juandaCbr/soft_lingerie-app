@@ -82,6 +82,7 @@ export async function POST(req: Request) {
     });
 
     const wompiData = await wompiRes.json();
+    console.log("RESPUESTA WOMPI:", JSON.stringify(wompiData, null, 2));
 
     if (!wompiRes.ok) {
       let errorMessage = "Error en la pasarela";
@@ -105,14 +106,20 @@ export async function POST(req: Request) {
     }
 
     const urlFinal = wompiData.data.payment_method?.extra?.async_payment_url || 
-                     wompiData.data.extra?.async_payment_url ||
                      wompiData.data.payment_method?.extra?.external_url ||
-                     wompiData.data.payment_method?.extra?.async_url;
+                     wompiData.data.payment_method?.extra?.external_resource_url ||
+                     wompiData.data.payment_method?.extra?.async_url ||
+                     wompiData.data.extra?.async_payment_url ||
+                     wompiData.data.extra?.external_url ||
+                     wompiData.data.payment_method?.async_payment_url ||
+                     wompiData.data.payment_method?.external_url;
 
     // Control del error de URL no generada
     if ((metodo === 'PSE' || metodo === 'BANCOLOMBIA') && !urlFinal) {
+        const motivoExtra = wompiData.data?.status_message || "Wompi no entregó URL de redirección";
+        const bankCode = transactionPayload.payment_method?.financial_institution_code || "N/A";
         return NextResponse.json({ 
-            error: "El banco no genero el enlace. Verifica: 1. Monto mayor a $10.000. 2. Cedula real. 3. Que PSE/Bancolombia esten ACTIVOS en tu dashboard de Wompi.", 
+            error: `El banco no generó el enlace. Motivo: ${motivoExtra}. (Banco: ${bankCode}). Verifica que el banco sea válido para el ambiente actual.`, 
             debug: wompiData 
         }, { status: 400 });
     }

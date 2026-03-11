@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import Link from 'next/link';
-import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Definicion de la estructura del producto basada en la base de datos

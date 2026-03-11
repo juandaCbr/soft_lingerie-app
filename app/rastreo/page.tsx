@@ -21,69 +21,42 @@ function RastreoContent() {
     setPedido(null);
 
     const queryTerm = termino.trim();
-    console.log("Iniciando búsqueda para:", queryTerm);
+    console.log("Iniciando búsqueda robusta para:", queryTerm);
 
-    try {
-      // 1. Intentamos buscar por REFERENCIA (Búsqueda exacta)
-      let { data: refData, error: refError } = await supabase
+    const realizarBusqueda = async (t: string) => {
+      // Intentamos buscar por Referencia (LIKE), Guía (EQ) o Email (EQ)
+      // Usamos .or() para que sea una sola consulta eficiente
+      const { data, error: dbError } = await supabase
         .from('ventas_realizadas')
         .select('*')
-        .eq('referencia_wompi', queryTerm)
+        .or(`referencia_wompi.ilike.%${t}%,numero_guia.eq.${t},email_cliente.eq.${t}`)
         .order('fecha', { ascending: false });
+      
+      return { data, error: dbError };
+    };
 
-      if (refError) console.error("Error en búsqueda exacta:", refError);
+    try {
+      let { data, error: dbError } = await realizarBusqueda(queryTerm);
 
-      // 2. Si no hay éxito, intentamos REFERENCIA (Búsqueda parcial / LIKE)
-      if ((!refData || refData.length === 0) && !refError) {
-        console.log("Intentando búsqueda parcial...");
-        const { data: partialData, error: partialError } = await supabase
-          .from('ventas_realizadas')
-          .select('*')
-          .ilike('referencia_wompi', `%${queryTerm}%`)
-          .order('fecha', { ascending: false });
-        
-        refData = partialData;
-        if (partialError) console.error("Error en búsqueda parcial:", partialError);
+      // Reintento automático de 2 segundos si venimos de un pago inmediato y no hay resultados
+      if ((!data || data.length === 0) && searchParams.get('ref') === termino) {
+        console.log("Pedido no encontrado tras el pago. Reintentando en 2.5 segundos...");
+        await new Promise(r => setTimeout(r, 2500));
+        const retry = await realizarBusqueda(queryTerm);
+        data = retry.data;
+        dbError = retry.error;
       }
 
-      // 3. Si sigue sin haber datos, intentamos por EMAIL
-      if ((!refData || refData.length === 0) && !refError) {
-        console.log("Intentando búsqueda por email...");
-        const { data: emailData, error: emailError } = await supabase
-          .from('ventas_realizadas')
-          .select('*')
-          .eq('email_cliente', queryTerm)
-          .order('fecha', { ascending: false });
-        
-        refData = emailData;
-        if (emailError) console.error("Error en búsqueda email:", emailError);
-      }
+      if (dbError) throw dbError;
 
-      // Procesamos el resultado
-      if (refData && refData.length > 0) {
-        setPedido(refData[0]);
+      if (data && data.length > 0) {
+        setPedido(data[0]);
       } else {
-        // Reintento automático si es una búsqueda inmediata tras pago
-        if (searchParams.get('ref') === termino) {
-          console.log("Reintentando en 2 segundos...");
-          await new Promise(r => setTimeout(resolve => r(null), 2000));
-          // Recursión controlada para un único reintento
-          const { data: retryData } = await supabase
-            .from('ventas_realizadas')
-            .select('*')
-            .ilike('referencia_wompi', `%${queryTerm}%`)
-            .limit(1);
-          
-          if (retryData && retryData.length > 0) {
-            setPedido(retryData[0]);
-            return;
-          }
-        }
-        setError('No encontramos ningún pedido con esos datos. Verifica que la referencia o el correo sean correctos.');
+        setError('No encontramos ningún pedido con esos datos. Verifica que la referencia, el correo o el número de guía sean correctos.');
       }
     } catch (err) {
       console.error("Error global en búsqueda:", err);
-      setError('Hubo un error al buscar. Intenta de nuevo.');
+      setError('Hubo un error al buscar el pedido. Intenta de nuevo más tarde.');
     } finally {
       setLoading(false);
     }

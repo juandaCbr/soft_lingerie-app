@@ -21,17 +21,33 @@ function RastreoContent() {
     setPedido(null);
 
     try {
-      // Búsqueda más robusta: quitamos el filtro de APROBADO para encontrar también pendientes
-      const { data, error: dbError } = await supabase
+      const queryTerm = termino.trim();
+      
+      // Intentamos buscar primero por referencia exacta o parcial
+      let { data, error: dbError } = await supabase
         .from('ventas_realizadas')
         .select('*')
-        .or(`referencia_wompi.ilike.%${termino.trim()}%,email_cliente.eq.${termino.trim()}`)
+        .ilike('referencia_wompi', `%${queryTerm}%`)
         .order('fecha', { ascending: false })
         .limit(1)
         .maybeSingle();
 
+      // Si no encontramos por referencia, intentamos por email exacto
+      if (!data && !dbError) {
+        const { data: dataEmail, error: errorEmail } = await supabase
+          .from('ventas_realizadas')
+          .select('*')
+          .eq('email_cliente', queryTerm)
+          .order('fecha', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        data = dataEmail;
+        dbError = errorEmail;
+      }
+
       if (dbError || !data) {
-        setError('No encontramos ningún pedido con esos datos.');
+        setError('No encontramos ningún pedido con esos datos. Verifica que la referencia o el correo sean correctos.');
       } else {
         setPedido(data);
       }

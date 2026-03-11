@@ -201,15 +201,22 @@ export default function GestionProductosPage() {
               return (
                 <div
                   key={producto.id}
-                  className={`bg-white p-4 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col md:flex-row md:items-center gap-4 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''}`}
+                  className={`bg-white p-4 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col md:flex-row md:items-center gap-4 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''} ${producto.stock <= 0 ? 'border-red-200' : ''}`}
                 >
                   {/* Informacion basica del producto */}
                   <div className="flex items-center gap-4 flex-1">
-                    <img
-                      src={miniatura || 'https://placehold.co/100x100?text=S.L'}
-                      className="w-16 h-16 rounded-2xl object-cover shadow-sm bg-gray-50"
-                      alt={producto.nombre}
-                    />
+                    <div className="relative">
+                      <img
+                        src={miniatura || 'https://placehold.co/100x100?text=S.L'}
+                        className="w-16 h-16 rounded-2xl object-cover shadow-sm bg-gray-50"
+                        alt={producto.nombre}
+                      />
+                      {producto.stock <= 0 && (
+                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                          SIN STOCK
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-bold text-[#4a1d44] leading-tight">{producto.nombre}</span>
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full w-fit mt-1">

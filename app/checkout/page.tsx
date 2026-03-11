@@ -359,7 +359,7 @@ export default function CheckoutPage() {
                             <input name="cardHolder" value={paymentData.cardHolder} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold uppercase tracking-wider border border-transparent focus:border-[#4a1d44]/10" placeholder="Nombre en la tarjeta" />
                             <input name="cardNumber" value={paymentData.cardNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-sm font-mono border border-transparent focus:border-[#4a1d44]/10" placeholder="0000 0000 0000 0000" maxLength={19} />
                             <div className="grid grid-cols-2 gap-4">
-                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="MM / YY" maxLength={5} />
+                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="MM / YY" maxLength={7} />
                               <input name="cvv" value={paymentData.cvv} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="CVV" maxLength={4} />
                             </div>
                           </div>
@@ -418,9 +418,17 @@ export default function CheckoutPage() {
                         )}
 
                         {metodo.id === 'BANCOLOMBIA' && (
-                          <div className="text-center py-4">
-                            <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">Pago con Transferencia Directa</p>
-                            <p className="text-xs mt-2 font-bold">Serás redirigido al portal de Bancolombia.</p>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
+                              <div className="bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 p-2 rounded-lg text-white font-black text-[10px]">B</div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Bancolombia Transferencia</p>
+                                <p className="text-[9px] opacity-60">Pago directo por la sucursal virtual</p>
+                              </div>
+                            </div>
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-center">
+                              <p className="text-[10px] text-amber-800 font-bold">Serás redirigido al portal oficial de Bancolombia para finalizar el pago de forma segura.</p>
+                            </div>
                           </div>
                         )}
 

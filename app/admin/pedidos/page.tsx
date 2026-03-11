@@ -251,7 +251,7 @@ export default function AdminPedidos() {
                     <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2"><Package size={14} /> Artículos del Pedido</h4>
                       <div className="space-y-3">
-                        {venta.detalle_compra?.map((item: any, idx: number) => (
+                        {venta.detalle_compra?.filter((item: any) => !item.es_envio).map((item: any, idx: number) => (
                           <div key={idx} className="flex flex-col gap-1.5 bg-[#fdf8f6]/50 p-3.5 rounded-2xl border border-[#4a1d44]/5">
                             <div className="flex justify-between text-xs font-black">
                               <span className="truncate pr-2 uppercase"><span className="bg-[#4a1d44] text-white px-1.5 py-0.5 rounded text-[9px] mr-2">{item.quantity}x</span> {item.nombre}</span>

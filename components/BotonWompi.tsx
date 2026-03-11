@@ -116,11 +116,15 @@ export default function BotonWompi({ montoTotal, referenciaPedido, onExito }: Bo
             amountInCents: montoEnCentavos,
             reference: referenciaPedido,
             publicKey: PUBLIC_KEY,
-            signature: { integrity: firma }
+            signature: { integrity: firma },
+            container: "#wompi-container",
+            render: "button"
         });
 
         checkout.open((result: any) => {
-            const transaction = result.transaction;
+            const transaction = result?.transaction;
+            if (!transaction) return;
+
             if (transaction.status === 'APPROVED') {
                 onExito(transaction);
             } else if (transaction.status === 'DECLINED') {
@@ -142,12 +146,15 @@ export default function BotonWompi({ montoTotal, referenciaPedido, onExito }: Bo
     }, []);
 
     return (
-        <button
-            type="button"
-            onClick={abrirWidgetWompi}
-            className="w-full bg-[#2a2a2a] text-white py-6 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
-        >
-            Proceder al pago
-        </button>
+        <>
+            <div id="wompi-container"></div>
+            <button
+                type="button"
+                onClick={abrirWidgetWompi}
+                className="w-full bg-[#2a2a2a] text-white py-6 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
+            >
+                Proceder al pago
+            </button>
+        </>
     );
 }

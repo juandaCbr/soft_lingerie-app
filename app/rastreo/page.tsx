@@ -21,14 +21,15 @@ function RastreoContent() {
     setPedido(null);
 
     try {
+      // Búsqueda más robusta: buscamos por referencia o por email por separado para evitar conflictos de tipos
       const { data, error: dbError } = await supabase
         .from('ventas_realizadas')
         .select('*')
-        .or(`email_cliente.eq.${termino.trim()},referencia_wompi.ilike.%${termino.trim()}%`)
+        .or(`referencia_wompi.ilike.%${termino.trim()}%,email_cliente.eq.${termino.trim()}`)
         .eq('estado_pago', 'APROBADO')
         .order('fecha', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (dbError || !data) {
         setError('No encontramos ningún pedido pagado con esos datos.');
@@ -182,7 +183,7 @@ function RastreoContent() {
             <div className="border-t border-gray-100 pt-8">
               <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-center">Resumen de tu pedido</p>
               <div className="flex flex-wrap justify-center gap-3">
-                {pedido.detalle_compra?.map((item: any, i: number) => (
+                {pedido.detalle_compra?.filter((item: any) => !item.es_envio).map((item: any, i: number) => (
                   <div key={i} className="px-4 py-2 bg-gray-50 rounded-xl text-[10px] font-bold border border-gray-100 text-[#4a1d44]/60">
                     {item.quantity}x {item.nombre} {item.talla && `(Talla: ${item.talla.nombre})`}
                   </div>

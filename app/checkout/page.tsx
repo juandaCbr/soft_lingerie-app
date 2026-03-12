@@ -142,12 +142,6 @@ export default function CheckoutPage() {
   const registrarPedidoPendiente = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validacion para asegurar que datos basicos existan
-    if (metodoPagoSeleccionado === 'NEQUI' && (!paymentData.phoneNequi || paymentData.phoneNequi.trim() === '')) {
-      toast.error("Ingresa tu número de celular para Nequi.");
-      return;
-    }
-
     setLoading(true);
 
     try {

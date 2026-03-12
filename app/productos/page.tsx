@@ -47,12 +47,15 @@ export default function CatalogoPage() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'productos' },
-        () => {
+        (payload) => {
+          console.log('Cambio detectado en productos (Realtime):', payload);
           // Revalidar SWR cuando algo cambie en la tabla productos
           mutate();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Estado de suscripción Realtime:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

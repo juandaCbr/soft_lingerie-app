@@ -399,52 +399,13 @@ export default function CheckoutPage() {
                               </div>
                             </div>
                             
-                            <select 
-                              name="bankPSE" 
-                              value={paymentData.bankPSE} 
-                              onChange={handlePaymentChange}
-                              className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
-                            >
-                              <option value="">Selecciona tu banco</option>
-                              {bancosPSE.map(b => (
-                                <option key={b.value} value={b.value}>{b.label}</option>
-                              ))}
-                            </select>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <select 
-                                name="userType" 
-                                value={paymentData.userType} 
-                                onChange={handlePaymentChange}
-                                className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold"
-                              >
-                                <option value="0">Persona Natural</option>
-                                <option value="1">Persona Jurídica</option>
-                              </select>
-                              <select 
-                                name="docType" 
-                                value={paymentData.docType} 
-                                onChange={handlePaymentChange}
-                                className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-[10px] font-bold"
-                              >
-                                <option value="CC">C. Cédula</option>
-                                <option value="CE">C. Extranjería</option>
-                                <option value="NIT">NIT</option>
-                                <option value="PP">Pasaporte</option>
-                              </select>
-                            </div>
-                            <input 
-                              name="docNumber" 
-                              value={paymentData.docNumber} 
-                              onChange={handlePaymentChange} 
-                              className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10" 
-                              placeholder="Número de documento" 
-                            />
-
-                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                              <p className="text-[10px] text-blue-800 font-bold leading-tight">
-                                Al confirmar, serás redirigido al portal seguro de tu banco para completar el pago.
+                            <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 space-y-3">
+                              <p className="text-xs text-blue-800 font-bold leading-tight">
+                                Al confirmar, serás redirigido al portal seguro de Wompi para elegir tu banco y completar el pago con PSE.
                               </p>
+                              <div className="flex items-center gap-2 opacity-40 grayscale">
+                                <img src="https://servicios.inm.gov.co/images/Boton_PSE.png" alt="PSE" className="h-6" />
+                              </div>
                             </div>
                           </div>
                         )}
@@ -483,6 +444,7 @@ export default function CheckoutPage() {
                   email={formData.email}
                   nombre={formData.nombre}
                   telefono={formData.telefono}
+                  pedidoId={pedidoIdExistente}
                 />
               </div>
 

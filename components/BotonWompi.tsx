@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ExternalLink } from 'lucide-react';
+import { supabase } from '@/app/lib/supabase';
 
 interface BotonWompiProps {
     montoTotal: number;
@@ -14,26 +15,56 @@ interface BotonWompiProps {
     email?: string;
     nombre?: string;
     telefono?: string;
+    pedidoId?: string | null; // Nuevo prop para vigilar el pedido en DB
 }
 
 export default function BotonWompi({
-    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono
+    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono, pedidoId
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
     const [verificando, setVerificando] = useState(false);
     const [urlRedireccion, setUrlRedireccion] = useState<string | null>(null);
 
-    // Comentario: Sistema de polling para Nequi y transferencias asincronas
+    // Sistema de Realtime para confirmacion instantanea via DB
+    useEffect(() => {
+        if (!pedidoId || !verificando) return;
+
+        console.log("Iniciando vigilancia Realtime para pedido:", pedidoId);
+        
+        const channel = supabase
+            .channel(`pago-${pedidoId}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'ventas_realizadas', filter: `id=eq.${pedidoId}` },
+                (payload) => {
+                    console.log("Cambio detectado en pedido via Realtime:", payload);
+                    if (payload.new.estado_pago === 'APROBADO') {
+                        toast.success("¡Pago confirmado por el sistema!");
+                        onExito(payload.new);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [pedidoId, verificando, onExito]);
+
+    // Comentario: Sistema de polling (Fallback en caso de que Realtime falle o sea lento)
     const iniciarPolling = (transactionId: string) => {
         setVerificando(true);
         const interval = setInterval(async () => {
             try {
+                // Agregamos cache: 'no-store' para forzar datos frescos de Wompi
                 const res = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions/${transactionId}`, {
                     headers: {
                         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}`
-                    }
+                    },
+                    cache: 'no-store'
                 });
                 const { data } = await res.json();
+                
                 if (data.status === 'APPROVED') {
                     clearInterval(interval);
                     onExito(data);
@@ -44,7 +75,7 @@ export default function BotonWompi({
                     setVerificando(false);
                 }
             } catch (e) { /* Captura silenciosa */ }
-        }, 2500); // Polling mas rapido para mejorar percepcion de velocidad
+        }, 3000); 
     };
 
     const procesarPagoNativo = async () => {

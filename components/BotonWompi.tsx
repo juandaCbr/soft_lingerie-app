@@ -39,12 +39,12 @@ export default function BotonWompi({
                     onExito(data);
                 } else if (['DECLINED', 'VOIDED', 'ERROR'].includes(data.status)) {
                     clearInterval(interval);
-                    const motivo = data.status_message || "Wompi declinó la transacción.";
+                    const motivo = data.status_message || "La transacción no pudo ser procesada.";
                     toast.error(`Pago fallido: ${motivo}`);
                     setVerificando(false);
                 }
-            } catch (e) { /* Captura silenciosa para no ensuciar la consola */ }
-        }, 4000);
+            } catch (e) { /* Captura silenciosa */ }
+        }, 2500); // Polling mas rapido para mejorar percepcion de velocidad
     };
 
     const procesarPagoNativo = async () => {
@@ -53,9 +53,13 @@ export default function BotonWompi({
             return;
         }
 
-        // Comentario: Barrera de contencion.
         if (metodo === 'NEQUI' && (!paymentData?.phoneNequi)) {
             toast.error("Ingresa tu número de celular para Nequi");
+            return;
+        }
+
+        if (metodo === 'PSE' && (!paymentData?.bankPSE || !paymentData?.docNumber)) {
+            toast.error("Completa los datos de PSE (Banco y Documento)");
             return;
         }
 
@@ -64,8 +68,7 @@ export default function BotonWompi({
 
         try {
             let finalPaymentData = { ...paymentData };
-
-            // Comentario: Tokenizacion para tarjeta
+            // ... (resto del código de tokenización de tarjeta se mantiene igual)
             if (metodo === 'CARD') {
                 if (!paymentData?.cardNumber || !paymentData?.expiry || !paymentData?.cvv) {
                     toast.error("Completa todos los datos de la tarjeta");
@@ -89,7 +92,6 @@ export default function BotonWompi({
                 finalPaymentData.token = tokenRes.data.id;
             }
 
-            // Comentario: Llamada a tu API centralizada
             const res = await fetch('/api/pagos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -106,24 +108,16 @@ export default function BotonWompi({
 
             const result = await res.json();
 
-            if (!res.ok) {
-                console.error("DETALLE ERROR API PAGOS:", result);
-                throw new Error(result.error || "Error al procesar el pago");
-            }
+            if (!res.ok) throw new Error(result.error || "Error al procesar el pago");
 
-            // Comentario: Redireccion automatica y manejo de respuestas
             if (result.url) {
                 setUrlRedireccion(result.url);
-                // Redireccion instantanea para mejorar la experiencia (friccion cero)
                 window.location.href = result.url;
-
             } else if (metodo === 'NEQUI' && result.data?.status === 'PENDING') {
-                toast.success("Revisa tu app Nequi para aprobar el pago");
+                toast.success("¡Notificación enviada! Por favor abre tu App Nequi y acepta el pago.");
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
                 onExito(result.data);
-            } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'DAVIPLATA') {
-                throw new Error(result.error || "El banco no generó el enlace. Revisa tu Dashboard de Wompi.");
             } else {
                 iniciarPolling(result.data.id);
             }
@@ -136,17 +130,27 @@ export default function BotonWompi({
 
     if (urlRedireccion) {
         return (
-            <a href={urlRedireccion} className="w-full bg-green-600 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:bg-green-700 transition-all border-4 border-white animate-in zoom-in">
-                <ExternalLink size={20} /> ABRIENDO PORTAL SEGURO...
-            </a>
+            <div className="w-full bg-green-600 text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-widest flex flex-col items-center justify-center gap-2 shadow-xl animate-in zoom-in">
+                <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <ExternalLink size={18} /> REDIRIGIENDO AL PORTAL SEGURO...
+                </div>
+                <p className="text-[8px] opacity-60 normal-case font-medium">No cierres esta ventana</p>
+            </div>
         );
     }
 
     if (verificando) {
         return (
-            <div className="w-full bg-[#fdf8f6] p-8 rounded-2xl border-2 border-[#4a1d44]/10 text-center space-y-3">
-                <div className="w-8 h-8 border-4 border-[#4a1d44]/20 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
-                <p className="text-[10px] font-black uppercase text-[#4a1d44]">Esperando confirmación...</p>
+            <div className="w-full bg-white p-8 rounded-[2rem] border-2 border-[#4a1d44]/10 text-center space-y-4 shadow-inner animate-pulse">
+                <div className="w-10 h-10 border-4 border-[#4a1d44]/10 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
+                <div>
+                    <p className="text-xs font-black uppercase text-[#4a1d44] tracking-widest">Esperando confirmación</p>
+                    <p className="text-[9px] text-[#4a1d44]/60 mt-1">Por favor, confirma el pago en tu App Nequi</p>
+                </div>
+                <div className="pt-2">
+                   <p className="text-[8px] italic opacity-40 italic">Esta ventana se actualizará automáticamente apenas confirmes.</p>
+                </div>
             </div>
         );
     }

@@ -62,13 +62,14 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE') {
-      // Para PSE, usamos el Web Checkout (Hosted) para que el usuario elija todo en la plataforma de Wompi
-      const checkoutUrl = `https://checkout.wompi.co/p/?public-key=${process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY}&amount-in-cents=${amountInCents}&reference=${referencia}&currency=COP&signature:integrity=${integrity_signature}&redirect-url=${encodeURIComponent(redirectUrlValid)}`;
-      
-      return NextResponse.json({ 
-          url: checkoutUrl,
-          data: { status: 'PENDING' } 
-      });
+      transactionPayload.payment_method = {
+        type: "PSE",
+        user_type: Number(paymentData.userType || 0),
+        user_legal_id_type: paymentData.docType || "CC",
+        user_legal_id: paymentData.docNumber,
+        financial_institution_code: paymentData.bankPSE,
+        payment_description: `Compra Soft Lingerie - Ref: ${referencia}`
+      };
     }
 
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {

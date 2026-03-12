@@ -84,6 +84,11 @@ export default function GestionProductosPage() {
     if (!productoAEliminar) return;
     setEliminando(true);
     try {
+      // 1. Borrar dependencias primero para evitar errores de clave foranea
+      await supabase.from('producto_tallas').delete().eq('producto_id', productoAEliminar.id);
+      await supabase.from('producto_colores').delete().eq('producto_id', productoAEliminar.id);
+
+      // 2. Ahora si borrar el producto
       const { error } = await supabase
         .from('productos')
         .delete()
@@ -94,8 +99,8 @@ export default function GestionProductosPage() {
       setProductos(productos.filter(p => p.id !== productoAEliminar.id));
       toast.success('Prenda eliminada correctamente');
     } catch (error: any) {
-      toast.error('No se pudo eliminar el producto');
-      console.error(error);
+      console.error("Error al eliminar:", error);
+      toast.error(`No se pudo eliminar: ${error.message || "Error de base de datos"}`);
     } finally {
       setEliminando(false);
       setMostrarModal(false);

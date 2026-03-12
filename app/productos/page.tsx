@@ -40,6 +40,25 @@ export default function CatalogoPage() {
     dedupingInterval: 60000,
   });
 
+  // Suscripcion Realtime para actualizar el catalogo al instante
+  useEffect(() => {
+    const channel = supabase
+      .channel('catalogo-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'productos' },
+        () => {
+          // Revalidar SWR cuando algo cambie en la tabla productos
+          mutate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [mutate]);
+
   const [productos, setProductos] = useState<any[]>([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [colorSeleccionado, setColorSeleccionado] = useState('Todos');
@@ -58,6 +77,7 @@ export default function CatalogoPage() {
   useEffect(() => {
     if (rawData) {
       const tempGrupos: any = {};
+      // Solo procesamos productos que realmente existen en rawData
       rawData.forEach(item => {
         const gid = item.grupo_id || `item-${item.id}`;
         if (!tempGrupos[gid]) {
@@ -66,7 +86,11 @@ export default function CatalogoPage() {
           tempGrupos[gid].variantes.push(item);
         }
       });
-      setProductos(Object.values(tempGrupos));
+      // Filtrar grupos que podrian haber quedado vacios por algun motivo (aunque rawData ya viene filtrado)
+      const gruposFinales = Object.values(tempGrupos).filter((g: any) => g.variantes && g.variantes.length > 0);
+      setProductos(gruposFinales);
+    } else {
+      setProductos([]); // Si no hay data, catalogo vacio
     }
   }, [rawData]);
 

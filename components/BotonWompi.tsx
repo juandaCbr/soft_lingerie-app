@@ -89,10 +89,7 @@ export default function BotonWompi({
             return;
         }
 
-        if (metodo === 'PSE' && (!paymentData?.bankPSE || !paymentData?.docNumber)) {
-            toast.error("Completa el banco y número de documento para PSE");
-            return;
-        }
+        // Se eliminó la validación de PSE aquí porque ahora usamos el portal Hosted de Wompi
 
         setCargando(true);
         setUrlRedireccion(null);

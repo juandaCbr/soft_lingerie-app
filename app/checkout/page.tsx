@@ -349,35 +349,35 @@ export default function CheckoutPage() {
                       <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
 
                         {metodo.id === 'CARD' && (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">Datos de tarjeta</p>
-                              <div className="flex gap-2">
-                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'VISA' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'opacity-20'}`}>VISA</span>
-                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'MASTERCARD' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'opacity-20'}`}>MASTER</span>
-                                <span className={`text-[8px] font-black px-2 py-1 rounded border ${cardBrand === 'AMEX' ? 'bg-cyan-50 border-cyan-200 text-cyan-600' : 'opacity-20'}`}>AMEX</span>
-                              </div>
+                          <div className="space-y-4 text-center py-6">
+                            <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-100 shadow-md">
+                                <CreditCard size={32} className="text-orange-600" />
                             </div>
-                            <input name="cardHolder" value={paymentData.cardHolder} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold uppercase tracking-wider border border-transparent focus:border-[#4a1d44]/10" placeholder="Nombre en la tarjeta" />
-                            <input name="cardNumber" value={paymentData.cardNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-sm font-mono border border-transparent focus:border-[#4a1d44]/10" placeholder="0000 0000 0000 0000" maxLength={19} />
-                            <div className="grid grid-cols-2 gap-4">
-                              <input name="expiry" value={paymentData.expiry} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="MM / YY" maxLength={7} />
-                              <input name="cvv" value={paymentData.cvv} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#4a1d44]/10" placeholder="CVV" maxLength={4} />
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Pago Seguro con Tarjeta</h4>
+                                <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
+                                  Aceptamos Visa, Mastercard y American Express. Serás redirigido al portal cifrado de **Wompi** para ingresar tus datos.
+                                </p>
+                            </div>
+                            <div className="flex justify-center gap-3 mt-4 opacity-60 grayscale hover:grayscale-0 transition-all">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" className="h-4 w-auto" />
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" className="h-4 w-auto" />
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/American_Express_logo_%282018%29.svg/1200px-American_Express_logo_%282018%29.svg.png" className="h-4 w-auto" />
                             </div>
                           </div>
                         )}
 
                         {metodo.id === 'NEQUI' && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
-                              <div className="bg-[#e6007e] p-2 rounded-lg text-white"><Smartphone size={20} /></div>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Nequi Directo</p>
-                                <p className="text-[9px] opacity-60">Pago rapido desde tu celular</p>
-                              </div>
+                          <div className="space-y-4 text-center py-6">
+                            <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-pink-100 shadow-md">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Nequi_Logo.png/1200px-Nequi_Logo.png" className="w-10 h-10 object-contain" />
                             </div>
-                            <input name="phoneNequi" value={paymentData.phoneNequi} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#4a1d44]/10 focus:border-[#4a1d44] text-center" placeholder="300 000 0000" maxLength={10} />
-                            <p className="text-[9px] opacity-40 italic text-center">Te llegara una notificacion de pago de Wompi a tu App.</p>
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Paga con Nequi</h4>
+                                <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
+                                  Podrás pagar escaneando el código QR o con tu número de celular directamente en el portal de Wompi.
+                                </p>
+                            </div>
                           </div>
                         )}
 

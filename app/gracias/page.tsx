@@ -13,9 +13,13 @@ function GraciasContent() {
     const ciudad = searchParams.get('city') || '';
     const esValledupar = ciudad.toLowerCase() === 'valledupar';
 
+    const { clearCart } = useCart();
+
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        // Vaciar el carrito automáticamente al llegar a la página de éxito
+        clearCart();
+    }, [clearCart]);
 
     const copiarReferencia = () => {
         navigator.clipboard.writeText(referencia);

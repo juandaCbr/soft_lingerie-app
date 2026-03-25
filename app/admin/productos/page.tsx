@@ -237,15 +237,19 @@ export default function GestionProductosPage() {
                 >
                   {/* Informacion basica del producto */}
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="relative">
+                    <div className="relative w-16 h-16 shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-black/5">
                       <img
-                        src={miniatura || 'https://placehold.co/100x100?text=S.L'}
-                        className="w-16 h-16 rounded-2xl object-cover shadow-sm bg-gray-50"
+                        src={(miniatura || 'https://placehold.co/100x100?text=S.L').includes('supabase.co') 
+                             ? `${(miniatura || 'https://placehold.co/100x100?text=S.L')}${miniatura?.includes('?') ? '' : '?width=150&quality=70'}` 
+                             : (miniatura || 'https://placehold.co/100x100?text=S.L')}
+                        className="w-full h-full object-cover"
                         alt={producto.nombre}
                       />
                       {producto.stock <= 0 && (
-                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
-                          SIN STOCK
+                        <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
+                          <div className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                            SIN STOCK
+                          </div>
                         </div>
                       )}
                     </div>

@@ -211,19 +211,19 @@ export default function CheckoutPage() {
       id: 'CARD', 
       label: 'Tarjeta de Crédito', 
       icon: <CreditCard size={18} />,
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" 
+      logo: "https://assets.ntextil.com/images/responsive/checkout/credit_card_big.png" 
     },
     { 
       id: 'PSE', 
       label: 'PSE / Transferencia', 
       icon: <User size={18} />,
-      logo: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" 
+      logo: "https://d1ih8jugeo2m5m.cloudfront.net/2023/05/pse-1-300x300.png" 
     },
     { 
       id: 'NEQUI', 
       label: 'Nequi', 
       icon: <Smartphone size={18} />,
-      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Nequi_Logo.png/1200px-Nequi_Logo.png" 
+      logo: "https://nequi.com.sv/img/icon.png" 
     },
   ];
 

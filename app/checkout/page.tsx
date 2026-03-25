@@ -207,9 +207,24 @@ export default function CheckoutPage() {
   };
 
   const metodosPago = [
-    { id: 'CARD', label: 'Tarjeta Credito / Debito', icon: <CreditCard size={18} /> },
-    { id: 'PSE', label: 'PSE / Transferencia', icon: <User size={18} /> },
-    { id: 'NEQUI', label: 'Nequi', icon: <Smartphone size={18} /> },
+    { 
+      id: 'CARD', 
+      label: 'Tarjeta de Crédito', 
+      icon: <CreditCard size={18} />,
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" 
+    },
+    { 
+      id: 'PSE', 
+      label: 'PSE / Transferencia', 
+      icon: <User size={18} />,
+      logo: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" 
+    },
+    { 
+      id: 'NEQUI', 
+      label: 'Nequi', 
+      icon: <Smartphone size={18} />,
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Nequi_Logo.png/1200px-Nequi_Logo.png" 
+    },
   ];
 
   return (
@@ -318,10 +333,10 @@ export default function CheckoutPage() {
                       className={`w-full group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20'}`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl transition-all ${metodoPagoSeleccionado === metodo.id ? 'bg-[#4a1d44] text-white' : 'bg-white text-[#4a1d44]'}`}>
-                          {metodo.icon}
+                        <div className={`p-2 rounded-xl transition-all bg-white shadow-sm border border-black/5 flex items-center justify-center w-12 h-10 overflow-hidden`}>
+                          <img src={metodo.logo} alt={metodo.label} className="w-full h-full object-contain" />
                         </div>
-                        <span className={`text-xs font-black uppercase tracking-widest ${metodoPagoSeleccionado === metodo.id ? 'text-[#4a1d44]' : 'opacity-60'}`}>
+                        <span className={`text-[11px] font-black uppercase tracking-widest ${metodoPagoSeleccionado === metodo.id ? 'text-[#4a1d44]' : 'opacity-60'}`}>
                           {metodo.label}
                         </span>
                       </div>
@@ -366,43 +381,28 @@ export default function CheckoutPage() {
                           </div>
                         )}
 
-                        {metodo.id === 'DAVIPLATA' && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
-                              <div className="bg-[#ff0000] p-2 rounded-lg text-white"><Smartphone size={20} /></div>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Daviplata Directo</p>
-                                <p className="text-[9px] opacity-60">Pago desde tu App Daviplata</p>
-                              </div>
-                            </div>
-                            <input name="phoneDaviplata" value={paymentData.phoneDaviplata} onChange={handlePaymentChange} className="w-full p-5 rounded-2xl bg-[#fdf8f6] outline-none text-xl font-bold tracking-[0.2em] text-[#4a1d44] border-2 border-[#ff0000]/10 focus:border-[#ff0000] text-center" placeholder="300 000 0000" maxLength={10} />
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Documento del titular</p>
-                                <input name="docNumber" value={paymentData.docNumber} onChange={handlePaymentChange} className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs border border-transparent focus:border-[#ff0000]/10" placeholder="Cédula para Daviplata" />
-                            </div>
-                          </div>
-                        )}
-
                         {metodo.id === 'PSE' && (
                           <div className="space-y-4">
-                            <div className="flex items-center gap-3 bg-[#fdf8f6] p-4 rounded-2xl border border-[#4a1d44]/5">
-                              <div className="bg-[#4a1d44] p-2 rounded-lg text-white"><User size={20} /></div>
+                            <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                              <div className="bg-white p-2 rounded-lg shadow-sm">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" className="w-8 h-8 object-contain" />
+                              </div>
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">PSE / Transferencia</p>
-                                <p className="text-[9px] opacity-60">Paga con cualquier banco</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-900">Portal Seguro PSE</p>
+                                <p className="text-[9px] text-blue-700 opacity-70 leading-tight">Elige tu banco y paga desde tu portal bancario.</p>
                               </div>
                             </div>
                             
                             <div className="space-y-3">
                               <div className="space-y-1">
-                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Banco</p>
+                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Selecciona tu Banco</p>
                                 <select 
                                   name="bankPSE" 
                                   value={paymentData.bankPSE} 
                                   onChange={handlePaymentChange}
-                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
+                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all cursor-pointer"
                                 >
-                                  <option value="">Selecciona tu banco</option>
+                                  <option value="">-- Elige tu banco --</option>
                                   {bancosPSE.map(b => (
                                     <option key={b.value} value={b.value}>{b.label}</option>
                                   ))}
@@ -411,48 +411,36 @@ export default function CheckoutPage() {
 
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Tipo de Persona</p>
-                                  <select 
-                                    name="userType" 
-                                    value={paymentData.userType} 
-                                    onChange={handlePaymentChange}
-                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
-                                  >
-                                    <option value="0">Persona Natural</option>
-                                    <option value="1">Persona Jurídica</option>
-                                  </select>
-                                </div>
-                                <div className="space-y-1">
                                   <p className="text-[10px] font-black opacity-40 uppercase ml-2">Tipo de Doc.</p>
                                   <select 
                                     name="docType" 
                                     value={paymentData.docType} 
                                     onChange={handlePaymentChange}
-                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
+                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all cursor-pointer"
                                   >
-                                    <option value="CC">Cédula de Ciudadanía</option>
-                                    <option value="CE">Cédula de Extranjería</option>
+                                    <option value="CC">Cédula</option>
+                                    <option value="CE">Extranjería</option>
                                     <option value="NIT">NIT</option>
                                     <option value="PP">Pasaporte</option>
                                   </select>
                                 </div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Número de Documento</p>
-                                <input 
-                                  name="docNumber" 
-                                  value={paymentData.docNumber} 
-                                  onChange={handlePaymentChange} 
-                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10" 
-                                  placeholder="Ej: 123456789" 
-                                />
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Número de Documento</p>
+                                  <input 
+                                    name="docNumber" 
+                                    value={paymentData.docNumber} 
+                                    onChange={handlePaymentChange} 
+                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all" 
+                                    placeholder="Ej: 123456789" 
+                                  />
+                                </div>
                               </div>
                             </div>
 
-                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                              <p className="text-[10px] text-blue-800 font-bold leading-tight">
-                                Al confirmar, serás redirigido al portal de tu banco para completar el pago de forma segura.
+                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 items-center">
+                              <ShieldCheck size={20} className="text-amber-600 shrink-0" />
+                              <p className="text-[10px] text-amber-900 font-bold leading-tight">
+                                Al confirmar, te llevaré al portal de tu banco para completar el pago. **No cierres la página**.
                               </p>
                             </div>
                           </div>

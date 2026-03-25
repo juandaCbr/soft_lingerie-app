@@ -62,13 +62,21 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
     } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'NEQUI_HOSTED') {
-      // Generar URL del Checkout Web de Wompi incluyendo la FIRMA DE INTEGRIDAD
+      // Generar URL del Checkout Web de Wompi con los parámetros EXACTOS que pide su documentación
       const amountInCents = Math.round(monto * 100);
-      const publicKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY;
       
-      // La firma ya la calculamos arriba como 'integrity_signature'
-      const hostedUrl = `https://checkout.wompi.co/p/?public-key=${publicKey}&currency=COP&amount-in-cents=${amountInCents}&reference=${referencia}&signature=${integrity_signature}&redirect-url=${encodeURIComponent(redirectUrlValid)}`;
+      // Asegurarnos de usar la llave pública correcta
+      const publicKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || merchantData.data.public_key;
       
+      if (!publicKey) {
+        throw new Error("Llave pública de Wompi no encontrada en las variables de entorno.");
+      }
+
+      // IMPORTANTE: El parámetro se debe llamar 'signature:integrity'
+      const hostedUrl = `https://checkout.wompi.co/p/?public-key=${publicKey}&currency=COP&amount-in-cents=${amountInCents}&reference=${referencia}&signature:integrity=${integrity_signature}&redirect-url=${encodeURIComponent(redirectUrlValid)}`;
+      
+      console.log("Generando URL Hosted:", hostedUrl);
+
       return NextResponse.json({ 
           url: hostedUrl 
       });

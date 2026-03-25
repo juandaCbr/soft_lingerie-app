@@ -233,6 +233,7 @@ export default function GestionProductosPage() {
               return (
                 <div
                   key={producto.id}
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 100px' }}
                   className={`bg-white p-4 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col md:flex-row md:items-center gap-4 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''} ${producto.stock <= 0 ? 'border-red-200' : ''}`}
                 >
                   {/* Informacion basica del producto */}
@@ -240,10 +241,12 @@ export default function GestionProductosPage() {
                     <div className="relative w-16 h-16 shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-black/5">
                       <img
                         src={(miniatura || 'https://placehold.co/100x100?text=S.L').includes('supabase.co') 
-                             ? `${(miniatura || 'https://placehold.co/100x100?text=S.L')}${miniatura?.includes('?') ? '' : '?width=150&quality=70'}` 
+                             ? `${(miniatura || 'https://placehold.co/100x100?text=S.L')}${miniatura?.includes('?') ? '' : '?width=120&quality=60'}` 
                              : (miniatura || 'https://placehold.co/100x100?text=S.L')}
                         className="w-full h-full object-cover"
                         alt={producto.nombre}
+                        loading="lazy"
+                        decoding="async"
                       />
                       {producto.stock <= 0 && (
                         <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">

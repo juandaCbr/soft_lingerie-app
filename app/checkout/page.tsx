@@ -350,8 +350,8 @@ export default function CheckoutPage() {
 
                         {metodo.id === 'CARD' && (
                           <div className="space-y-4 text-center py-6">
-                            <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-100 shadow-md">
-                                <CreditCard size={32} className="text-orange-600" />
+                            <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-100 shadow-md overflow-hidden p-2">
+                                <img src="https://assets.ntextil.com/images/responsive/checkout/credit_card_big.png" className="w-full h-full object-contain" />
                             </div>
                             <div className="space-y-2">
                                 <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Pago Seguro con Tarjeta</h4>
@@ -359,18 +359,13 @@ export default function CheckoutPage() {
                                   Aceptamos Visa, Mastercard y American Express. Serás redirigido al portal cifrado de **Wompi** para ingresar tus datos.
                                 </p>
                             </div>
-                            <div className="flex justify-center gap-3 mt-4 opacity-60 grayscale hover:grayscale-0 transition-all">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" className="h-4 w-auto" />
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" className="h-4 w-auto" />
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/American_Express_logo_%282018%29.svg/1200px-American_Express_logo_%282018%29.svg.png" className="h-4 w-auto" />
-                            </div>
                           </div>
                         )}
 
                         {metodo.id === 'NEQUI' && (
                           <div className="space-y-4 text-center py-6">
-                            <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-pink-100 shadow-md">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Nequi_Logo.png/1200px-Nequi_Logo.png" className="w-10 h-10 object-contain" />
+                            <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-pink-100 shadow-md overflow-hidden p-4">
+                                <img src="https://nequi.com.sv/img/icon.png" className="w-full h-full object-contain" />
                             </div>
                             <div className="space-y-2">
                                 <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Paga con Nequi</h4>
@@ -383,8 +378,8 @@ export default function CheckoutPage() {
 
                         {metodo.id === 'PSE' && (
                           <div className="space-y-4 text-center py-6 animate-in fade-in duration-500">
-                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-md">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" className="w-12 h-12 object-contain" />
+                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-md overflow-hidden p-4">
+                                <img src="https://d1ih8jugeo2m5m.cloudfront.net/2023/05/pse-1-300x300.png" className="w-full h-full object-contain" />
                             </div>
                             <div className="space-y-2">
                                 <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Portal Oficial PSE</h4>

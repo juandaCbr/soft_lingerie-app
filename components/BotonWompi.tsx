@@ -90,7 +90,7 @@ export default function BotonWompi({
         }
 
         if (metodo === 'PSE' && (!paymentData?.bankPSE || !paymentData?.docNumber)) {
-            toast.error("Completa los datos de PSE (Banco y Documento)");
+            toast.error("Completa el banco y número de documento para PSE");
             return;
         }
 

@@ -38,10 +38,23 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   }, [producto, colorFiltro]);
 
   const obtenerListaDeFotos = () => {
+    let urls = [];
     if (Array.isArray(varianteActiva.imagenes_urls) && varianteActiva.imagenes_urls.length > 0) {
-      return varianteActiva.imagenes_urls;
+      urls = varianteActiva.imagenes_urls;
+    } else {
+      urls = varianteActiva.imagen_url ? [varianteActiva.imagen_url] : [];
     }
-    return varianteActiva.imagen_url ? [varianteActiva.imagen_url] : [];
+    
+    // Optimizar URLs de Supabase para que pesen menos (500px de ancho y calidad 80)
+    return urls.map((url: string) => {
+      if (url.includes('supabase.co')) {
+        // Si ya tiene parámetros, no añadimos más para no romper la URL
+        if (url.includes('?')) return url;
+        // Solo redimensionamos si es una imagen de producto
+        return `${url}?width=500&quality=80`;
+      }
+      return url;
+    });
   };
 
   const imagenes = obtenerListaDeFotos();
@@ -85,18 +98,27 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
 
           {imagenes.length > 0 ? (
             <>
-              {imagenes.map((img: string, index: number) => (
-                <Image
-                  key={`${varianteActiva.id}-${index}`}
-                  src={img}
-                  alt={`${varianteActiva.nombre} - ${index}`}
-                  fill
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                  className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${index === currentImg ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.8]' : ''}`}
-                  priority={priority && index === 0}
-                  loading={priority && index === 0 ? 'eager' : 'lazy'}
-                />
-              ))}
+              {/* Solo renderizamos la imagen actual y la siguiente para optimizar */}
+              {imagenes.map((img: string, index: number) => {
+                const isCurrent = index === currentImg;
+                const isNext = index === (currentImg + 1) % imagenes.length;
+                
+                // Si no es la actual ni la siguiente, no la renderizamos para ahorrar recursos
+                if (!isCurrent && !isNext) return null;
+
+                return (
+                  <Image
+                    key={`${varianteActiva.id}-${index}`}
+                    src={img}
+                    alt={`${varianteActiva.nombre} - ${index}`}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.8]' : ''}`}
+                    priority={priority && index === 0}
+                    loading={priority && index === 0 ? 'eager' : 'lazy'}
+                  />
+                );
+              })}
 
               {imagenes.length > 1 && (
                 <>

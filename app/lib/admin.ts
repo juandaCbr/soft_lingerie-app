@@ -11,7 +11,8 @@ export async function obtenerVentasAdmin() {
         nombre_producto_snapshot
       )
     `)
-    .order('fecha', { ascending: false });
+    .order('fecha', { ascending: false })
+    .limit(100);
 
   if (error) throw error;
   return data;

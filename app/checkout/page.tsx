@@ -393,13 +393,67 @@ export default function CheckoutPage() {
                               </div>
                             </div>
                             
-                            <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 space-y-3">
-                              <p className="text-xs text-blue-800 font-bold leading-tight">
-                                Al confirmar, serás redirigido al portal seguro de Wompi para elegir tu banco y completar el pago con PSE.
-                              </p>
-                              <div className="flex items-center gap-2 opacity-40 grayscale">
-                                <img src="https://servicios.inm.gov.co/images/Boton_PSE.png" alt="PSE" className="h-6" />
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Banco</p>
+                                <select 
+                                  name="bankPSE" 
+                                  value={paymentData.bankPSE} 
+                                  onChange={handlePaymentChange}
+                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
+                                >
+                                  <option value="">Selecciona tu banco</option>
+                                  {bancosPSE.map(b => (
+                                    <option key={b.value} value={b.value}>{b.label}</option>
+                                  ))}
+                                </select>
                               </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Tipo de Persona</p>
+                                  <select 
+                                    name="userType" 
+                                    value={paymentData.userType} 
+                                    onChange={handlePaymentChange}
+                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
+                                  >
+                                    <option value="0">Persona Natural</option>
+                                    <option value="1">Persona Jurídica</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Tipo de Doc.</p>
+                                  <select 
+                                    name="docType" 
+                                    value={paymentData.docType} 
+                                    onChange={handlePaymentChange}
+                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10"
+                                  >
+                                    <option value="CC">Cédula de Ciudadanía</option>
+                                    <option value="CE">Cédula de Extranjería</option>
+                                    <option value="NIT">NIT</option>
+                                    <option value="PP">Pasaporte</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Número de Documento</p>
+                                <input 
+                                  name="docNumber" 
+                                  value={paymentData.docNumber} 
+                                  onChange={handlePaymentChange} 
+                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border border-transparent focus:border-[#4a1d44]/10" 
+                                  placeholder="Ej: 123456789" 
+                                />
+                              </div>
+                            </div>
+
+                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                              <p className="text-[10px] text-blue-800 font-bold leading-tight">
+                                Al confirmar, serás redirigido al portal de tu banco para completar el pago de forma segura.
+                              </p>
                             </div>
                           </div>
                         )}

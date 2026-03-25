@@ -23,19 +23,37 @@ export default function EstadisticasPage() {
     const [loading, setLoading] = useState(true);
     const [vistaActual, setVistaActual] = useState<VistaGrafica>('mes');
 
+    // Inicializacion y suscripcion en tiempo real
     useEffect(() => {
-        const fetchDatos = async () => {
-            // Consulta de todos los registros de la tabla ventas_realizadas
-            const { data, error } = await supabase
-                .from('ventas_realizadas')
-                .select('*');
-            if (!error && data) {
-                setVentas(data);
-            }
-            setLoading(false);
-        };
         fetchDatos();
+
+        const canalVentasRealtime = supabase
+            .channel('estadisticas-live')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'ventas_realizadas' },
+                () => {
+                    // Re-ejecuta la consulta completa para refrescar graficas
+                    fetchDatos();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(canalVentasRealtime);
+        };
     }, []);
+
+    const fetchDatos = async () => {
+        // Consulta de todos los registros de la tabla ventas_realizadas
+        const { data, error } = await supabase
+            .from('ventas_realizadas')
+            .select('*');
+        if (!error && data) {
+            setVentas(data);
+        }
+        setLoading(false);
+    };
 
     const datosGrafica = useMemo(() => {
         // Filtramos por pagos exitosos ignorando mayusculas
@@ -51,7 +69,6 @@ export default function EstadisticasPage() {
                 d.setDate(d.getDate() - (6 - i));
                 return {
                     label: diasSemana[d.getDay()],
-                    // Formato YYYY-MM-DD para comparacion precisa
                     fechaClave: d.toISOString().split('T')[0],
                     total: 0
                 };
@@ -76,7 +93,6 @@ export default function EstadisticasPage() {
             ventasAprobadas.forEach(v => {
                 if (!v.fecha) return;
                 const fecha = new Date(v.fecha);
-                // Solo sumamos si el año coincide con el actual
                 if (fecha.getFullYear() === añoEnCurso) {
                     datosMes[fecha.getMonth()].total += Number(v.monto_total || 0);
                 }

@@ -46,10 +46,25 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
       .eq('producto_id', productoId);
     
     if (!errorTallas && tallasRel) {
+      // Definir el orden lógico de las tallas
+      const ordenTallas: Record<string, number> = {
+        'XS': 1, 'xs': 1,
+        'S': 2, 's': 2,
+        'M': 3, 'm': 3,
+        'L': 4, 'l': 4,
+        'XL': 5, 'xl': 5,
+        'XXL': 6, 'xxl': 6,
+        'Única': 10, 'UNICA': 10, 'Unica': 10
+      };
+
       const tallasConStock = tallasRel.map(r => ({
         ...r.tallas,
         stock: r.stock_talla || 0
-      })).sort((a, b) => a.orden - b.orden);
+      })).sort((a, b) => {
+        const nombreA = a.nombre?.trim() || "";
+        const nombreB = b.nombre?.trim() || "";
+        return (ordenTallas[nombreA] || 99) - (ordenTallas[nombreB] || 99);
+      });
       
       setTallasDisponibles(tallasConStock);
       const primeraDisponible = tallasConStock.find(t => t.stock > 0);

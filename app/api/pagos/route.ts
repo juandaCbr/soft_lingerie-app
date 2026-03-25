@@ -61,18 +61,21 @@ export async function POST(req: Request) {
       transactionPayload.payment_method = { type: "NEQUI", phone_number: paymentData.phoneNequi };
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
-    } else if (metodo === 'PSE') {
-      if (!paymentData.bankPSE || !paymentData.docNumber) {
-        return NextResponse.json({ error: "Faltan datos de PSE (Banco o Documento)" }, { status: 400 });
-      }
-      transactionPayload.payment_method = {
-        type: "PSE",
-        user_type: parseInt(paymentData.userType) || 0,
-        user_legal_id_type: paymentData.docType || "CC",
-        user_legal_id: paymentData.docNumber,
-        financial_institution_code: paymentData.bankPSE,
-        payment_description: `Compra en Soft Lingerie - Ref: ${referencia}`
-      };
+    } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'NEQUI_HOSTED') {
+      // Para PSE y otros metodos que queramos que se manejen en el portal de Wompi,
+      // NO enviamos el objeto payment_method detallado.
+      // Wompi usara la redirect_url para procesar el pago en su propio portal si no se especifica un metodo nativo.
+      // NOTA: Para forzar el portal de Wompi (Hosted), simplemente devolvemos la URL de Checkout Web.
+      
+      const amountInCents = Math.round(monto * 100);
+      const publicKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY;
+      
+      // Generar URL del Checkout Web de Wompi
+      const hostedUrl = `https://checkout.wompi.co/p/?public-key=${publicKey}&currency=COP&amount-in-cents=${amountInCents}&reference=${referencia}&redirect-url=${encodeURIComponent(redirectUrlValid)}`;
+      
+      return NextResponse.json({ 
+          url: hostedUrl 
+      });
     }
 
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {

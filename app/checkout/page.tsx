@@ -382,65 +382,20 @@ export default function CheckoutPage() {
                         )}
 
                         {metodo.id === 'PSE' && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                              <div className="bg-white p-2 rounded-lg shadow-sm">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" className="w-8 h-8 object-contain" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-900">Portal Seguro PSE</p>
-                                <p className="text-[9px] text-blue-700 opacity-70 leading-tight">Elige tu banco y paga desde tu portal bancario.</p>
-                              </div>
+                          <div className="space-y-4 text-center py-6 animate-in fade-in duration-500">
+                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-md">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PSE_Logo.png" className="w-12 h-12 object-contain" />
                             </div>
-                            
-                            <div className="space-y-3">
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-black opacity-40 uppercase ml-2">Selecciona tu Banco</p>
-                                <select 
-                                  name="bankPSE" 
-                                  value={paymentData.bankPSE} 
-                                  onChange={handlePaymentChange}
-                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all cursor-pointer"
-                                >
-                                  <option value="">-- Elige tu banco --</option>
-                                  {bancosPSE.map(b => (
-                                    <option key={b.value} value={b.value}>{b.label}</option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Tipo de Doc.</p>
-                                  <select 
-                                    name="docType" 
-                                    value={paymentData.docType} 
-                                    onChange={handlePaymentChange}
-                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all cursor-pointer"
-                                  >
-                                    <option value="CC">Cédula</option>
-                                    <option value="CE">Extranjería</option>
-                                    <option value="NIT">NIT</option>
-                                    <option value="PP">Pasaporte</option>
-                                  </select>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-black opacity-40 uppercase ml-2">Número de Documento</p>
-                                  <input 
-                                    name="docNumber" 
-                                    value={paymentData.docNumber} 
-                                    onChange={handlePaymentChange} 
-                                    className="w-full p-4 rounded-xl bg-[#fdf8f6] outline-none text-xs font-bold border-2 border-transparent focus:border-blue-200 transition-all" 
-                                    placeholder="Ej: 123456789" 
-                                  />
-                                </div>
-                              </div>
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Portal Oficial PSE</h4>
+                                <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
+                                  Al hacer clic en el botón de abajo, te llevaré al **Portal Seguro de Wompi** donde podrás elegir tu banco y completar tu pago.
+                                </p>
                             </div>
-
-                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 items-center">
-                              <ShieldCheck size={20} className="text-amber-600 shrink-0" />
-                              <p className="text-[10px] text-amber-900 font-bold leading-tight">
-                                Al confirmar, te llevaré al portal de tu banco para completar el pago. **No cierres la página**.
+                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 mt-4 flex items-center gap-3 text-left">
+                              <ShieldCheck size={24} className="text-blue-600 shrink-0" />
+                              <p className="text-[10px] text-blue-800 font-bold leading-tight italic">
+                                Tu información está protegida por la seguridad bancaria de Wompi.
                               </p>
                             </div>
                           </div>

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     } else if (metodo === 'CARD') {
       transactionPayload.payment_method = { 
         type: "CARD", 
-        installments: 1, 
+        installments: Number(paymentData.installments) || 1, 
         token: paymentData.token 
       };
     } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {

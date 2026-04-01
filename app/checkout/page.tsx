@@ -20,6 +20,7 @@ export default function CheckoutPage() {
     cardHolder: '',
     expiry: '',
     cvv: '',
+    installments: '1',
     phoneNequi: '',
     phoneDaviplata: '',
     bankPSE: '',
@@ -210,10 +211,16 @@ export default function CheckoutPage() {
 
   const metodosPago = [
     { 
-      id: 'CARD', 
+      id: 'CREDIT_CARD', 
       label: 'Tarjeta de Crédito', 
       icon: <CreditCard size={18} />,
       logo: "https://assets.ntextil.com/images/responsive/checkout/credit_card_big.png" 
+    },
+    { 
+      id: 'DEBIT_CARD', 
+      label: 'Tarjeta de Débito', 
+      icon: <CreditCard size={18} />,
+      logo: "https://cdn-icons-png.flaticon.com/512/4021/4021708.png" 
     },
     { 
       id: 'PSE', 
@@ -228,6 +235,13 @@ export default function CheckoutPage() {
       logo: "https://nequi.com.sv/img/icon.png" 
     },
   ];
+
+  // Logos de franquicias para deteccion dinamica
+  const brandLogos: Record<string, string> = {
+    'VISA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png',
+    'MASTERCARD': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png',
+    'AMEX': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/American_Express_logo_%282018%29.svg/1200px-American_Express_logo_%282018%29.svg.png'
+  };
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">
@@ -350,24 +364,38 @@ export default function CheckoutPage() {
                     {metodoPagoSeleccionado === metodo.id && (
                       <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
 
-                        {metodo.id === 'CARD' && (
-                          <div className="space-y-4 pt-4 animate-in slide-in-from-top-2">
-                            <div className="grid grid-cols-1 gap-4">
-                              <input
-                                type="text"
-                                name="cardNumber"
-                                placeholder="Número de tarjeta"
-                                value={paymentData.cardNumber}
-                                onChange={handlePaymentChange}
-                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
-                              />
+                        {(metodo.id === 'CREDIT_CARD' || metodo.id === 'DEBIT_CARD') && (
+                          <div className="space-y-5 pt-4 animate-in slide-in-from-top-2">
+                            <div className="bg-[#4a1d44]/5 p-6 rounded-[2rem] border border-[#4a1d44]/10 space-y-4">
+                              <div className="relative">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                  {cardBrand ? (
+                                    <img src={brandLogos[cardBrand]} alt={cardBrand} className="h-4 w-auto object-contain animate-in zoom-in" />
+                                  ) : (
+                                    <CreditCard className="opacity-20" size={18} />
+                                  )}
+                                </div>
+                                <input
+                                  type="text"
+                                  name="cardNumber"
+                                  placeholder="0000 0000 0000 0000"
+                                  value={paymentData.cardNumber}
+                                  onChange={handlePaymentChange}
+                                  className="w-full p-4 pl-14 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold tracking-widest"
+                                />
+                                {cardBrand && (
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <div className="bg-green-500 w-1.5 h-1.5 rounded-full animate-pulse" />
+                                  </div>
+                                )}
+                              </div>
                               <input
                                 type="text"
                                 name="cardHolder"
-                                placeholder="Nombre en la tarjeta"
+                                placeholder="Nombre como aparece en la tarjeta"
                                 value={paymentData.cardHolder}
                                 onChange={handlePaymentChange}
-                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
+                                className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-xs font-bold uppercase tracking-widest"
                               />
                               <div className="grid grid-cols-2 gap-4">
                                 <input
@@ -376,7 +404,7 @@ export default function CheckoutPage() {
                                   placeholder="MM / YY"
                                   value={paymentData.expiry}
                                   onChange={handlePaymentChange}
-                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm text-center"
+                                  className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold text-center"
                                 />
                                 <input
                                   type="text"
@@ -384,33 +412,52 @@ export default function CheckoutPage() {
                                   placeholder="CVV"
                                   value={paymentData.cvv}
                                   onChange={handlePaymentChange}
-                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm text-center"
+                                  className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold text-center"
                                 />
                               </div>
+                              
+                              {metodo.id === 'CREDIT_CARD' && (
+                                <div className="pt-2 animate-in fade-in duration-500">
+                                  <label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 px-1 mb-2 block">Número de cuotas</label>
+                                  <select 
+                                    name="installments" 
+                                    value={paymentData.installments} 
+                                    onChange={handlePaymentChange}
+                                    className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold appearance-none cursor-pointer"
+                                  >
+                                    {[...Array(24)].map((_, i) => (
+                                      <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'cuota' : 'cuotas'}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
                             </div>
-                            <p className="text-[10px] text-[#4a1d44]/60 italic text-center">
-                              * Aceptamos tarjetas de Crédito y Débito. Procesamiento seguro vía Wompi.
-                            </p>
+                            <div className="flex items-center justify-center gap-2 opacity-40">
+                              <ShieldCheck size={14} />
+                              <p className="text-[9px] font-bold uppercase tracking-widest">Pago cifrado de extremo a extremo</p>
+                            </div>
                           </div>
                         )}
 
                         {metodo.id === 'NEQUI' && (
-                          <div className="space-y-4 pt-4 animate-in slide-in-from-top-2">
-                            <div className="flex flex-col gap-3">
-                              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Número de celular Nequi</label>
-                              <input
-                                type="tel"
-                                name="phoneNequi"
-                                placeholder="Ej: 3001234567"
-                                value={paymentData.phoneNequi}
-                                onChange={handlePaymentChange}
-                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
-                              />
-                            </div>
-                            <div className="p-4 bg-pink-50 rounded-2xl border border-pink-100 flex items-center gap-3">
-                              <Smartphone size={20} className="text-pink-600 shrink-0" />
-                              <p className="text-[10px] text-pink-800 font-bold leading-tight">
-                                Recibirás una notificación en tu App Nequi para autorizar el pago.
+                          <div className="space-y-5 pt-4 animate-in slide-in-from-top-2">
+                            <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border-2 border-dashed border-[#4a1d44]/10 flex flex-col items-center text-center space-y-4">
+                              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                <Smartphone className="text-[#4a1d44]" size={24} />
+                              </div>
+                              <div className="w-full max-w-[240px]">
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 mb-3 block">Celular vinculado a Nequi</label>
+                                <input
+                                  type="tel"
+                                  name="phoneNequi"
+                                  placeholder="300 000 0000"
+                                  value={paymentData.phoneNequi}
+                                  onChange={handlePaymentChange}
+                                  className="w-full p-5 rounded-2xl bg-white border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-center text-lg font-black tracking-[0.2em] text-[#4a1d44]"
+                                />
+                              </div>
+                              <p className="text-[10px] text-[#4a1d44]/60 max-w-[200px] leading-relaxed">
+                                Te enviaremos un mensaje push a tu celular para que autorices el pago.
                               </p>
                             </div>
                           </div>

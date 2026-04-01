@@ -110,14 +110,18 @@ export default function HomePage() {
           <img
             src="/home.jpg"
             className="w-full h-full object-cover"
-            alt="Soft Lingerie Home"
+            alt="Soft Lingerie Valledupar - Lencería Exclusiva"
           />
         </div>
-        <div className="relative z-10 max-w-3xl">
-          <span className="text-white/60 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Elegancia & Confianza</span>
-          <h1 className="text-5xl md:text-8xl font-bold text-white mb-6 tracking-tighter leading-none font-playfair italic">
-            Siente el Lujo
+        <div className="relative z-10 max-w-4xl">
+          <span className="text-white/60 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mb-4 block">Boutique Exclusiva en Valledupar</span>
+          <h1 className="text-5xl md:text-8xl lg:text-9xl font-bold text-white mb-6 tracking-tighter leading-none font-playfair italic">
+            Lencería <br className="hidden md:block" /> Valledupar
           </h1>
+          <p className="text-white/80 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+            Elegancia, seducción y diseños exclusivos que resaltan tu belleza natural. 
+            Envíos seguros a todo Colombia desde Valledupar.
+          </p>
           <Link href="/productos" className="bg-white text-[#4a1d44] px-10 py-5 rounded-full font-bold text-xs md:text-sm hover:bg-[#f2e1d9] transition-all shadow-2xl inline-flex items-center gap-3 uppercase tracking-widest active:scale-95">
             Explorar Catálogo <ArrowRight size={18} />
           </Link>

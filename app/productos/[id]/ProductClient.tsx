@@ -119,8 +119,36 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     ? varianteActiva.imagenes_urls
     : [varianteActiva.imagen_url];
 
+  // Datos estructurados JSON-LD para Google (Rich Snippets)
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": varianteActiva.nombre,
+    "image": imagenes,
+    "description": varianteActiva.descripcion,
+    "brand": {
+      "@type": "Brand",
+      "name": "Soft Lingerie"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://soft-lingerie-app.vercel.app/productos/${varianteActiva.id}`,
+      "priceCurrency": "COP",
+      "price": varianteActiva.precio,
+      "availability": tallasDisponibles.some(t => t.stock > 0) 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 text-[#4a1d44]">
+      {/* Script de Datos Estructurados */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="-mt-2 mb-6 max-w-5xl mx-auto">
         <button onClick={handleBack} className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase tracking-[0.2em] py-1">
           <ArrowLeft size={14} /> Volver al catálogo

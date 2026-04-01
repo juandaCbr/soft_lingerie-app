@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://soft-lingerie-app.vercel.app'),
   title: {
     default: "Soft Lingerie | Lencería Valledupar y Boutique Online",
     template: "%s | Soft Lingerie"

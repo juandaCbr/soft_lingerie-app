@@ -14,7 +14,21 @@ export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [preparandoPago, setPreparandoPago] = useState(false);
-  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA' | null>(null);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA' | null>(null);
+  
+  // Limpiar datos cuando se cambia de metodo
+  const cambiarMetodo = (id: any) => {
+    setPaymentData(prev => ({
+      ...prev,
+      cardNumber: '',
+      cardHolder: '',
+      expiry: '',
+      cvv: '',
+      installments: '1',
+      phoneNequi: '',
+    }));
+    setMetodoPagoSeleccionado(id);
+  };
   const [paymentData, setPaymentData] = useState({
     cardNumber: '',
     cardHolder: '',

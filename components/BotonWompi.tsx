@@ -103,7 +103,9 @@ export default function BotonWompi({
         try {
             let finalPaymentData = { ...paymentData };
             
-            if (metodo === 'CARD') {
+            const esTarjeta = metodo === 'CARD' || metodo === 'CREDIT_CARD' || metodo === 'DEBIT_CARD';
+
+            if (esTarjeta) {
                 if (!paymentData?.cardNumber || !paymentData?.expiry || !paymentData?.cvv) {
                     toast.error("Completa todos los datos de la tarjeta");
                     setCargando(false);

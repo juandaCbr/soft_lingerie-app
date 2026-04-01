@@ -376,7 +376,7 @@ export default function CheckoutPage() {
                   <div key={metodo.id} className="space-y-3">
                     <button
                       type="button"
-                      onClick={() => setMetodoPagoSeleccionado(metodo.id as any)}
+                      onClick={() => cambiarMetodo(metodo.id)}
                       className={`w-full group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${metodoPagoSeleccionado === metodo.id ? 'border-[#4a1d44] bg-[#4a1d44]/5' : 'border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20'}`}
                     >
                       <div className="flex items-center gap-4">

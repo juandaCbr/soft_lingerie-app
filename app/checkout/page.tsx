@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCart } from '@/context/CartContext';
 import { COLOMBIA_COMPLETA } from '@/app/lib/colombia';
 import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2, Smartphone, Bike } from 'lucide-react';

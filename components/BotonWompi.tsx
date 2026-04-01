@@ -16,10 +16,11 @@ interface BotonWompiProps {
     nombre?: string;
     telefono?: string;
     pedidoId?: string | null; // Nuevo prop para vigilar el pedido en DB
+    ciudad?: string; // Nueva prop
 }
 
 export default function BotonWompi({
-    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono, pedidoId
+    montoTotal, referenciaPedido, onExito, disabled, metodo, paymentData, email, nombre, telefono, pedidoId, ciudad
 }: BotonWompiProps) {
     const [cargando, setCargando] = useState(false);
     const [verificando, setVerificando] = useState(false);
@@ -130,7 +131,8 @@ export default function BotonWompi({
                     monto: montoTotal,
                     email,
                     nombre,
-                    telefono
+                    telefono,
+                    ciudad // Enviamos la ciudad al backend
                 })
             });
 

@@ -1,12 +1,49 @@
-import { supabase } from '@/app/lib/supabase';
 import { notFound } from 'next/navigation';
 import ProductClient from './ProductClient';
+import { Metadata } from 'next';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // ISR: Revalidar cada 60 segundos
 export const revalidate = 60;
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { data: producto } = await supabaseAdmin
+    .from('productos')
+    .select('nombre, descripcion, imagenes_urls')
+    .eq('id', id)
+    .single();
+
+  if (!producto) return { title: "Producto no encontrado" };
+
+  const image = Array.isArray(producto.imagenes_urls) && producto.imagenes_urls.length > 0 
+    ? producto.imagenes_urls[0] 
+    : "https://soft-lingerie-app.vercel.app/home.jpg";
+
+  return {
+    title: producto.nombre,
+    description: producto.descripcion?.substring(0, 160) || `Compra ${producto.nombre} en Soft Lingerie Valledupar. Calidad premium y diseños exclusivos.`,
+    openGraph: {
+      title: `${producto.nombre} | Soft Lingerie`,
+      description: producto.descripcion?.substring(0, 160),
+      images: [image],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: producto.nombre,
+      description: producto.descripcion?.substring(0, 160),
+      images: [image],
+    }
+  };
+}
+
 export async function generateStaticParams() {
-  const { data: productos } = await supabase
+  const { data: productos } = await supabaseAdmin
     .from('productos')
     .select('id')
     .eq('activo', true);
@@ -17,10 +54,14 @@ export async function generateStaticParams() {
 }
 
 export default async function ProductoDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  
+  // Extraer el ID real (la última parte después del último guion)
+  // Esto permite que /productos/nombre-del-producto-123 funcione
+  const id = rawId.split('-').pop() || rawId;
 
   // 1. Obtener producto principal
-  const { data: producto, error } = await supabase
+  const { data: producto, error } = await supabaseAdmin
     .from('productos')
     .select(`*, producto_colores ( colores (hex, nombre) )`)
     .eq('id', id)
@@ -33,7 +74,7 @@ export default async function ProductoDetallePage({ params }: { params: Promise<
   // 2. Obtener variantes del mismo grupo
   let variantes = [producto];
   if (producto.grupo_id) {
-    const { data: todasLasVariantes } = await supabase
+    const { data: todasLasVariantes } = await supabaseAdmin
       .from('productos')
       .select(`*, producto_colores ( colores (hex, nombre) )`)
       .eq('grupo_id', producto.grupo_id)
@@ -42,12 +83,13 @@ export default async function ProductoDetallePage({ params }: { params: Promise<
   }
 
   // 3. Obtener productos relacionados
-  const { data: dataRelacionados } = await supabase
+  const { data: dataRelacionados } = await supabaseAdmin
     .from('productos')
     .select(`*, producto_colores ( colores (hex, nombre) )`)
     .eq('activo', true)
     .neq('id', producto.id)
     .limit(12);
+// ... resto del archivo
 
   let relacionados: any[] = [];
   if (dataRelacionados) {

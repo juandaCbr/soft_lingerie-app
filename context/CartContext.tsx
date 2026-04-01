@@ -92,7 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, user, isLoaded]);
 
-  const addToCart = async (product: any, talla?: any, qty: number = 1) => {
+  const addToCart = useCallback(async (product: any, talla?: any, qty: number = 1) => {
     const tallaId = talla?.id || null;
     const stockMax = talla?.stock ?? product.stock;
 
@@ -127,9 +127,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }]);
       }
     }
-  };
+  }, [user, cart]);
 
-  const updateQuantity = async (id: number, delta: number, tallaId: any = null) => {
+  const updateQuantity = useCallback(async (id: number, delta: number, tallaId: any = null) => {
     let finalQty = 0;
 
     setCart(prev => prev.map(item => {
@@ -152,9 +152,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       await query;
     }
-  };
+  }, [user]);
 
-  const removeFromCart = async (id: number, tallaId: any = null) => {
+  const removeFromCart = useCallback(async (id: number, tallaId: any = null) => {
     // 1. Actualizar estado local inmediatamente
     setCart(prev => prev.filter(item => {
       const matchId = item.id === id;
@@ -175,15 +175,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       await query;
     }
-  };
+  }, [user]);
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     setCart([]);
     localStorage.removeItem('soft_cart');
     if (user) {
       await supabase.from('carrito').delete().eq('user_id', user.id);
     }
-  };
+  }, [user]);
 
   const totalItems = Array.isArray(cart) ? cart.reduce((acc, item) => acc + (item.quantity || 0), 0) : 0;
   const totalPrice = Array.isArray(cart) ? cart.reduce((acc, item) => acc + (Number(item.precio) || 0) * (item.quantity || 0), 0) : 0;

@@ -5,29 +5,46 @@ import { CheckCircle, ShoppingBag, Search, ClipboardCheck, Bike, Truck } from "l
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useCart } from "@/context/CartContext";
 
 function GraciasContent() {
     const [isMounted, setIsMounted] = useState(false);
     const searchParams = useSearchParams();
-    const referencia = searchParams.get('ref') || '---';
-    const ciudad = searchParams.get('city') || '';
-    const esValledupar = ciudad.toLowerCase() === 'valledupar';
+    const [referencia, setReferencia] = useState('---');
+    const [ciudad, setCiudad] = useState('');
+    const [esValledupar, setEsValledupar] = useState(false);
 
-    const { clearCart } = useCart();
+    const cartContext = useCart();
+    const clearCart = cartContext?.clearCart;
 
     useEffect(() => {
         setIsMounted(true);
+        
+        // Extraer params de forma segura en el cliente
+        const ref = searchParams.get('ref') || '---';
+        const city = searchParams.get('city') || '';
+        
+        setReferencia(ref);
+        setCiudad(city);
+        setEsValledupar(city.toLowerCase() === 'valledupar');
+
         // Vaciar el carrito automáticamente al llegar a la página de éxito
-        clearCart();
-    }, [clearCart]);
+        if (clearCart) {
+            clearCart();
+        }
+    }, [searchParams, clearCart]);
 
     const copiarReferencia = () => {
-        navigator.clipboard.writeText(referencia);
-        toast.success("¡Número de pedido copiado!");
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            navigator.clipboard.writeText(referencia);
+            toast.success("¡Número de pedido copiado!");
+        }
     };
 
     if (!isMounted) {
-        return <div className="min-h-screen bg-[#faf8f7]" />;
+        return <div className="min-h-screen bg-[#faf8f7] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-[#4a1d44]/10 border-t-[#4a1d44] rounded-full animate-spin" />
+        </div>;
     }
 
     return (

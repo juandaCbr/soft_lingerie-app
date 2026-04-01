@@ -198,13 +198,15 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePagoConfirmadoVisual = async (transaccion: any) => {
-    if (transaccion.status === 'APPROVED') {
-      toast.success('Pago exitoso detectado!');
+  const handlePagoConfirmadoVisual = useCallback(async (transaccion: any) => {
+    // Aceptamos tanto 'APPROVED' (de Wompi API) como 'APROBADO' (de nuestra DB via Realtime)
+    const status = transaccion.status || transaccion.estado_pago;
+    if (status === 'APPROVED' || status === 'APROBADO') {
+      toast.success('¡Pago exitoso detectado!');
       clearCart();
       router.push(`/gracias?ref=${referenciaUnica}&city=${encodeURIComponent(formData.ciudad)}`);
     }
-  };
+  }, [referenciaUnica, formData.ciudad, clearCart, router]);
 
   const metodosPago = [
     { 
@@ -431,6 +433,7 @@ export default function CheckoutPage() {
                   nombre={formData.nombre}
                   telefono={formData.telefono}
                   pedidoId={pedidoIdExistente}
+                  ciudad={formData.ciudad}
                 />
               </div>
 

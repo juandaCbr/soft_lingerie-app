@@ -105,6 +105,16 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     }
   };
 
+  const handleBack = () => {
+    // Si hay historial previo en esta pestaña, vuelve atrás (mantiene filtros/scroll)
+    // Si no (ventana nueva), va directo al catálogo
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/productos');
+    }
+  };
+
   const imagenes = Array.isArray(varianteActiva.imagenes_urls)
     ? varianteActiva.imagenes_urls
     : [varianteActiva.imagen_url];
@@ -112,7 +122,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   return (
     <main className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 text-[#4a1d44]">
       <div className="-mt-2 mb-6 max-w-5xl mx-auto">
-        <button onClick={() => router.back()} className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase tracking-[0.2em] py-1">
+        <button onClick={handleBack} className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase tracking-[0.2em] py-1">
           <ArrowLeft size={14} /> Volver al catálogo
         </button>
       </div>

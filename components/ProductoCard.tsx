@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
+import { slugify } from '@/app/lib/utils';
 
 export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: any, colorFiltro?: string, priority?: boolean }) {
   const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
@@ -73,8 +74,10 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
     setCurrentImg(0);
   };
 
+  const slug = slugify(varianteActiva.nombre);
+
   return (
-    <Link href={`/productos/${varianteActiva.id}`} className={`block h-full ${isAgotado ? 'pointer-events-auto' : ''}`}>
+    <Link href={`/productos/${slug}-${varianteActiva.id}`} className={`block h-full ${isAgotado ? 'pointer-events-auto' : ''}`}>
       <div className={`group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${isAgotado ? 'opacity-80' : ''}`}>
 
         {/* Contenedor de Imagen */}

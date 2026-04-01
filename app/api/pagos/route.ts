@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { metodo, paymentData, referencia, monto, email, nombre, telefono } = body;
+    const { metodo, paymentData, referencia, monto, email, nombre, telefono, ciudad } = body;
 
     const amountInCents = Math.round(monto * 100);
 
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     // 3. Determinar URL de redireccion dinamicamente
     const origin = req.headers.get('origin') || 'https://soft-lingerie-app.vercel.app';
-    const redirectUrlValid = `${origin}/gracias?ref=${referencia}`;
+    const redirectUrlValid = `${origin}/gracias?ref=${referencia}${ciudad ? '&city=' + encodeURIComponent(ciudad) : ''}`;
 
     // Limpieza de telefono para Colombia (10 digitos empezando por 3)
     let rawPhone = (telefono || "3000000000").replace(/\D/g, '');

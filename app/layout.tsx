@@ -11,8 +11,32 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "Soft Lingerie | Boutique Online",
-  description: "Elegancia y seducción en cada prenda.",
+  title: {
+    default: "Soft Lingerie | Lencería Valledupar y Boutique Online",
+    template: "%s | Soft Lingerie"
+  },
+  description: "La mejor lencería en Valledupar. Boutique online con conjuntos exclusivos, bodies y seducción. Envíos seguros a todo Colombia. Resalta tu belleza con Soft.",
+  keywords: ["lencería valledupar", "lencería colombia", "ropa interior femenina", "soft lingerie boutique", "comprar lencería online"],
+  openGraph: {
+    title: "Soft Lingerie | Lencería Valledupar",
+    description: "Elegancia y seducción en cada prenda. Envíos nacionales.",
+    url: "https://soft-lingerie-app.vercel.app",
+    siteName: "Soft Lingerie",
+    images: [
+      {
+        url: "https://soft-lingerie-app.vercel.app/home.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Soft Lingerie Boutique",
+      },
+    ],
+    locale: "es_CO",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 export const viewport: Viewport = {

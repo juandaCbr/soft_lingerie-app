@@ -8,6 +8,28 @@ import { supabase } from '@/app/lib/supabase';
 import { useCart } from '@/context/CartContext';
 import AdminButton from './AdminButton'; 
 
+const NavLink = ({ href, children, pathname }: { href: string, children: React.ReactNode, pathname: string }) => {
+  const active = pathname === href;
+  return (
+    <LinkComponent href={href} className="relative py-2 px-1">
+      <span className={`
+        block transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase font-bold text-[14px] md:text-[15px]
+        ${active 
+          ? 'text-[#4a1d44] tracking-[0.15em] opacity-100' 
+          : 'text-[#4a1d44] opacity-30 hover:opacity-100 hover:tracking-[0.1em] tracking-normal'
+        }
+      `}>
+        {children}
+      </span>
+      <span className={`
+        absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#4a1d44] rounded-full 
+        transition-all duration-700 ease-out
+        ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
+      `}></span>
+    </LinkComponent>
+  );
+};
+
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -15,12 +37,15 @@ export default function Navbar() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  const { totalItems } = useCart(); 
+  const cartContext = useCart();
+  const totalItems = cartContext?.totalItems ?? 0;
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    setIsMenuOpen(false);
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
   }, [pathname]);
 
   useEffect(() => {
@@ -40,9 +65,14 @@ export default function Navbar() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error("Error session:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     getSession();
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -55,28 +85,6 @@ export default function Navbar() {
     await supabase.auth.signOut();
     router.push('/login');
     router.refresh();
-  };
-
-  const NavLink = ({ href, children }: { href: string, children: React.ReactNode }) => {
-    const active = pathname === href;
-    return (
-      <LinkComponent href={href} className="relative py-2 px-1">
-        <span className={`
-          block transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase font-bold text-[14px] md:text-[15px]
-          ${active 
-            ? 'text-[#4a1d44] tracking-[0.15em] opacity-100' 
-            : 'text-[#4a1d44] opacity-30 hover:opacity-100 hover:tracking-[0.1em] tracking-normal'
-          }
-        `}>
-          {children}
-        </span>
-        <span className={`
-          absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#4a1d44] rounded-full 
-          transition-all duration-700 ease-out
-          ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
-        `}></span>
-      </LinkComponent>
-    );
   };
 
   return (
@@ -112,10 +120,10 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-10">
-            <NavLink href="/">Inicio</NavLink>
-            <NavLink href="/productos">Catálogo</NavLink>
-            <NavLink href="/rastreo">Rastreo</NavLink>
-            <NavLink href="/contacto">Contacto</NavLink>
+            <NavLink href="/" pathname={pathname}>Inicio</NavLink>
+            <NavLink href="/productos" pathname={pathname}>Catálogo</NavLink>
+            <NavLink href="/rastreo" pathname={pathname}>Rastreo</NavLink>
+            <NavLink href="/contacto" pathname={pathname}>Contacto</NavLink>
           </div>
 
           <div className="flex gap-4 md:gap-6 items-center">

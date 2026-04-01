@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import Link from 'next/link';
 import { ArrowRight, Star, Clock, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { slugify } from './lib/utils';
 
 export default function HomePage() {
   const [productos, setProductos] = useState<any[]>([]);
@@ -220,9 +221,11 @@ function ProductCard({ prod, mounted, etiqueta }: { prod: any, mounted: boolean,
     ? prod.imagenes_urls[0]
     : prod.imagen_url;
 
+  const slug = slugify(prod.nombre);
+
   return (
     <Link
-      href={`/productos/${prod.id}`}
+      href={`/productos/${slug}-${prod.id}`}
       // Tamaños fijos para evitar cards mas grandes que otras
       className="w-[45vw] md:w-[280px] flex-shrink-0 snap-start group flex flex-col"
     >

@@ -62,10 +62,10 @@ export async function POST(req: Request) {
         type: "NEQUI", 
         phone_number: paymentData.phoneNequi 
       };
-    } else if (metodo === 'CARD') {
+    } else if (metodo === 'CREDIT_CARD' || metodo === 'DEBIT_CARD') {
       transactionPayload.payment_method = { 
         type: "CARD", 
-        installments: Number(paymentData.installments) || 1, 
+        installments: metodo === 'DEBIT_CARD' ? 1 : (Number(paymentData.installments) || 1), 
         token: paymentData.token 
       };
     } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {

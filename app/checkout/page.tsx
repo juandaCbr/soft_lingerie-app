@@ -238,9 +238,26 @@ export default function CheckoutPage() {
 
   // Logos de franquicias para deteccion dinamica
   const brandLogos: Record<string, string> = {
-    'VISA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png',
+    'VISA': 'https://1000marcas.net/wp-content/uploads/2019/12/VISA-Logo.png',
     'MASTERCARD': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png',
-    'AMEX': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/American_Express_logo_%282018%29.svg/1200px-American_Express_logo_%282018%29.svg.png'
+    'AMEX': 'https://cdn-icons-png.flaticon.com/512/179/179431.png'
+  };
+
+  const resetPaymentData = () => {
+    setPaymentData({
+      cardNumber: '',
+      cardHolder: '',
+      expiry: '',
+      cvv: '',
+      installments: '1',
+      phoneNequi: '',
+      phoneDaviplata: '',
+      bankPSE: '',
+      userType: '0',
+      docType: 'CC',
+      docNumber: '',
+    });
+    setMetodoPagoSeleccionado(null);
   };
 
   return (
@@ -441,24 +458,25 @@ export default function CheckoutPage() {
 
                         {metodo.id === 'NEQUI' && (
                           <div className="space-y-5 pt-4 animate-in slide-in-from-top-2">
-                            <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border-2 border-dashed border-[#4a1d44]/10 flex flex-col items-center text-center space-y-4">
-                              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                <Smartphone className="text-[#4a1d44]" size={24} />
+                            <div className="bg-[#E00075]/5 p-8 rounded-[2.5rem] border-2 border-dashed border-[#E00075]/20 flex flex-col items-center text-center space-y-4">
+                              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md">
+                                <img src="https://nequi.com.sv/img/icon.png" alt="Nequi" className="w-10 h-10 object-contain" />
                               </div>
                               <div className="w-full max-w-[240px]">
-                                <label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 mb-3 block">Celular vinculado a Nequi</label>
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E00075]/60 mb-3 block">Celular vinculado a Nequi</label>
                                 <input
                                   type="tel"
                                   name="phoneNequi"
                                   placeholder="300 000 0000"
                                   value={paymentData.phoneNequi}
                                   onChange={handlePaymentChange}
-                                  className="w-full p-5 rounded-2xl bg-white border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-center text-lg font-black tracking-[0.2em] text-[#4a1d44]"
+                                  className="w-full p-5 rounded-2xl bg-white border border-[#E00075]/10 outline-none focus:border-[#E00075] transition-all text-center text-lg font-black tracking-[0.2em] text-[#E00075]"
                                 />
                               </div>
-                              <p className="text-[10px] text-[#4a1d44]/60 max-w-[200px] leading-relaxed">
-                                Te enviaremos un mensaje push a tu celular para que autorices el pago.
-                              </p>
+                              <div className="flex items-center gap-2 px-4 py-2 bg-[#E00075] rounded-full">
+                                <Smartphone size={14} className="text-white" />
+                                <p className="text-[9px] text-white font-black uppercase tracking-widest">Push dinámico activo</p>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -524,6 +542,7 @@ export default function CheckoutPage() {
 
               <button
                 onClick={() => {
+                  resetPaymentData();
                   setPreparandoPago(false);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}

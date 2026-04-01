@@ -115,7 +115,7 @@ export default function HomePage() {
         </div>
         <div className="relative z-10 max-w-4xl">
           <span className="text-white/60 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mb-4 block">Boutique Exclusiva en Valledupar</span>
-          <h1 className="text-5xl md:text-8xl lg:text-9xl font-bold text-white mb-6 tracking-tighter leading-none font-playfair italic">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-[1.1] font-playfair italic">
             Lencería <br className="hidden md:block" /> Valledupar
           </h1>
           <p className="text-white/80 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed">

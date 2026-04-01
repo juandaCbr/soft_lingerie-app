@@ -95,13 +95,19 @@ export default function BotonWompi({
         setCargando(true);
         setUrlRedireccion(null);
 
+        // Mensaje de tranquilidad al usuario
+        const toastId = toast.loading("Procesando tu pago de forma segura... Esto puede tardar hasta un minuto.", {
+            style: { fontSize: '12px', fontWeight: 'bold' }
+        });
+
         try {
             let finalPaymentData = { ...paymentData };
-            // ... (resto del código de tokenización de tarjeta se mantiene igual)
+            
             if (metodo === 'CARD') {
                 if (!paymentData?.cardNumber || !paymentData?.expiry || !paymentData?.cvv) {
                     toast.error("Completa todos los datos de la tarjeta");
                     setCargando(false);
+                    toast.dismiss(toastId);
                     return;
                 }
                 const parts = paymentData.expiry.split('/').map((s: string) => s.replace(/\D/g, '').trim());
@@ -141,18 +147,21 @@ export default function BotonWompi({
             if (!res.ok) throw new Error(result.error || "Error al procesar el pago");
 
             if (result.url) {
+                // Para PSE y Bancolombia, redirigimos
+                toast.dismiss(toastId);
                 setUrlRedireccion(result.url);
                 window.location.href = result.url;
             } else if (metodo === 'NEQUI' && result.data?.status === 'PENDING') {
-                toast.success("¡Notificación enviada! Por favor abre tu App Nequi y acepta el pago.");
+                toast.success("¡Notificación enviada! Abre tu App Nequi ahora.", { id: toastId });
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
+                toast.success("¡Pago aprobado!", { id: toastId });
                 onExito(result.data);
             } else {
                 iniciarPolling(result.data.id);
             }
         } catch (error: any) {
-            toast.error(error.message || "Fallo en la pasarela de pagos");
+            toast.error(error.message || "Fallo en la pasarela de pagos", { id: toastId });
         } finally {
             setCargando(false);
         }

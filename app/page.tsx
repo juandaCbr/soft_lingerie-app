@@ -68,21 +68,26 @@ export default function HomePage() {
       if (v && Array.isArray(v.detalle_compra)) {
         v.detalle_compra.forEach((item: any) => {
           const id = item.id;
-          if (id) conteo[id] = (conteo[id] || 0) + (item.quantity || 1);
+          if (id) {
+            conteo[id] = (conteo[id] || 0) + (Number(item.quantity) || 1);
+          }
         });
       }
     });
 
-    // Si hay productos pero no hay ventas registradas (o no accesibles por RLS)
-    // mostramos los productos mas populares/recientes como favoritos por defecto
-    if (Object.keys(conteo).length === 0 && productos.length > 0) {
-      return [...productos].slice(0, 8);
+    // Intentar obtener los productos que tienen ventas registradas
+    const conVentas = [...productos]
+      .filter(p => conteo[p.id] && conteo[p.id] > 0)
+      .sort((a, b) => conteo[b.id] - conteo[a.id]);
+
+    // Si no hay productos con ventas, o la lista es vacía, mostrar los más recientes (novedades)
+    if (conVentas.length === 0) {
+      return [...productos]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 8);
     }
 
-    return [...productos]
-      .filter(p => conteo[p.id])
-      .sort((a, b) => (conteo[b.id] || 0) - (conteo[a.id] || 0))
-      .slice(0, 8);
+    return conVentas.slice(0, 8);
   }, [productos, ventas]);
 
   const scroll = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
@@ -119,8 +124,8 @@ export default function HomePage() {
             Lencería <br className="hidden md:block" /> Valledupar
           </h1>
           <p className="text-white/80 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
-            Elegancia, seducción y diseños exclusivos que resaltan tu belleza natural. 
-            Envíos seguros a todo Colombia desde Valledupar.
+            Elegancia y diseños exclusivos que resaltan tu belleza natural.
+            Envíos seguros a todo Colombia.
           </p>
           <Link href="/productos" className="bg-white text-[#4a1d44] px-10 py-5 rounded-full font-bold text-xs md:text-sm hover:bg-[#f2e1d9] transition-all shadow-2xl inline-flex items-center gap-3 uppercase tracking-widest active:scale-95">
             Explorar Catálogo <ArrowRight size={18} />

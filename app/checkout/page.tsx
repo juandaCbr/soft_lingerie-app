@@ -351,29 +351,67 @@ export default function CheckoutPage() {
                       <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
 
                         {metodo.id === 'CARD' && (
-                          <div className="space-y-4 text-center py-6">
-                            <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-100 shadow-md overflow-hidden p-2">
-                                <img src="https://assets.ntextil.com/images/responsive/checkout/credit_card_big.png" className="w-full h-full object-contain" />
+                          <div className="space-y-4 pt-4 animate-in slide-in-from-top-2">
+                            <div className="grid grid-cols-1 gap-4">
+                              <input
+                                type="text"
+                                name="cardNumber"
+                                placeholder="Número de tarjeta"
+                                value={paymentData.cardNumber}
+                                onChange={handlePaymentChange}
+                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
+                              />
+                              <input
+                                type="text"
+                                name="cardHolder"
+                                placeholder="Nombre en la tarjeta"
+                                value={paymentData.cardHolder}
+                                onChange={handlePaymentChange}
+                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
+                              />
+                              <div className="grid grid-cols-2 gap-4">
+                                <input
+                                  type="text"
+                                  name="expiry"
+                                  placeholder="MM / YY"
+                                  value={paymentData.expiry}
+                                  onChange={handlePaymentChange}
+                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm text-center"
+                                />
+                                <input
+                                  type="text"
+                                  name="cvv"
+                                  placeholder="CVV"
+                                  value={paymentData.cvv}
+                                  onChange={handlePaymentChange}
+                                  className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm text-center"
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Pago Seguro con Tarjeta</h4>
-                                <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
-                                  Aceptamos Visa, Mastercard y American Express. Serás redirigido al portal cifrado de **Wompi** para ingresar tus datos.
-                                </p>
-                            </div>
+                            <p className="text-[10px] text-[#4a1d44]/60 italic text-center">
+                              * Aceptamos tarjetas de Crédito y Débito. Procesamiento seguro vía Wompi.
+                            </p>
                           </div>
                         )}
 
                         {metodo.id === 'NEQUI' && (
-                          <div className="space-y-4 text-center py-6">
-                            <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-pink-100 shadow-md overflow-hidden p-4">
-                                <img src="https://nequi.com.sv/img/icon.png" className="w-full h-full object-contain" />
+                          <div className="space-y-4 pt-4 animate-in slide-in-from-top-2">
+                            <div className="flex flex-col gap-3">
+                              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Número de celular Nequi</label>
+                              <input
+                                type="tel"
+                                name="phoneNequi"
+                                placeholder="Ej: 3001234567"
+                                value={paymentData.phoneNequi}
+                                onChange={handlePaymentChange}
+                                className="w-full p-4 rounded-xl bg-[#fdf8f6] border border-[#4a1d44]/10 outline-none focus:border-[#4a1d44] transition-all text-sm"
+                              />
                             </div>
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Paga con Nequi</h4>
-                                <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
-                                  Podrás pagar escaneando el código QR o con tu número de celular directamente en el portal de Wompi.
-                                </p>
+                            <div className="p-4 bg-pink-50 rounded-2xl border border-pink-100 flex items-center gap-3">
+                              <Smartphone size={20} className="text-pink-600 shrink-0" />
+                              <p className="text-[10px] text-pink-800 font-bold leading-tight">
+                                Recibirás una notificación en tu App Nequi para autorizar el pago.
+                              </p>
                             </div>
                           </div>
                         )}

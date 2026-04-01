@@ -58,11 +58,18 @@ export async function POST(req: Request) {
     };
 
     if (metodo === 'NEQUI') {
-      transactionPayload.payment_method = { type: "NEQUI", phone_number: paymentData.phoneNequi };
+      transactionPayload.payment_method = { 
+        type: "NEQUI", 
+        phone_number: paymentData.phoneNequi 
+      };
     } else if (metodo === 'CARD') {
-      transactionPayload.payment_method = { type: "CARD", installments: 1, token: paymentData.token };
-    } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA' || metodo === 'NEQUI_HOSTED') {
-      // Generar URL del Checkout Web de Wompi con los parámetros EXACTOS que pide su documentación
+      transactionPayload.payment_method = { 
+        type: "CARD", 
+        installments: 1, 
+        token: paymentData.token 
+      };
+    } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {
+      // Solo PSE y Bancolombia usan el Checkout Web Hosted de Wompi
       const amountInCents = Math.round(monto * 100);
       
       // Asegurarnos de usar la llave pública correcta

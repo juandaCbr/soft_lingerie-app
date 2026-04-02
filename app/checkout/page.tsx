@@ -14,7 +14,7 @@ export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [preparandoPago, setPreparandoPago] = useState(false);
-  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CREDIT_CARD' | 'DEBIT_CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA' | null>(null);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<'CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA' | null>(null);
   
   // Limpiar datos cuando se cambia de metodo
   const cambiarMetodo = (id: any) => {
@@ -217,6 +217,7 @@ export default function CheckoutPage() {
     // Aceptamos tanto 'APPROVED' (de Wompi API) como 'APROBADO' (de nuestra DB via Realtime)
     const status = transaccion.status || transaccion.estado_pago;
     if (status === 'APPROVED' || status === 'APROBADO') {
+      toast.dismiss(); // Cerramos cualquier toast de carga
       toast.success('¡Pago exitoso detectado!');
       clearCart();
       router.push(`/gracias?ref=${referenciaUnica}&city=${encodeURIComponent(formData.ciudad)}`);
@@ -225,16 +226,10 @@ export default function CheckoutPage() {
 
   const metodosPago = [
     { 
-      id: 'CREDIT_CARD', 
-      label: 'Tarjeta de Crédito', 
+      id: 'CARD', 
+      label: 'Tarjeta Crédito / Débito', 
       icon: <CreditCard size={18} />,
       logo: "https://assets.ntextil.com/images/responsive/checkout/credit_card_big.png" 
-    },
-    { 
-      id: 'DEBIT_CARD', 
-      label: 'Tarjeta de Débito', 
-      icon: <CreditCard size={18} />,
-      logo: "https://cdn-icons-png.flaticon.com/512/4021/4021708.png" 
     },
     { 
       id: 'PSE', 
@@ -395,7 +390,7 @@ export default function CheckoutPage() {
                     {metodoPagoSeleccionado === metodo.id && (
                       <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
 
-                        {(metodo.id === 'CREDIT_CARD' || metodo.id === 'DEBIT_CARD') && (
+                        {metodo.id === 'CARD' && (
                           <div className="space-y-5 pt-4 animate-in slide-in-from-top-2">
                             <div className="bg-[#4a1d44]/5 p-6 rounded-[2rem] border border-[#4a1d44]/10 space-y-4">
                               <div className="relative">
@@ -446,22 +441,6 @@ export default function CheckoutPage() {
                                   className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold text-center"
                                 />
                               </div>
-                              
-                              {metodo.id === 'CREDIT_CARD' && (
-                                <div className="pt-2 animate-in fade-in duration-500">
-                                  <label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 px-1 mb-2 block">Número de cuotas</label>
-                                  <select 
-                                    name="installments" 
-                                    value={paymentData.installments} 
-                                    onChange={handlePaymentChange}
-                                    className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold appearance-none cursor-pointer"
-                                  >
-                                    {[...Array(24)].map((_, i) => (
-                                      <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'cuota' : 'cuotas'}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
                             </div>
                             <div className="flex items-center justify-center gap-2 opacity-40">
                               <ShieldCheck size={14} />

@@ -49,7 +49,8 @@ export async function POST(req: Request) {
       reference: referencia,
       signature: integrity_signature,
       acceptance_token: acceptance_token,
-      personal_data_auth_token: personal_data_auth_token,
+      // Se recomienda incluir personal_data_auth_token si el merchant lo tiene habilitado
+      ...(personal_data_auth_token && { personal_data_auth_token }),
       redirect_url: redirectUrlValid,
       customer_data: {
         phone_number: cleanPhone,

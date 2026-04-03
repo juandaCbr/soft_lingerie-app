@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import DiscountModal from "@/components/DiscountModal";
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
+import Link from "next/link";
 import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -41,10 +42,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -86,9 +85,21 @@ export default function RootLayout({
               <div>
                 <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-white/40">Menú</h4>
                 <ul className="text-sm space-y-2">
-                  <li><a href="/" className="hover:underline">Inicio</a></li>
-                  <li><a href="/productos" className="hover:underline">Catálogo</a></li>
-                  <li><a href="/contacto" className="hover:underline">Contacto</a></li>
+                  <li>
+                    <Link href="/" className="hover:underline">
+                      Inicio
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/productos" className="hover:underline">
+                      Catálogo
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/contacto" className="hover:underline">
+                      Contacto
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div>

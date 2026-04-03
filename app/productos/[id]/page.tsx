@@ -12,30 +12,33 @@ const supabaseAdmin = createClient(
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  // Extraer el ID real (la última parte después del último guion) para que el SEO funcione igual que la página
+  const id = rawId.split('-').pop() || rawId;
+
   const { data: producto } = await supabaseAdmin
     .from('productos')
     .select('nombre, descripcion, imagenes_urls')
     .eq('id', id)
     .single();
 
-  if (!producto) return { title: "Producto no encontrado" };
+  if (!producto) return { title: "Soft Lingerie | Producto" };
 
   const image = Array.isArray(producto.imagenes_urls) && producto.imagenes_urls.length > 0 
     ? producto.imagenes_urls[0] 
     : "https://soft-lingerie-app.vercel.app/home.jpg";
 
   return {
-    title: producto.nombre,
+    title: `Soft Lingerie | ${producto.nombre}`,
     description: producto.descripcion?.substring(0, 160) || `Compra ${producto.nombre} en Soft Lingerie Valledupar. Calidad premium y diseños exclusivos.`,
     openGraph: {
-      title: `${producto.nombre} | Soft Lingerie`,
+      title: `Soft Lingerie | ${producto.nombre}`,
       description: producto.descripcion?.substring(0, 160),
       images: [image],
     },
     twitter: {
       card: 'summary_large_image',
-      title: producto.nombre,
+      title: `Soft Lingerie | ${producto.nombre}`,
       description: producto.descripcion?.substring(0, 160),
       images: [image],
     }

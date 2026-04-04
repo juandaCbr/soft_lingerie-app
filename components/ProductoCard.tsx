@@ -13,8 +13,23 @@ import {
   withSupabaseListThumbnailParams,
 } from '@/app/lib/image-helper';
 
+/** Determina si una variante tiene stock disponible (columna stock O stock_talla). */
+function varianteTieneStock(v: any): boolean {
+  if (Number(v.stock ?? 0) > 0) return true;
+  return (v.producto_tallas ?? []).some((pt: any) => Number(pt.stock_talla ?? 0) > 0);
+}
+
+/** Devuelve la primera variante con stock > 0, o la primera si todas están agotadas. */
+function primeraVarianteConStock(variantes: any[]): any {
+  return variantes.find(varianteTieneStock) ?? variantes[0];
+}
+
 export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: any, colorFiltro?: string, priority?: boolean }) {
-  const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
+  const varianteInicial = producto.variantes
+    ? primeraVarianteConStock(producto.variantes)
+    : producto;
+
+  const [varianteActiva, setVarianteActiva] = useState(varianteInicial);
   const [currentImg, setCurrentImg] = useState(0);
   const [mounted, setMounted] = useState(false);
   const { addToCart } = useCart();
@@ -27,7 +42,7 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
     if (producto.variantes) {
       // Si hay un filtro de color activo, buscamos la variante que coincida
       if (colorFiltro && colorFiltro !== 'Todos') {
-        const varianteMatch = producto.variantes.find((v: any) => 
+        const varianteMatch = producto.variantes.find((v: any) =>
           v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorFiltro)
         );
         if (varianteMatch) {
@@ -36,7 +51,8 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
           return;
         }
       }
-      setVarianteActiva(producto.variantes[0]);
+      // Sin filtro de color: preferir la primera variante con stock
+      setVarianteActiva(primeraVarianteConStock(producto.variantes));
     } else {
       setVarianteActiva(producto);
     }
@@ -52,7 +68,7 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   };
 
   const imagenes = obtenerListaDeFotos();
-  const isAgotado = (varianteActiva.stock || 0) <= 0;
+  const isAgotado = !varianteTieneStock(varianteActiva);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,12 +86,12 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   const slug = slugify(varianteActiva.nombre);
 
   return (
-    <Link href={`/productos/${slug}-${varianteActiva.id}`} className={`block h-full ${isAgotado ? 'pointer-events-auto' : ''}`}>
-      <div className={`group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${isAgotado ? 'opacity-80' : ''}`}>
+    <Link href={`/productos/${slug}-${varianteActiva.id}`} className="block h-full">
+      <div className={`group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${isAgotado ? 'opacity-70' : ''}`}>
 
         {/* Contenedor de Imagen */}
         <div className="relative w-full pt-[125%] overflow-hidden bg-[#fdf8f6] flex-shrink-0">
-          
+
           {/* OVERLAY AGOTADO */}
           {isAgotado && (
             <div className="absolute inset-0 z-40 bg-white/40 backdrop-blur-[2px] flex items-center justify-center p-4">
@@ -109,7 +125,7 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
                     alt={`${varianteActiva.nombre} - ${index}`}
                     fill
                     sizes="(max-width: 768px) 50vw, 33vw"
-                    className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.8]' : ''}`}
+                    className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.6]' : ''}`}
                     priority={priority && index === 0}
                     loading={priority && index === 0 ? 'eager' : 'lazy'}
                   />

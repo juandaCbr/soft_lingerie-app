@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import ProductoCard from '@/components/ProductoCard';
 
-// Fetcher para SWR
+// Fetcher para SWR — trae todos los activos (con y sin stock); el filtro de agotados es client-side
 const fetcher = async () => {
   const { data, error } = await supabase
     .from('productos')
@@ -35,7 +35,7 @@ const fetcher = async () => {
 };
 
 export default function CatalogoPage() {
-  const { data: rawData, mutate, isLoading } = useSWR('productos-activos', fetcher, {
+  const { data: rawData, mutate, isLoading } = useSWR('productos-catalogo-v2', fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 60000,
   });
@@ -74,6 +74,7 @@ export default function CatalogoPage() {
   const [isCatFilterOpen, setIsCatFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [productosVisibles, setProductosVisibles] = useState(12);
+  const [mostrarAgotados, setMostrarAgotados] = useState(false);
 
   const numeroWhatsApp = "573118897646";
 
@@ -105,7 +106,7 @@ export default function CatalogoPage() {
 
   useEffect(() => {
     setProductosVisibles(12);
-  }, [categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, busqueda, ordenarPor]);
+  }, [categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, busqueda, ordenarPor, mostrarAgotados]);
 
   const { categoriasDisponibles, coloresDisponibles, tallasDisponibles } = useMemo(() => {
     const cats = new Set<string>();
@@ -151,8 +152,16 @@ export default function CatalogoPage() {
       const matchTalla = tallaSeleccionada === 'Todas' || p.variantes.some((v: any) =>
         v.producto_tallas?.some((pt: any) => pt.tallas?.nombre === tallaSeleccionada && pt.stock_talla > 0)
       );
+      // Un producto tiene stock si `productos.stock > 0` O algún `stock_talla > 0`.
+      // Ambas fuentes se comprueban para tolerar desincronías entre columnas.
+      const varianteTieneStock = (v: any): boolean => {
+        if (Number(v.stock ?? 0) > 0) return true;
+        return (v.producto_tallas ?? []).some((pt: any) => Number(pt.stock_talla ?? 0) > 0);
+      };
+      const tieneStock = p.variantes.some(varianteTieneStock);
+      const matchStock = mostrarAgotados || tieneStock;
 
-      return matchSearch && matchCat && matchColor && matchTalla;
+      return matchSearch && matchCat && matchColor && matchTalla && matchStock;
     });
 
     return [...resultado].sort((a, b) => {
@@ -160,7 +169,7 @@ export default function CatalogoPage() {
       if (ordenarPor === 'precio-mayor') return b.precio - a.precio;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor]);
+  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor, mostrarAgotados]);
 
   if (isLoading && productos.length === 0) return <CatalogoSkeleton />;
 
@@ -275,8 +284,24 @@ export default function CatalogoPage() {
               )}
             </div>
 
-            {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas') && (
-              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); }} className="mt-12 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all">Limpiar</button>
+            {/* TOGGLE AGOTADOS */}
+            <div className="pt-6 border-t border-[#4a1d44]/5 mt-2">
+              <button
+                type="button"
+                onClick={() => setMostrarAgotados(prev => !prev)}
+                className="w-full flex items-center justify-between gap-3 group"
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-all">
+                  Ver agotados
+                </span>
+                <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${mostrarAgotados ? 'bg-[#4a1d44]' : 'bg-[#4a1d44]/10'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${mostrarAgotados ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </button>
+            </div>
+
+            {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas' || mostrarAgotados) && (
+              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); setMostrarAgotados(false); }} className="mt-6 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all">Limpiar</button>
             )}
           </div>
         </aside>

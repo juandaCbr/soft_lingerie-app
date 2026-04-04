@@ -1,15 +1,51 @@
+/**
+ * Checkout en un solo paso: correo primero, comprobación de cuenta (blur), login en modal si aplica,
+ * precarga desde `perfiles` si hay sesión, y actualización de perfil al confirmar datos.
+ */
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { COLOMBIA_COMPLETA } from '@/app/lib/colombia';
-import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2, Smartphone, Bike } from 'lucide-react';
+import { Truck, MapPin, Lock, ShieldCheck, ArrowLeft, User, CreditCard, Loader2, Smartphone, Bike, Mail, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import toast from 'react-hot-toast';
 import BotonWompi from '@/components/BotonWompi';
 import { getProductoImage, withSupabaseListThumbnailParams } from '@/app/lib/image-helper';
+import type { User as AuthUser } from '@supabase/supabase-js';
+
+type FormCheckout = {
+  nombre: string;
+  email: string;
+  telefono: string;
+  departamento: string;
+  ciudad: string;
+  direccion: string;
+  barrio: string;
+  apartamento: string;
+};
+
+/** Une fila `perfiles` (si existe) + metadata de Auth al estado del formulario. */
+function mergePerfilCheckout(perfil: Record<string, unknown> | null, user: AuthUser, prev: FormCheckout): FormCheckout {
+  const meta = (user.user_metadata || {}) as Record<string, unknown>;
+  const nombre =
+    (typeof perfil?.nombre_completo === 'string' && perfil.nombre_completo.trim()) ||
+    (typeof meta.full_name === 'string' && String(meta.full_name).trim()) ||
+    '';
+  const email =
+    (typeof perfil?.email === 'string' && perfil.email.trim()) || user.email?.trim() || prev.email;
+  const telefono = typeof perfil?.telefono === 'string' ? perfil.telefono : '';
+  const depRaw = typeof perfil?.departamento === 'string' ? perfil.departamento : '';
+  const departamento =
+    depRaw && COLOMBIA_COMPLETA[depRaw] ? depRaw : prev.departamento;
+  const ciudad = typeof perfil?.ciudad === 'string' ? perfil.ciudad : '';
+  const direccion = typeof perfil?.direccion === 'string' ? perfil.direccion : '';
+  const barrio = typeof perfil?.barrio === 'string' ? perfil.barrio : '';
+  const apartamento = typeof perfil?.apartamento === 'string' ? perfil.apartamento : '';
+  return { ...prev, nombre, email, telefono, departamento, ciudad, direccion, barrio, apartamento };
+}
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -110,6 +146,153 @@ export default function CheckoutPage() {
   const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<'INCLUIDO' | 'CONTRAENTREGA'>('INCLUIDO');
   const [bancosPSE, setBancosPSE] = useState<{ value: string, label: string }[]>([]);
 
+  const [sesionActiva, setSesionActiva] = useState(false);
+  const [cargandoPerfilCheckout, setCargandoPerfilCheckout] = useState(true);
+  type EstadoEmailCheckout = 'idle' | 'checking' | 'exists' | 'available' | 'error';
+  const [estadoEmailCheckout, setEstadoEmailCheckout] = useState<EstadoEmailCheckout>('idle');
+  const [modalLoginAbierto, setModalLoginAbierto] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginCargando, setLoginCargando] = useState(false);
+  const emailCheckRef = useRef<string | null>(null);
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const cargarPerfilCheckout = useCallback(async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
+      setSesionActiva(false);
+      return;
+    }
+    setSesionActiva(true);
+    setEstadoEmailCheckout('available');
+
+    let fila: Record<string, unknown> | null = null;
+    const ext = await supabase
+      .from('perfiles')
+      .select('nombre_completo, email, telefono, direccion, departamento, ciudad, barrio, apartamento')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (ext.error) {
+      const min = await supabase
+        .from('perfiles')
+        .select('nombre_completo, email, telefono')
+        .eq('id', user.id)
+        .maybeSingle();
+      fila = (min.data as Record<string, unknown> | null) ?? null;
+    } else {
+      fila = (ext.data as Record<string, unknown> | null) ?? null;
+    }
+
+    setFormData((prev) => mergePerfilCheckout(fila, user, prev));
+  }, []);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      setCargandoPerfilCheckout(true);
+      try {
+        await cargarPerfilCheckout();
+      } finally {
+        if (!cancel) setCargandoPerfilCheckout(false);
+      }
+    })();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        (async () => {
+          setCargandoPerfilCheckout(true);
+          try {
+            await cargarPerfilCheckout();
+          } finally {
+            setCargandoPerfilCheckout(false);
+          }
+        })();
+      }
+      if (event === 'SIGNED_OUT') {
+        setSesionActiva(false);
+        setEstadoEmailCheckout('idle');
+        emailCheckRef.current = null;
+      }
+    });
+
+    return () => {
+      cancel = true;
+      subscription.unsubscribe();
+    };
+  }, [cargarPerfilCheckout]);
+
+  const aplicarPerfilTrasLogin = useCallback(async () => {
+    await cargarPerfilCheckout();
+  }, [cargarPerfilCheckout]);
+
+  const handleEmailBlur = async () => {
+    const email = formData.email.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      setEstadoEmailCheckout('idle');
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) return;
+
+    if (
+      emailCheckRef.current === email &&
+      (estadoEmailCheckout === 'available' || estadoEmailCheckout === 'exists')
+    ) {
+      return;
+    }
+    emailCheckRef.current = email;
+    setEstadoEmailCheckout('checking');
+    try {
+      const res = await fetch('/api/checkout/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 429) {
+        setEstadoEmailCheckout('error');
+        toast.error(typeof json.error === 'string' ? json.error : 'Demasiados intentos. Espera unos minutos.');
+        return;
+      }
+      if (!res.ok || json.success === false) {
+        setEstadoEmailCheckout('error');
+        return;
+      }
+      setEstadoEmailCheckout(json.exists ? 'exists' : 'available');
+    } catch {
+      setEstadoEmailCheckout('error');
+    }
+  };
+
+  const handleLoginModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginCargando(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
+        password: loginPassword,
+      });
+      if (error) throw error;
+      toast.success('¡Bienvenida de nuevo!');
+      setModalLoginAbierto(false);
+      setLoginPassword('');
+      setEstadoEmailCheckout('available');
+      await aplicarPerfilTrasLogin();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      toast.error(msg);
+    } finally {
+      setLoginCargando(false);
+    }
+  };
+
   useEffect(() => {
     const fetchBancos = async () => {
       const url = `${process.env.NEXT_PUBLIC_WOMPI_API_URL}/pse/financial_institutions`;
@@ -152,7 +335,54 @@ export default function CheckoutPage() {
   const totalConEnvio = totalPrice + (metodoPagoEnvio === 'INCLUIDO' ? costoEnvio : 0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'email') {
+      setEstadoEmailCheckout('idle');
+      emailCheckRef.current = null;
+    }
+    setFormData({ ...formData, [name]: value });
+  };
+
+  /** Invitado: asegura que el correo no pertenece a una cuenta sin sesión (también si no hubo blur). */
+  const resolverCorreoAntesDePedido = async (): Promise<boolean> => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) return true;
+    const email = formData.email.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      toast.error('Introduce un correo válido.');
+      return false;
+    }
+    if (estadoEmailCheckout === 'exists') {
+      toast.error('Inicia sesión con tu cuenta para continuar.');
+      setModalLoginAbierto(true);
+      return false;
+    }
+    if (estadoEmailCheckout === 'available') return true;
+
+    const res = await fetch('/api/checkout/check-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      toast.error(typeof json.error === 'string' ? json.error : 'Demasiados intentos. Espera unos minutos.');
+      return false;
+    }
+    if (!res.ok || json.success === false) {
+      toast.error('No se pudo validar el correo. Inténtalo de nuevo.');
+      return false;
+    }
+    if (json.exists) {
+      setEstadoEmailCheckout('exists');
+      toast.error('Inicia sesión con tu cuenta para continuar.');
+      setModalLoginAbierto(true);
+      return false;
+    }
+    setEstadoEmailCheckout('available');
+    return true;
   };
 
   const registrarPedidoPendiente = async (e: React.FormEvent) => {
@@ -161,6 +391,34 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      if (!(await resolverCorreoAntesDePedido())) return;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const extendido = {
+          nombre_completo: formData.nombre.trim(),
+          telefono: formData.telefono.trim(),
+          email: formData.email.trim(),
+          direccion: formData.direccion.trim(),
+          departamento: formData.departamento,
+          ciudad: formData.ciudad,
+          barrio: formData.barrio.trim(),
+          apartamento: formData.apartamento.trim() || null,
+        };
+        let { error: perfilErr } = await supabase.from('perfiles').update(extendido).eq('id', user.id);
+        if (perfilErr) {
+          const basico = {
+            nombre_completo: formData.nombre.trim(),
+            telefono: formData.telefono.trim(),
+            email: formData.email.trim(),
+          };
+          ({ error: perfilErr } = await supabase.from('perfiles').update(basico).eq('id', user.id));
+        }
+        if (perfilErr) console.warn('[checkout] actualizar perfil', perfilErr);
+      }
+
       const nuevaReferencia = `SOFT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       setReferenciaUnica(nuevaReferencia);
 
@@ -186,6 +444,7 @@ export default function CheckoutPage() {
         detalle_compra: [...cart, infoEnvio]
       };
 
+      let pedidoIdLocal = pedidoIdExistente;
       if (pedidoIdExistente) {
         await supabase
           .from('ventas_realizadas')
@@ -199,12 +458,48 @@ export default function CheckoutPage() {
           .single();
 
         if (error) throw error;
-        if (data) setPedidoIdExistente(data.id);
+        if (data) {
+          pedidoIdLocal = data.id;
+          setPedidoIdExistente(data.id);
+        }
+      }
+
+      // Registro silencioso para invitadas: crear cuenta y enviar email con link para definir contraseña.
+      if (!user) {
+        fetch('/api/checkout/register-guest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email.trim(),
+            nombre: formData.nombre.trim(),
+            telefono: formData.telefono.trim(),
+            pedidoId: pedidoIdLocal,
+            direccion: formData.direccion.trim(),
+            ciudad: formData.ciudad,
+            departamento: formData.departamento,
+            barrio: formData.barrio.trim(),
+            apartamento: formData.apartamento.trim(),
+          }),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const json = await res.json().catch(() => ({}));
+              if (json.userCreated) {
+                setTimeout(() => {
+                  toast.success(
+                    'Creamos una cuenta para ti. Revisa tu correo para configurar tu contraseña.',
+                    { duration: 8000 },
+                  );
+                }, 1500);
+              }
+            }
+          })
+          .catch(() => {});
       }
 
       setPreparandoPago(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      toast.success('Informacion confirmada.');
+      toast.success('Información confirmada.');
 
     } catch (error: any) {
       console.error("Error registro inicial:", error);
@@ -287,11 +582,78 @@ export default function CheckoutPage() {
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-40 flex items-center gap-2 mb-4">
                   <User size={14} /> Datos de contacto
                 </h2>
-                <input required name="nombre" value={formData.nombre} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="Nombre completo" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="Correo electronico" />
-                  <input required type="tel" name="telefono" value={formData.telefono} onChange={handleChange} className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all" placeholder="WhatsApp / Celular" />
+
+                {cargandoPerfilCheckout && (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#4a1d44]/40 flex items-center gap-2">
+                    <Loader2 className="animate-spin shrink-0" size={14} /> Cargando tu información…
+                  </p>
+                )}
+
+                {sesionActiva && !cargandoPerfilCheckout && (
+                  <div className="text-[10px] font-black uppercase tracking-widest text-green-700 bg-green-50 border border-green-100 px-4 py-2.5 rounded-2xl">
+                    Sesión iniciada: tus datos se guardarán en tu cuenta al confirmar.
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1 flex items-center gap-2">
+                    <Mail size={12} /> Correo electrónico (primero)
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onBlur={handleEmailBlur}
+                    disabled={cargandoPerfilCheckout}
+                    className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all disabled:opacity-60"
+                    placeholder="tu@correo.com"
+                  />
+                  {estadoEmailCheckout === 'checking' && (
+                    <p className="text-[10px] text-[#4a1d44]/50 flex items-center gap-2 ml-1">
+                      <Loader2 className="animate-spin" size={12} /> Comprobando correo…
+                    </p>
+                  )}
+                  {!sesionActiva && estadoEmailCheckout === 'exists' && (
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 leading-snug">
+                      <p>
+                        Este correo ya está registrado con nosotros.{' '}
+                        <button
+                          type="button"
+                          onClick={() => setModalLoginAbierto(true)}
+                          className="font-bold text-[#4a1d44] underline underline-offset-2 hover:opacity-80"
+                        >
+                          Inicia sesión aquí
+                        </button>
+                      </p>
+                    </div>
+                  )}
+                  {!sesionActiva && estadoEmailCheckout === 'available' && formData.email.trim() && EMAIL_REGEX.test(formData.email.trim()) && (
+                    <p className="text-[10px] text-green-700/90 ml-1 font-medium">Puedes continuar como invitada o crear cuenta después.</p>
+                  )}
                 </div>
+
+                <input
+                  required
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  disabled={cargandoPerfilCheckout}
+                  className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all disabled:opacity-60"
+                  placeholder="Nombre completo"
+                />
+                <input
+                  required
+                  type="tel"
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                  disabled={cargandoPerfilCheckout}
+                  className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all disabled:opacity-60"
+                  placeholder="WhatsApp / Celular"
+                />
               </div>
 
               <div className="space-y-4 pt-6 border-t border-gray-50">
@@ -625,6 +987,61 @@ export default function CheckoutPage() {
         </div>
 
       </div>
+
+      {modalLoginAbierto && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#4a1d44]/40 backdrop-blur-sm"
+            aria-label="Cerrar"
+            onClick={() => !loginCargando && setModalLoginAbierto(false)}
+          />
+          <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-[#4a1d44]/10 animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => !loginCargando && setModalLoginAbierto(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#fdf8f6] text-[#4a1d44]/50"
+              aria-label="Cerrar"
+            >
+              <X size={20} />
+            </button>
+            <h3 className="text-xl font-black font-playfair text-[#4a1d44] mb-1">Iniciar sesión</h3>
+            <p className="text-xs text-[#4a1d44]/60 mb-6">Usa la contraseña de tu cuenta Soft Lingerie.</p>
+            <form onSubmit={handleLoginModalSubmit} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Correo</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  readOnly
+                  className="mt-1 w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-[#4a1d44]/10 text-[#4a1d44]/70"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Contraseña</label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                  className="mt-1 w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10"
+                  placeholder="••••••••"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loginCargando}
+                className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loginCargando ? <Loader2 className="animate-spin" size={20} /> : null}
+                Entrar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

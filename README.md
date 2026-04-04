@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Soft Lingerie App
 
-## Getting Started
+Tienda en línea construida con Next.js: catálogo, carrito, checkout con Wompi y panel administrativo.
 
-First, run the development server:
+**Autor:** Juan David Cabrera Salas — [juandacabrera178@gmail.com](mailto:juandacabrera178@gmail.com)
+
+## Requisitos
+
+- [Node.js](https://nodejs.org/) 20 o superior (recomendado)
+- npm (incluido con Node)
+- Cuenta [Supabase](https://supabase.com/) y proyecto configurado
+- Cuenta [Wompi](https://wompi.co/) para pagos (claves de prueba o producción)
+
+## Instalación
+
+1. Clona el repositorio e instala dependencias:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <url-del-repositorio>
+cd soft_lingerie-app
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Crea el archivo de entorno a partir del ejemplo:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Windows (PowerShell)**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+Copy-Item .env_example .env
+```
 
-## Learn More
+**macOS / Linux**
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cp .env_example .env
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Abre `.env` y sustituye cada valor placeholder por tus credenciales reales (Supabase, Wompi, etc.). Las variables están comentadas en `.env_example` para orientarte.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. En el panel de Supabase, en **Authentication → URL Configuration**, añade la URL de tu app (por ejemplo `http://localhost:3000` y la de producción) en **Redirect URLs** si usas recuperación de contraseña o registro desde checkout.
 
-## Deploy on Vercel
+## Variables de entorno (resumen)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Variable | Uso |
+|----------|-----|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anónima (cliente) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clave de servicio (solo servidor: APIs checkout, admin) |
+| `NEXT_PUBLIC_WOMPI_*`, `WOMPI_*` | Integración de pagos Wompi |
+| `PUSHOVER_*` | Notificaciones (opcional) |
+| `NEXT_PUBLIC_SITE_URL` | URL pública del sitio |
+| `UPLOAD_DIR` | Ruta local para subidas de imágenes |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No subas `.env` al repositorio; solo `.env_example` sirve como plantilla.
+
+## Scripts
+
+```bash
+npm run dev    # Servidor de desarrollo → http://localhost:3000
+npm run build  # Compilación de producción
+npm run start  # Ejecutar build en producción
+npm run lint   # ESLint
+```
+
+## Despliegue
+
+Genera un build con `npm run build`, configura las mismas variables de entorno en tu proveedor (Vercel, etc.) y asegúrate de que `NEXT_PUBLIC_SITE_URL` apunte al dominio público.
+
+## Licencia
+
+Privado / según el repositorio.

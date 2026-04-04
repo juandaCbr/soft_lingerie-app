@@ -84,11 +84,12 @@ export default async function ProductoDetallePage({ params }: { params: Promise<
     if (todasLasVariantes) variantes = todasLasVariantes;
   }
 
-  // 3. Obtener productos relacionados
+  // 3. Obtener productos relacionados (solo con stock disponible)
   const { data: dataRelacionados } = await supabaseAdmin
     .from('productos')
     .select(`*, producto_colores ( colores (hex, nombre) )`)
     .eq('activo', true)
+    .gt('stock', 0)
     .neq('id', producto.id)
     .limit(12);
 // ... resto del archivo

@@ -1,3 +1,8 @@
+/**
+ * Al cambiar el nombre del producto en el admin, el slug de archivos y carpeta debe coincidir.
+ * Renombra el directorio `uploads/productos/{oldSlug}-{id}` → `{newSlug}-{id}` y prefijos en .webp.
+ * Si no existe carpeta local (solo URLs legacy), responde success sin error.
+ */
 import { readdir, rename as fsRename } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
@@ -18,9 +23,6 @@ type Body = {
   nombre_nuevo: string;
 };
 
-/**
- * Renombra productos/{slugViejo}-{id} → {slugNuevo}-{id} y los .webp dentro.
- */
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Body;

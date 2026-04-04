@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Nombres de archivo a conservar (thumb + detail por cada entrada del array).
     const keep = new Set<string>();
     const list = Array.isArray(imagenes_locales) ? imagenes_locales : [];
     for (const row of list) {
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
 
     const entries = await readdir(dir);
     const removed: string[] = [];
+    // Solo .webp gestionados por esta app; otros tipos no se tocan.
     for (const name of entries) {
       if (!name.endsWith('.webp')) continue;
       if (keep.has(name)) continue;

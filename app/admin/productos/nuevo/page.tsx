@@ -169,6 +169,10 @@ export default function NuevoProductoPage() {
     setPrevisualizaciones(prev => prev.filter((_, i) => i !== index));
   };
 
+  /**
+   * Alta: insert mínimo en `productos` para obtener id → /api/upload con ese id → update con imagenes_locales.
+   * Luego color y tallas (orden acorde a las FKs).
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

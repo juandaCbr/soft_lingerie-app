@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     const fileErrors: FileError[] = [];
     const buffers: Buffer[] = [];
 
+    // Leer y validar con sharp (dimensiones reales) antes de tocar el disco.
     for (let i = 0; i < files.length; i++) {
       const index = i + 1;
       const file = files[i];
@@ -160,6 +161,7 @@ export async function POST(request: NextRequest) {
     const publicBase = `/uploads/productos/${folderName}`;
     const imagenesLocales: { thumb: string; detail: string }[] = [];
 
+    // indice_inicio permite añadir fotos sin pisar las ya guardadas (flujo editar).
     for (let i = 0; i < buffers.length; i++) {
       const n = indiceInicio + i;
       const thumbName = `${slug}-${n}-thumb.webp`;
@@ -185,6 +187,7 @@ export async function POST(request: NextRequest) {
           detail: `${publicBase}/${detailName}`,
         });
       } catch (perFileErr) {
+        // Evitar carpeta vacía si el primer guardado falla en una carpeta recién creada (solo índice 1).
         if (createdNewFolder && indiceInicio === 1) {
           await rm(destDir!, { recursive: true, force: true }).catch(() => {});
         }

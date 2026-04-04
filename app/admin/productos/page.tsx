@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Panel de inventario: listado de productos, búsqueda/filtros, activar-ocultar en tienda,
+ * y eliminación delegada a /api/admin/producto-delete (validaciones + carpeta uploads).
+ * La lista se sincroniza con Supabase Realtime en la tabla `productos` para reflejar cambios sin recargar.
+ */
+
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import Link from 'next/link';
@@ -31,7 +37,7 @@ export default function GestionProductosPage() {
   const [productoAEliminar, setProductoAEliminar] = useState<{ id: string, nombre: string } | null>(null);
   const [eliminando, setEliminando] = useState(false);
 
-  // Carga inicial y configuracion de suscripcion en tiempo real
+  // Carga inicial + suscripción Realtime: otra pestaña o el webhook de pago pueden mutar `productos`.
   useEffect(() => {
     fetchProductos();
 
@@ -57,13 +63,14 @@ export default function GestionProductosPage() {
     };
   }, []);
 
+  /** Carga única al montar (y si en el futuro se expone un “refrescar”, reutilizar esta función). */
   const fetchProductos = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('productos')
         .select('*')
-        .order('id', { ascending: false }); // Ordenar por ID para que los nuevos y de prueba salgan primero
+        .order('id', { ascending: false }); // IDs altos primero: suele coincidir con “más recientes”
 
       if (error) throw error;
       setProductos(data || []);
@@ -81,28 +88,43 @@ export default function GestionProductosPage() {
     setMostrarModal(true);
   };
 
-  // Ejecuta la eliminacion fisica del registro en Supabase
+  /**
+   * Borrado vía POST /api/admin/producto-delete: valida carrito, ventas y otras FKs en servidor,
+   * borra hijos + producto con service role, y elimina la carpeta uploads/productos/{slug}-{id}/.
+   */
   const ejecutarEliminacion = async () => {
     if (!productoAEliminar) return;
     setEliminando(true);
     try {
-      // 1. Borrar dependencias primero para evitar errores de clave foranea
-      await supabase.from('producto_tallas').delete().eq('producto_id', productoAEliminar.id);
-      await supabase.from('producto_colores').delete().eq('producto_id', productoAEliminar.id);
+      // Cookies de sesión van en la petición (mismo origen); el servidor comprueba admin y usa service role.
+      const res = await fetch('/api/admin/producto-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          producto_id: productoAEliminar.id,
+          nombre_producto: productoAEliminar.nombre,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
 
-      // 2. Ahora si borrar el producto
-      const { error } = await supabase
-        .from('productos')
-        .delete()
-        .eq('id', productoAEliminar.id);
+      if (!res.ok || !json.success) {
+        // Prioridad: mensaje del API (carrito, ventas, FK). Si no hay cuerpo, mensajes por código HTTP.
+        const msg =
+          typeof json.error === 'string'
+            ? json.error
+            : res.status === 401 || res.status === 403
+              ? 'No tienes permiso para eliminar productos o la sesión expiró.'
+              : 'No se pudo eliminar el producto.';
+        toast.error(msg);
+        return;
+      }
 
-      if (error) throw error;
-
-      setProductos(productos.filter(p => p.id !== productoAEliminar.id));
+      // Optimistic UI: el canal Realtime también emitiría DELETE, pero actualizamos ya para feedback instantáneo.
+      setProductos(productos.filter((p) => p.id !== productoAEliminar.id));
       toast.success('Prenda eliminada correctamente');
-    } catch (error: any) {
-      console.error("Error al eliminar:", error);
-      toast.error(`No se pudo eliminar: ${error.message || "Error de base de datos"}`);
+    } catch (error: unknown) {
+      console.error('Error al eliminar:', error);
+      toast.error('No se pudo eliminar. Revisa la conexión e inténtalo de nuevo.');
     } finally {
       setEliminando(false);
       setMostrarModal(false);

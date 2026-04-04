@@ -197,6 +197,14 @@ export default function EditarProductoPage() {
     }
   };
 
+  /**
+   * Guardado del producto (orden del flujo):
+   * 1) Si cambió el nombre → renombrar carpeta y .webp en disco (/api/upload-rename).
+   * 2) Si hay fotos nuevas → subir con /api/upload (indice_inicio según cuántas locales queden).
+   * 3) Persistir fila en Supabase (imagenes_urls legacy + imagenes_locales).
+   * 4) /api/upload-cleanup → quitar del disco los .webp que ya no están en imagenes_locales.
+   * 5) Sincronizar producto_tallas (delete + insert).
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (Object.keys(stocksPorTalla).length === 0) {

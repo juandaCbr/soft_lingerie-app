@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import toast from 'react-hot-toast';
 import BotonWompi from '@/components/BotonWompi';
+import { getProductoImage, withSupabaseListThumbnailParams } from '@/app/lib/image-helper';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -560,9 +561,9 @@ export default function CheckoutPage() {
           <div className="bg-[#f2e1d9]/20 p-8 rounded-[2.5rem] border border-[#4a1d44]/5">
             <div className="space-y-6 mb-8">
               {cart.map((item: any) => {
-                const imgPrincipal = Array.isArray(item.imagenes_urls) && item.imagenes_urls.length > 0
-                  ? item.imagenes_urls[0]
-                  : (item.imagen_url || "/placeholder.png");
+                const imgPrincipal = withSupabaseListThumbnailParams(
+                  getProductoImage(item, 0, "thumb"),
+                );
 
                 return (
                   <div key={`${item.id}-${item.talla_id}`} className="flex justify-between items-center gap-4">

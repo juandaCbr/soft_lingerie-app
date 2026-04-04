@@ -5,6 +5,7 @@ import { supabase } from '@/app/lib/supabase';
 import Link from 'next/link';
 import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getProductoImage } from '@/app/lib/image-helper';
 
 // Definicion de la estructura del producto basada en la base de datos
 type Producto = {
@@ -15,6 +16,7 @@ type Producto = {
   categoria: string | { nombre: string };
   imagen_url?: string;
   imagenes_urls?: string[];
+  imagenes_locales?: { thumb: string; detail: string }[] | null;
   activo: boolean;
 };
 
@@ -222,9 +224,7 @@ export default function GestionProductosPage() {
         ) : (
           <div className="grid gap-4">
             {productosFiltrados.map((producto) => {
-              const miniatura = (producto.imagenes_urls && producto.imagenes_urls.length > 0)
-                ? producto.imagenes_urls[0]
-                : producto.imagen_url;
+              const miniatura = getProductoImage(producto, 0, 'thumb');
 
               const nombreCategoria = typeof producto.categoria === 'object' && producto.categoria !== null
                 ? (producto.categoria as any).nombre
@@ -240,9 +240,11 @@ export default function GestionProductosPage() {
                   <div className="flex items-center gap-4 flex-1">
                     <div className="relative w-16 h-16 shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-black/5">
                       <img
-                        src={(miniatura || 'https://placehold.co/100x100?text=S.L').includes('supabase.co') 
-                             ? `${(miniatura || 'https://placehold.co/100x100?text=S.L')}${miniatura?.includes('?') ? '' : '?width=120&quality=60'}` 
-                             : (miniatura || 'https://placehold.co/100x100?text=S.L')}
+                        src={
+                          miniatura.includes('supabase.co') && !miniatura.includes('?')
+                            ? `${miniatura}?width=120&quality=60`
+                            : miniatura
+                        }
                         className="w-full h-full object-cover"
                         alt={producto.nombre}
                         loading="lazy"

@@ -3,6 +3,7 @@ export function slugify(text: string) {
   return text
     .toString()
     .toLowerCase()
+    .replace(/ñ/g, "n") // ñ no coincide con \w en RegExp JS estándar
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
     .trim()

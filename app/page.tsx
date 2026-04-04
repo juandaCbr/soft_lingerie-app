@@ -3,8 +3,10 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Star, Clock, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { slugify } from './lib/utils';
+import { getProductoImage, withSupabaseListThumbnailParams } from './lib/image-helper';
 
 export default function HomePage() {
   const [productos, setProductos] = useState<any[]>([]);
@@ -226,9 +228,7 @@ export default function HomePage() {
 
 // Componente de tarjeta con tamaños estandarizados
 function ProductCard({ prod, mounted, etiqueta }: { prod: any, mounted: boolean, etiqueta: string }) {
-  const fotoUrl = Array.isArray(prod.imagenes_urls) && prod.imagenes_urls.length > 0
-    ? prod.imagenes_urls[0]
-    : prod.imagen_url;
+  const fotoUrl = withSupabaseListThumbnailParams(getProductoImage(prod, 0, 'thumb'));
 
   const slug = slugify(prod.nombre);
 
@@ -239,15 +239,13 @@ function ProductCard({ prod, mounted, etiqueta }: { prod: any, mounted: boolean,
       className="w-[45vw] md:w-[280px] flex-shrink-0 snap-start group flex flex-col"
     >
       <div className="relative aspect-[3/4] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden mb-4 shadow-sm bg-white border border-[#4a1d44]/5">
-        {fotoUrl ? (
-          <img
-            src={fotoUrl}
-            className="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-in-out"
-            alt={prod.nombre}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center opacity-10 bg-gray-100"><Star /></div>
-        )}
+        <Image
+          src={fotoUrl}
+          alt={prod.nombre}
+          fill
+          sizes="(max-width: 768px) 45vw, 280px"
+          className="object-cover group-hover:scale-110 transition duration-700 ease-in-out"
+        />
 
         {prod.categoria && (
           <span className="absolute top-3 left-3 md:top-4 md:left-4 bg-white/90 backdrop-blur-md text-[#4a1d44] text-[7px] md:text-[9px] font-black uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5 rounded-full shadow-sm z-10">

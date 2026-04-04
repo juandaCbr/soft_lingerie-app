@@ -7,6 +7,11 @@ import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'luc
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import { slugify } from '@/app/lib/utils';
+import {
+  getProductoImage,
+  getProductoImageCount,
+  withSupabaseListThumbnailParams,
+} from '@/app/lib/image-helper';
 
 export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: any, colorFiltro?: string, priority?: boolean }) {
   const [varianteActiva, setVarianteActiva] = useState(producto.variantes ? producto.variantes[0] : producto);
@@ -39,23 +44,11 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   }, [producto, colorFiltro]);
 
   const obtenerListaDeFotos = () => {
-    let urls = [];
-    if (Array.isArray(varianteActiva.imagenes_urls) && varianteActiva.imagenes_urls.length > 0) {
-      urls = varianteActiva.imagenes_urls;
-    } else {
-      urls = varianteActiva.imagen_url ? [varianteActiva.imagen_url] : [];
-    }
-    
-    // Optimizar URLs de Supabase para que pesen menos (500px de ancho y calidad 80)
-    return urls.map((url: string) => {
-      if (url.includes('supabase.co')) {
-        // Si ya tiene parámetros, no añadimos más para no romper la URL
-        if (url.includes('?')) return url;
-        // Solo redimensionamos si es una imagen de producto
-        return `${url}?width=500&quality=80`;
-      }
-      return url;
-    });
+    const count = getProductoImageCount(varianteActiva);
+    const n = Math.max(count, 1);
+    return Array.from({ length: n }, (_, i) =>
+      withSupabaseListThumbnailParams(getProductoImage(varianteActiva, i, 'thumb')),
+    );
   };
 
   const imagenes = obtenerListaDeFotos();

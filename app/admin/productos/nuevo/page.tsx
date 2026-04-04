@@ -188,26 +188,20 @@ export default function NuevoProductoPage() {
     setLoading(true);
 
     try {
+      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => Number(a) + Number(b || 0), 0);
+
+      /* --- Flujo anterior: subida a Supabase Storage y URLs públicas ---
       const urlsSubidas = [];
       for (const archivo of archivosImagenes) {
         const fileExt = archivo.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
         const filePath = `lenceria/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('productos')
-          .upload(filePath, archivo);
-
+        const { error: uploadError } = await supabase.storage.from('productos').upload(filePath, archivo);
         if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('productos')
-          .getPublicUrl(filePath);
-        
+        const { data: publicUrlData } = supabase.storage.from('productos').getPublicUrl(filePath);
         urlsSubidas.push(publicUrlData.publicUrl);
       }
-
-      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => Number(a) + Number(b || 0), 0);
+      */
 
       const { data: nuevoProducto, error: dbError } = await supabase
         .from('productos')
@@ -218,12 +212,36 @@ export default function NuevoProductoPage() {
           stock: stockTotal,
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null,
-          imagenes_urls: urlsSubidas
+          imagenes_urls: [],
+          imagenes_locales: [],
         }])
         .select()
         .single();
 
       if (dbError) throw dbError;
+
+      let imagenesLocales: { thumb: string; detail: string }[] = [];
+      if (archivosImagenes.length > 0) {
+        const fd = new FormData();
+        fd.append('nombre_producto', formData.nombre);
+        fd.append('producto_id', String(nuevoProducto.id));
+        fd.append('indice_inicio', '1');
+        archivosImagenes.forEach((f) => fd.append('files', f));
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Error al subir imágenes al servidor');
+        }
+        imagenesLocales = json.imagenes_locales || [];
+        const { error: upErr } = await supabase
+          .from('productos')
+          .update({
+            imagenes_locales: imagenesLocales,
+            imagenes_urls: [],
+          })
+          .eq('id', nuevoProducto.id);
+        if (upErr) throw upErr;
+      }
 
       const { error: colorError } = await supabase
         .from('producto_colores')

@@ -19,6 +19,8 @@ export default function EditarProductoPage() {
   const [precio, setPrecio] = useState("");
   const [categoria, setCategoria] = useState("");
   const [descripcion, setDescripcion] = useState(""); 
+  const [nombreInicial, setNombreInicial] = useState("");
+  const [imagenesLocales, setImagenesLocales] = useState<{ thumb: string; detail: string }[]>([]);
   const [imagenesUrls, setImagenesUrls] = useState<string[]>([]);
   const [nuevasImagenes, setNuevasImagenes] = useState<File[]>([]);
   const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
@@ -53,10 +55,28 @@ export default function EditarProductoPage() {
       if (error) throw error;
       if (data) {
         setNombre(data.nombre || "");
+        setNombreInicial((data.nombre || "").trim());
         setPrecio(data.precio?.toString() || "0");
         setCategoria(data.categoria || "");
         setDescripcion(data.descripcion || ""); 
         setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
+        let locales: { thumb: string; detail: string }[] = [];
+        const raw = data.imagenes_locales as unknown;
+        if (Array.isArray(raw)) {
+          locales = raw.filter(
+            (x): x is { thumb: string; detail: string } =>
+              typeof x === 'object' &&
+              x !== null &&
+              typeof (x as { thumb: string }).thumb === 'string' &&
+              typeof (x as { detail: string }).detail === 'string',
+          );
+        } else if (typeof raw === 'string' && raw.trim()) {
+          try {
+            const p = JSON.parse(raw);
+            if (Array.isArray(p)) locales = p;
+          } catch { /* ignore */ }
+        }
+        setImagenesLocales(locales);
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
@@ -186,6 +206,7 @@ export default function EditarProductoPage() {
 
     setSaving(true);
     try {
+      /* --- Flujo anterior: nuevas fotos solo a Supabase Storage ---
       const urlsNuevasSubidas = [];
       for (const file of nuevasImagenes) {
         const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
@@ -194,8 +215,46 @@ export default function EditarProductoPage() {
         const { data: { publicUrl } } = supabase.storage.from('productos').getPublicUrl(data.path);
         urlsNuevasSubidas.push(publicUrl);
       }
-
       const listaFinalUrls = [...imagenesUrls, ...urlsNuevasSubidas];
+      */
+
+      let localesMut = [...imagenesLocales];
+
+      if (nombre.trim() !== nombreInicial.trim()) {
+        const rr = await fetch('/api/upload-rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            producto_id: idProducto,
+            nombre_anterior: nombreInicial,
+            nombre_nuevo: nombre,
+          }),
+        });
+        const rj = await rr.json();
+        if (!rr.ok || !rj.success) {
+          throw new Error(rj.error || 'Error al renombrar carpeta de imágenes');
+        }
+        if (rj.changed && Array.isArray(rj.imagenes_locales)) {
+          localesMut = rj.imagenes_locales;
+        }
+      }
+
+      if (nuevasImagenes.length > 0) {
+        const fd = new FormData();
+        fd.append('nombre_producto', nombre);
+        fd.append('producto_id', String(idProducto));
+        const indiceInicio = localesMut.length > 0 ? localesMut.length + 1 : 1;
+        fd.append('indice_inicio', String(indiceInicio));
+        nuevasImagenes.forEach((f) => fd.append('files', f));
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Error al subir nuevas imágenes');
+        }
+        localesMut = [...localesMut, ...(json.imagenes_locales || [])];
+      }
+
+      const listaFinalUrls = [...imagenesUrls];
       const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + Number(b || 0), 0);
 
       const cleanId = parseInt(idProducto);
@@ -206,10 +265,35 @@ export default function EditarProductoPage() {
         stock: stockTotal,
         categoria,
         descripcion,
-        imagenes_urls: listaFinalUrls
+        imagenes_urls: listaFinalUrls,
+        imagenes_locales: localesMut.length > 0 ? localesMut : null,
       }).eq('id', cleanId);
 
       if (error) throw error;
+
+      /*
+       * Limpieza de disco (upload-cleanup): /api/upload solo añade archivos; al quitar fotos en el
+       * formulario, la BD ya refleja el array final pero podían quedar .webp huérfanos en la carpeta.
+       * Tras persistir el producto, borramos del FS todo .webp en productos/{slug}-{id} que no esté
+       * en imagenes_locales. Detalle: app/api/upload-cleanup/route.ts
+       */
+      try {
+        const cleanupRes = await fetch('/api/upload-cleanup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            producto_id: cleanId,
+            nombre_producto: nombre,
+            imagenes_locales: localesMut.length > 0 ? localesMut : [],
+          }),
+        });
+        const cleanupJson = await cleanupRes.json();
+        if (!cleanupRes.ok || !cleanupJson.success) {
+          console.warn('[editar producto] Limpieza de uploads:', cleanupJson?.error ?? cleanupRes.status);
+        }
+      } catch (cleanupErr) {
+        console.warn('[editar producto] Limpieza de uploads (red):', cleanupErr);
+      }
 
       // Intentar actualizar tallas, pero atrapar el error específicamente aquí
       try {
@@ -233,6 +317,12 @@ export default function EditarProductoPage() {
         console.error("Error en tallas:", tallaErr);
         toast.error("Precio actualizado, pero hubo un error de permisos al guardar el desglose de tallas. Revisa el SQL de RLS.");
       }
+
+      previsualizaciones.forEach((u) => URL.revokeObjectURL(u));
+      setNuevasImagenes([]);
+      setPrevisualizaciones([]);
+      setNombreInicial(nombre.trim());
+      setImagenesLocales(localesMut);
 
       router.push("/admin/productos");
       router.refresh();
@@ -258,6 +348,18 @@ export default function EditarProductoPage() {
           <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
             <h2 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Fotos</h2>
             <div className="grid grid-cols-3 gap-3">
+              {imagenesLocales.map((img, i) => (
+                <div key={`loc-${i}-${img.thumb}`} className="relative aspect-square">
+                  <img src={img.thumb} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" />
+                  <button
+                    type="button"
+                    onClick={() => setImagenesLocales(imagenesLocales.filter((_, j) => j !== i))}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"
+                  >
+                    <X size={12} strokeWidth={3} />
+                  </button>
+                </div>
+              ))}
               {imagenesUrls.map((url, i) => (
                 <div key={`old-${i}`} className="relative aspect-square">
                   <img src={url} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" />

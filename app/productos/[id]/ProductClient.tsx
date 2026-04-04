@@ -9,6 +9,11 @@ import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
 import SizeGuideModal from '@/components/SizeGuideModal';
 import { supabase } from '@/app/lib/supabase';
+import {
+  getProductoImage,
+  getProductoImageCount,
+  toAbsolutePublicUrl,
+} from '@/app/lib/image-helper';
 
 export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales }: { 
   producto: any, 
@@ -115,16 +120,17 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     }
   };
 
-  const imagenes = Array.isArray(varianteActiva.imagenes_urls)
-    ? varianteActiva.imagenes_urls
-    : [varianteActiva.imagen_url];
+  const imageCount = Math.max(1, getProductoImageCount(varianteActiva));
+  const imagenes = Array.from({ length: imageCount }, (_, i) =>
+    getProductoImage(varianteActiva, i, 'detail'),
+  );
 
   // Datos estructurados JSON-LD para Google (Rich Snippets)
   const jsonLd = {
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": varianteActiva.nombre,
-    "image": imagenes,
+    "image": imagenes.map((src) => toAbsolutePublicUrl(src)),
     "description": varianteActiva.descripcion,
     "brand": {
       "@type": "Brand",

@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { Trash2, ArrowLeft, Plus, Minus, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useEffect, useState } from "react";
+import { getProductoImage, withSupabaseListThumbnailParams } from "@/app/lib/image-helper";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
@@ -63,7 +64,9 @@ export default function CartPage() {
           <div className="flex-grow">
             <div className="bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.08)] border border-white/60 ring-1 ring-[#4a1d44]/5 flex flex-col p-1.5 md:p-3 overflow-hidden backdrop-blur-xl">
               {cartOrdenado.map((item: any, index: number) => {
-                const imagenAShow = item.imagenes_urls?.[0] || item.imagen_url || "/placeholder.png";
+                const imagenAShow = withSupabaseListThumbnailParams(
+                  getProductoImage(item, 0, "thumb"),
+                );
                 const isMax = item.quantity >= (item.stock_disponible ?? 99);
 
                 return (

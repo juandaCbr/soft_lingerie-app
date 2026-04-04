@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import ProductClient from './ProductClient';
 import { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { getProductoImage, toAbsolutePublicUrl } from '@/app/lib/image-helper';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,15 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const { data: producto } = await supabaseAdmin
     .from('productos')
-    .select('nombre, descripcion, imagenes_urls')
+    .select('nombre, descripcion, imagenes_urls, imagenes_locales')
     .eq('id', id)
     .single();
 
   if (!producto) return { title: "Soft Lingerie | Producto" };
 
-  const image = Array.isArray(producto.imagenes_urls) && producto.imagenes_urls.length > 0 
-    ? producto.imagenes_urls[0] 
-    : "https://soft-lingerie-app.vercel.app/home.jpg";
+  const image = toAbsolutePublicUrl(getProductoImage(producto, 0, 'detail'));
 
   return {
     title: `Soft Lingerie | ${producto.nombre}`,

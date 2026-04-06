@@ -9,10 +9,15 @@ import {
   ArrowRight,
   Heart
 } from 'lucide-react';
+import {
+  contactWhatsAppHref,
+  CONTACT_INSTAGRAM_URL,
+  CONTACT_INSTAGRAM_HANDLE,
+  CONTACT_EMAIL,
+} from '@/app/lib/contacto';
 
 export default function ContactoPage() {
-  const numeroWhatsApp = "573118897646";
-  const mensaje = encodeURIComponent("¡Hola! Me gustaría recibir asesoría personalizada sobre sus prendas.");
+  const whatsappHref = contactWhatsAppHref();
 
   return (
     <div className="min-h-screen bg-[#fdf8f6] flex items-center justify-center p-4 md:p-10 text-[#4a1d44]">
@@ -56,7 +61,7 @@ export default function ContactoPage() {
           <div className="space-y-6">
             {/* Opcion: WhatsApp */}
             <a
-              href={`https://wa.me/${numeroWhatsApp}?text=${mensaje}`}
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center justify-between p-6 bg-[#25D366]/5 hover:bg-[#25D366]/10 border border-[#25D366]/10 rounded-[2rem] transition-all active:scale-95"
@@ -66,8 +71,8 @@ export default function ContactoPage() {
                   <MessageCircle size={24} />
                 </div>
                 <div>
-                  <p className="font-black text-sm uppercase tracking-tighter">WhatsApp Asesoría</p>
-                  <p className="text-[10px] font-bold opacity-50">Respuesta inmediata</p>
+                  <p className="font-black uppercase tracking-tighter">WhatsApp Asesoría</p>
+                  <p className="text-[14px] font-bold opacity-50">Respuesta inmediata</p>
                 </div>
               </div>
               <ArrowRight size={18} className="opacity-20 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -75,7 +80,7 @@ export default function ContactoPage() {
 
             {/* Opcion: Instagram */}
             <a
-              href="https://instagram.com/soft.lingerie_"
+              href={CONTACT_INSTAGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center justify-between p-6 bg-[#E1306C]/5 hover:bg-[#E1306C]/10 border border-[#E1306C]/10 rounded-[2rem] transition-all active:scale-95"
@@ -85,26 +90,26 @@ export default function ContactoPage() {
                   <Instagram size={24} />
                 </div>
                 <div>
-                  <p className="font-black text-sm uppercase tracking-tighter">Instagram</p>
-                  <p className="text-[10px] font-bold opacity-50">@soft.lingerie_</p>
+                  <p className="font-black  uppercase tracking-tighter">Instagram</p>
+                  <p className="text-[14px] font-bold opacity-50">{CONTACT_INSTAGRAM_HANDLE}</p>
                 </div>
               </div>
               <ArrowRight size={18} className="opacity-20 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </a>
 
             {/* Opcion: Email */}
-            <div className="flex items-center gap-5 p-6 border border-[#4a1d44]/5 rounded-[2rem] opacity-60">
-              <div className="w-12 h-12 bg-[#4a1d44]/5 text-[#4a1d44] rounded-2xl flex items-center justify-center">
+            <div className="flex items-center bg-blue-50 gap-5 p-6 border border-[#4a1d44]/5 rounded-[2rem]">
+              <div className="w-12 h-12 bg-blue-200 rounded-2xl flex items-center justify-center">
                 <Mail size={24} />
               </div>
               <div>
-                <p className="font-black text-sm uppercase tracking-tighter">Correo Electrónico</p>
-                <p className="text-[10px] font-bold">softlingerie8@gmail.com</p>
+                <p className="font-black uppercase tracking-tighter">Correo Electrónico</p>
+                <p className="text-[14px] font-bold">{CONTACT_EMAIL}</p>
               </div>
             </div>
           </div>
 
-          <p className="mt-12 text-[9px] font-bold uppercase tracking-[0.3em] text-center opacity-30">
+          <p className="mt-12 text-[14px] font-bold font-black uppercase tracking-[0.3em] text-center opacity-80">
             Valledupar, Colombia
           </p>
         </div>

@@ -5,8 +5,8 @@ import Navbar from "@/components/Navbar";
 import DiscountModal from "@/components/DiscountModal";
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
-import Link from "next/link";
 import Script from "next/script";
+import SiteFooter from "@/components/SiteFooter";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -76,38 +76,7 @@ export default function RootLayout({
             {children}
           </div>
 
-          <footer className="bg-[#4a1d44] text-white py-12 mt-20">
-            <div className="max-w-7xl mx-auto px-6 text-center md:text-left grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div>
-                <h3 className="font-playfair text-xl font-bold mb-4 tracking-widest uppercase">Soft Lingerie</h3>
-                <p className="text-white/60 text-sm italic">Resaltando tu belleza con la mejor calidad.</p>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-white/40">Menú</h4>
-                <ul className="text-sm space-y-2">
-                  <li>
-                    <Link href="/" className="hover:underline">
-                      Inicio
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/productos" className="hover:underline">
-                      Catálogo
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/contacto" className="hover:underline">
-                      Contacto
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-white/40">Soporte</h4>
-                <p className="text-sm text-white/60">Pagos seguros con PSE, Nequi y Bancolombia.</p>
-              </div>
-            </div>
-          </footer>
+          <SiteFooter />
         </CartProvider>
       </body>
     </html>

@@ -121,11 +121,11 @@ export default function HomePage() {
           />
         </div>
         <div className="relative z-10 max-w-4xl">
-          <span className="text-white/60 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mb-4 block">Boutique Exclusiva en Valledupar</span>
+          <span className="text-white/80 text-[12px] md:text-base font-black uppercase tracking-[0.4em] mb-4 block">Boutique Exclusiva</span>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-[1.1] font-playfair italic">
-            Lencería <br className="hidden md:block" /> Valledupar
+            Lencería <br className="hidden md:block" /> <span className="text-white">en Valledupar</span>
           </h1>
-          <p className="text-white/80 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-violet-100 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
             Elegancia y diseños exclusivos que resaltan tu belleza natural.
             Envíos seguros a todo Colombia.
           </p>
@@ -141,7 +141,7 @@ export default function HomePage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Clock className="text-[#4a1d44]" size={16} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40">Recién Llegado</span>
+              <span className="text-[12px] font-black uppercase tracking-widest text-[#4a1d44]/60">Recién Llegado</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-[#4a1d44] font-playfair italic tracking-tighter">Novedades</h2>
           </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center text-center mb-16">
             <div className="flex items-center gap-2 mb-4">
               <Star className="text-amber-500 fill-amber-500" size={16} />
-              <span className="font-black tracking-[0.3em] text-[#4a1d44]/40 text-[10px] uppercase">Best Sellers</span>
+              <span className="font-black tracking-[0.3em] text-[#4a1d44]/4+60 text-[12px] uppercase">Best Sellers</span>
               <Star className="text-amber-500 fill-amber-500" size={16} />
             </div>
             <h2 className="text-4xl md:text-6xl font-bold font-playfair text-[#4a1d44] italic tracking-tighter">Favoritos</h2>
@@ -220,7 +220,7 @@ export default function HomePage() {
       </section>
 
       <footer className="py-12 bg-[#fdf8f6] text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[#4a1d44]/30">Soft Lingerie © 2026</p>
+        <p className="text-[14px] font-black uppercase tracking-[0.5em] text-[#4a1d44]/60">Soft Lingerie © 2026</p>
       </footer>
     </div>
   );

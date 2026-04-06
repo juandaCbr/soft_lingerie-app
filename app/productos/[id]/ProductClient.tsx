@@ -201,8 +201,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: INFORMACIÓN */}
-        <div className="flex flex-col gap-6 md:sticky md:top-28 w-full max-w-[420px] mx-auto md:mx-0">
+        {/* COLUMNA DERECHA: INFORMACIÓN (panel blanco) */}
+        <div className="mx-auto flex w-full max-w-[420px] flex-col gap-6 rounded-[1.75rem] border border-[#4a1d44]/10 bg-white p-6 shadow-sm sm:p-7 md:sticky md:top-28 md:mx-0 md:rounded-[2rem] md:p-8 md:shadow-md">
           <div className="space-y-2">
             <div className="hidden md:block">
               <span className="text-sm font-black uppercase tracking-[0.2em] opacity-40 block mb-2">
@@ -332,7 +332,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           {/* Acordeones */}
-          <div className="mt-4 border border-[#4a1d44]/10 rounded-2xl overflow-hidden bg-[#fdf8f6]/50">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-[#4a1d44]/10 bg-white">
             <div className="border-b border-[#4a1d44]/10">
               <button onClick={() => toggleAcordeon('cuidado')} className="w-full flex justify-between items-center p-4 text-xs font-bold uppercase tracking-widest hover:bg-[#4a1d44]/5 transition-colors">
                 <div className="flex items-center gap-3"><Heart size={16} className="opacity-60" /> Cuidado de la prenda</div>

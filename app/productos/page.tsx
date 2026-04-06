@@ -225,7 +225,7 @@ export default function CatalogoPage() {
             
             {/* CATEGORÍAS */}
             <div className="mb-10">
-              <button onClick={() => setIsCatFilterOpen(!isCatFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+              <button onClick={() => setIsCatFilterOpen(!isCatFilterOpen)} className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all">
                 Categoría <ChevronDown size={14} className={isCatFilterOpen ? "rotate-180" : ""} />
               </button>
               {isCatFilterOpen && (
@@ -240,7 +240,7 @@ export default function CatalogoPage() {
 
             {/* TALLAS */}
             <div className="mb-10">
-              <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+              <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all">
                 Talla <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
               </button>
               {isTallaFilterOpen && (
@@ -255,7 +255,7 @@ export default function CatalogoPage() {
 
             {/* COLORES */}
             <div className="mb-6">
-              <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 hover:opacity-100 transition-all">
+              <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all">
                 Color <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
               </button>
               {isColorFilterOpen && (
@@ -291,7 +291,7 @@ export default function CatalogoPage() {
                 onClick={() => setMostrarAgotados(prev => !prev)}
                 className="w-full flex items-center justify-between gap-3 group"
               >
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-all">
+                <span className="text-[12px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all">
                   Ver agotados
                 </span>
                 <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${mostrarAgotados ? 'bg-[#4a1d44]' : 'bg-[#4a1d44]/10'}`}>
@@ -301,7 +301,7 @@ export default function CatalogoPage() {
             </div>
 
             {(busqueda || categoriaSeleccionada !== 'Todas' || colorSeleccionado !== 'Todos' || tallaSeleccionada !== 'Todas' || mostrarAgotados) && (
-              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); setMostrarAgotados(false); }} className="mt-6 w-full py-4 text-[9px] font-black uppercase tracking-widest text-red-400 border border-red-50 rounded-2xl hover:bg-red-50 transition-all">Limpiar</button>
+              <button onClick={() => { setBusqueda(''); setCategoriaSeleccionada('Todas'); setColorSeleccionado('Todos'); setTallaSeleccionada('Todas'); setMostrarAgotados(false); }} className="mt-6 w-full py-4 text-[12px] font-black uppercase tracking-widest bg-red-50 text-red-400 border border-red-100 rounded-2xl hover:bg-red-100 transition-all">Limpiar</button>
             )}
           </div>
         </aside>

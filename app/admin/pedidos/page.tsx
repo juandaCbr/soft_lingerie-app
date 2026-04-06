@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/app/lib/supabase';
 import { obtenerVentasAdmin } from '@/app/lib/admin';
 import toast from 'react-hot-toast';
@@ -24,13 +25,30 @@ import {
   Loader2,
   Bike,
   AlertTriangle,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Domicilio Local', 'Otro'];
+const PEDIDOS_POR_PAGINA = 20;
 
-export default function AdminPedidos() {
+/** Pedidos cuya `fecha` cae en el día calendario actual (zona horaria del navegador). */
+function esVentaDelDiaActual(fechaIso: string): boolean {
+  const t = new Date(fechaIso);
+  const inicio = new Date();
+  inicio.setHours(0, 0, 0, 0);
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + 1);
+  return t >= inicio && t < fin;
+}
+
+function AdminPedidosContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const soloPedidosHoy = searchParams.get('hoy') === '1';
+
   const [ventas, setVentas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +56,7 @@ export default function AdminPedidos() {
   const [filtroLogistica, setFiltroLogistica] = useState('POR_DESPACHAR'); 
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
   const [ordenPrioridad, setOrdenPrioridad] = useState('Recientes');
+  const [pagina, setPagina] = useState(1);
 
   const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
   const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
@@ -137,6 +156,9 @@ export default function AdminPedidos() {
 
   const ventasSegunPagoYLogistica = useMemo(() => {
     let base = [...ventas];
+    if (soloPedidosHoy) {
+      base = base.filter((v) => v.fecha && esVentaDelDiaActual(v.fecha));
+    }
     if (filtroEstadoPago !== 'Todos') base = base.filter(v => (v.estado_pago || 'PENDIENTE') === filtroEstadoPago);
     if (filtroEstadoPago === 'APROBADO') {
       if (filtroLogistica === 'POR_DESPACHAR') base = base.filter(v => (v.estado_logistico || 'PREPARANDO') === 'PREPARANDO');
@@ -144,7 +166,7 @@ export default function AdminPedidos() {
       else if (filtroLogistica === 'ENTREGADOS') base = base.filter(v => v.estado_logistico === 'ENTREGADO');
     }
     return base;
-  }, [ventas, filtroEstadoPago, filtroLogistica]);
+  }, [ventas, soloPedidosHoy, filtroEstadoPago, filtroLogistica]);
 
   const ciudadesUnicas = useMemo(() => {
     const ciudades = ventasSegunPagoYLogistica.map(v => v.ciudad).filter(Boolean);
@@ -157,6 +179,37 @@ export default function AdminPedidos() {
     res.sort((a, b) => ordenPrioridad === 'Recientes' ? new Date(b.fecha).getTime() - new Date(a.fecha).getTime() : new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
     return res;
   }, [ventasSegunPagoYLogistica, filtroCiudad, ordenPrioridad]);
+
+  useEffect(() => {
+    if (soloPedidosHoy) {
+      setFiltroEstadoPago('Todos');
+    } else {
+      setFiltroEstadoPago('APROBADO');
+    }
+  }, [soloPedidosHoy]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [filtroEstadoPago, filtroLogistica, filtroCiudad, ordenPrioridad, soloPedidosHoy]);
+
+  const totalPaginas = useMemo(
+    () => Math.max(1, Math.ceil(ventasFinales.length / PEDIDOS_POR_PAGINA)),
+    [ventasFinales.length]
+  );
+
+  useEffect(() => {
+    setPagina((p) => Math.min(p, totalPaginas));
+  }, [totalPaginas]);
+
+  const ventasPagina = useMemo(() => {
+    const inicio = (pagina - 1) * PEDIDOS_POR_PAGINA;
+    return ventasFinales.slice(inicio, inicio + PEDIDOS_POR_PAGINA);
+  }, [ventasFinales, pagina]);
+
+  const rangoTexto =
+    ventasFinales.length === 0
+      ? '0 pedidos'
+      : `${(pagina - 1) * PEDIDOS_POR_PAGINA + 1}–${Math.min(pagina * PEDIDOS_POR_PAGINA, ventasFinales.length)} de ${ventasFinales.length}`;
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión logística...</div>;
 
@@ -196,6 +249,28 @@ export default function AdminPedidos() {
           </div>
         </header>
 
+        {soloPedidosHoy && (
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[1.5rem] border border-green-200 bg-green-50/80 px-5 py-4 text-[#4a1d44]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-green-500 text-white shadow-sm">
+                <Calendar size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-green-800/80">Vista del día</p>
+                <p className="text-sm font-bold">
+                  Solo pedidos con fecha de hoy ({new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })})
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/admin/pedidos"
+              className="shrink-0 rounded-2xl bg-white px-5 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4a1d44] shadow-sm ring-1 ring-[#4a1d44]/10 transition hover:bg-[#fdf8f6]"
+            >
+              Ver todos los pedidos
+            </Link>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="bg-white px-5 py-3 rounded-2xl border border-[#4a1d44]/5 shadow-sm flex items-center gap-3 flex-1">
             <Filter size={16} className="opacity-30" />
@@ -225,7 +300,7 @@ export default function AdminPedidos() {
               <p className="opacity-30 font-bold italic uppercase tracking-widest text-xs">Sin pedidos en esta sección</p>
             </div>
           ) : (
-            ventasFinales.map((venta) => {
+            ventasPagina.map((venta) => {
               const esValledupar = venta.ciudad?.toLowerCase() === 'valledupar';
               return (
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
@@ -330,6 +405,35 @@ export default function AdminPedidos() {
             })
           )}
         </div>
+
+        {ventasFinales.length > 0 && totalPaginas > 1 && (
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-7xl mx-auto pt-4 border-t border-[#4a1d44]/10">
+            <p className="text-[11px] font-bold text-[#4a1d44]/50 uppercase tracking-widest">
+              Mostrando {rangoTexto}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina <= 1}
+                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-[#4a1d44]/15 text-[#4a1d44] text-[11px] font-black uppercase tracking-widest hover:bg-[#4a1d44]/5 disabled:opacity-40 disabled:pointer-events-none transition-all"
+              >
+                <ChevronLeft size={18} /> Anterior
+              </button>
+              <span className="text-xs font-black text-[#4a1d44] tabular-nums px-3 min-w-[5rem] text-center">
+                {pagina} / {totalPaginas}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+                disabled={pagina >= totalPaginas}
+                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-[#4a1d44]/15 text-[#4a1d44] text-[11px] font-black uppercase tracking-widest hover:bg-[#4a1d44]/5 disabled:opacity-40 disabled:pointer-events-none transition-all"
+              >
+                Siguiente <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
@@ -362,5 +466,19 @@ export default function AdminPedidos() {
       )}
 
     </div>
+  );
+}
+
+export default function AdminPedidos() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">
+          Cargando gestión logística...
+        </div>
+      }
+    >
+      <AdminPedidosContent />
+    </Suspense>
   );
 }

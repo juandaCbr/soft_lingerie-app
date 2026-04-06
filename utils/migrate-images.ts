@@ -7,16 +7,23 @@
  * Variables necesarias en .env:
  *   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, UPLOAD_DIR (default: ./uploads)
  *
- * El script es idempotente: si un producto ya tiene imagenes_locales, lo salta.
+ * Incluye todo producto con al menos una URL en `imagenes_urls` (aunque ya tenga `imagenes_locales`):
+ * vuelve a descargar desde Storage, sobrescribe los WebP en disco y actualiza `imagenes_locales`.
  * Si una imagen individual falla, continúa con las restantes y lo marca como error al final.
  */
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import sharp from 'sharp';
 import { mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import {
+  generarThumbYDetailWebp,
+  PRODUCT_IMAGE_DETAIL_MAX_BYTES,
+  PRODUCT_IMAGE_DETAIL_WIDTH,
+  PRODUCT_IMAGE_THUMB_WIDTH,
+  PRODUCT_IMAGE_WEBP_QUALITY_THUMB,
+} from '../app/lib/product-image-sharp';
 
 // ─── Slugify (replica de app/lib/utils.ts sin imports Next) ──────────────────
 
@@ -48,9 +55,6 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 const UPLOAD_ROOT = path.join(process.cwd(), UPLOAD_DIR);
-const THUMB_WIDTH = 350;
-const DETAIL_WIDTH = 800;
-const WEBP_QUALITY = 70;
 const FETCH_TIMEOUT_MS = 30_000;
 
 type ImagenLocal = { thumb: string; detail: string };
@@ -84,16 +88,7 @@ async function procesarImagen(
   const thumbName = `${slug}-${n}-thumb.webp`;
   const detailName = `${slug}-${n}-detail.webp`;
 
-  const [thumbBuf, detailBuf] = await Promise.all([
-    sharp(buffer)
-      .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-      .webp({ quality: WEBP_QUALITY })
-      .toBuffer(),
-    sharp(buffer)
-      .resize({ width: DETAIL_WIDTH, withoutEnlargement: true })
-      .webp({ quality: WEBP_QUALITY })
-      .toBuffer(),
-  ]);
+  const { thumbBuf, detailBuf } = await generarThumbYDetailWebp(buffer);
 
   await writeFile(path.join(destDir, thumbName), thumbBuf);
   await writeFile(path.join(destDir, detailName), detailBuf);
@@ -110,18 +105,16 @@ async function main() {
   console.log('\n🚀  Inicio de migración de imágenes\n');
   console.log(`   UPLOAD_DIR → ${UPLOAD_ROOT}`);
   console.log(
-    `   Tamaños   → thumb ${THUMB_WIDTH}px  |  detail ${DETAIL_WIDTH}px (WebP q${WEBP_QUALITY})`,
+    `   Tamaños   → thumb max ${PRODUCT_IMAGE_THUMB_WIDTH}px  |  detail max ${PRODUCT_IMAGE_DETAIL_WIDTH}px (proporcional, sin deformar)`,
+  );
+  console.log(
+    `   Detail WebP → máx. ~${PRODUCT_IMAGE_DETAIL_MAX_BYTES / 1024} KB  |  thumb q${PRODUCT_IMAGE_WEBP_QUALITY_THUMB}`,
   );
   console.log('');
 
-  /**
-   * Traer todos los productos con imagenes_urls + imagenes_locales para filtrar en JS.
-   * No se usa `.or('imagenes_locales.eq.[]')` porque PostgREST espera sintaxis PostgreSQL `{}`
-   * y falla con `[]` (malformed array literal). Se filtra en memoria (tabla pequeña).
-   */
   const { data: productos, error: dbErr } = await supabase
     .from('productos')
-    .select('id, nombre, imagenes_urls, imagenes_locales')
+    .select('id, nombre, imagenes_urls')
     .not('imagenes_urls', 'is', null)
     .order('id', { ascending: true });
 
@@ -130,14 +123,13 @@ async function main() {
     process.exit(1);
   }
 
-  const candidatos: Producto[] = (productos ?? []).filter((p: any) => {
-    const tieneUrls = Array.isArray(p.imagenes_urls) && p.imagenes_urls.length > 0;
-    const tieneLocales = Array.isArray(p.imagenes_locales) && p.imagenes_locales.length > 0;
-    return tieneUrls && !tieneLocales;
+  const candidatos: Producto[] = (productos ?? []).filter((p: Record<string, unknown>) => {
+    const urls = p.imagenes_urls;
+    return Array.isArray(urls) && urls.some((u) => typeof u === 'string' && u.trim().length > 0);
   });
 
   if (candidatos.length === 0) {
-    console.log('✅  No hay productos pendientes de migración. ¡Todo al día!');
+    console.log('✅  No hay productos con URLs en imagenes_urls. Nada que migrar.');
     return;
   }
 

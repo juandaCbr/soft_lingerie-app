@@ -215,7 +215,7 @@ export default function AdminDashboard() {
               <p className="text-3xl font-black text-[#4a1d44]">${stats.ventasHoy.toLocaleString('es-CO')} <span className="text-xs opacity-30">COP</span></p>
             </div>
           </div>
-          <Link href="/admin/pedidos" className="px-8 py-4 bg-[#4a1d44] text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#5c2454] transition-colors shadow-lg">
+          <Link href="/admin/pedidos?hoy=1" className="px-8 py-4 bg-[#4a1d44] text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#5c2454] transition-colors shadow-lg">
             Ver pedidos hoy
           </Link>
         </div>

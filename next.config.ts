@@ -50,6 +50,7 @@ const nextConfig: NextConfig = {
     localPatterns: [
       { pathname: '/images/**', search: '' },
       { pathname: '/uploads/**', search: '' },
+      { pathname: '/logo.jpg', search: '' },
     ],
   },
 };

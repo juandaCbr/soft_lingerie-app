@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import LinkComponent from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
@@ -109,13 +110,23 @@ export default function Navbar() {
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             
-            <LinkComponent href="/" className="flex flex-col group cursor-pointer">
-              <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out tracking-tight group-hover:tracking-[0.05em]">
-                Soft
-              </span>
-              <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out opacity-80 tracking-widest group-hover:tracking-[0.35em]">
-                Lingerie
-              </span>
+            <LinkComponent href="/" className="flex flex-row items-center gap-3 md:gap-4 group cursor-pointer">
+              <Image
+                src="/logo.jpg"
+                alt="Soft Lingeria Valledupar"
+                width={48}
+                height={48}
+                className="h-10 w-10 md:h-12 md:w-12 shrink-0 rounded-full object-cover ring-1 ring-[#4a1d44]/10"
+                priority
+              />
+              <div className="flex flex-col">
+                <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out tracking-tight group-hover:tracking-[0.05em]">
+                  Soft
+                </span>
+                <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out opacity-80 tracking-widest group-hover:tracking-[0.35em]">
+                  Lingerie
+                </span>
+              </div>
             </LinkComponent>
           </div>
 

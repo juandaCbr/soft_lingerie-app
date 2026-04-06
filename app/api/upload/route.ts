@@ -4,6 +4,7 @@ import path from 'path';
 import { NextResponse, type NextRequest } from 'next/server';
 import sharp from 'sharp';
 import { slugify } from '@/app/lib/utils';
+import { generarThumbYDetailWebp } from '@/app/lib/product-image-sharp';
 
 /** sharp requiere runtime Node (no Edge). */
 export const runtime = 'nodejs';
@@ -22,6 +23,8 @@ function uploadRootDir(): string {
 /**
  * POST multipart → guarda en disco en uploads/productos/{slug}-{producto_id}/
  * Campos: nombre_producto, producto_id, files; opcional indice_inicio (default 1).
+ *
+ * Procesamiento de imagen: ver `app/lib/product-image-sharp.ts` (EXIF, thumb 250px, detail 700px, detail ≤100KB).
  *
  * No elimina archivos previos: al quitar/reemplazar fotos en el admin, el borrado en disco lo hace
  * POST /api/upload-cleanup tras guardar el producto (sincroniza carpeta con imagenes_locales).
@@ -169,15 +172,7 @@ export async function POST(request: NextRequest) {
       const buffer = buffers[i]!;
 
       try {
-        const thumbBuf = await sharp(buffer)
-          .resize({ width: 350, withoutEnlargement: true })
-          .webp({ quality: 85 })
-          .toBuffer();
-
-        const detailBuf = await sharp(buffer)
-          .resize({ width: 800, withoutEnlargement: true })
-          .webp({ quality: 85 })
-          .toBuffer();
+        const { thumbBuf, detailBuf } = await generarThumbYDetailWebp(buffer);
 
         await writeFile(path.join(destDir, thumbName), thumbBuf);
         await writeFile(path.join(destDir, detailName), detailBuf);

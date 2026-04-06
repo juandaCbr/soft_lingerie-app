@@ -27,14 +27,14 @@ export default function CartPage() {
   if (totalItems === 0) {
     return (
       <div className="min-h-[75vh] flex flex-col items-center justify-center px-6 text-center text-[#4a1d44]">
-        <div className="bg-[#f2e1d9]/50 p-10 rounded-full mb-8 animate-pulse">
-          <Trash2 size={48} className="opacity-20" />
+        <div className="bg-[#f2e1d9]/70 p-10 rounded-full mb-8 animate-pulse">
+          <Trash2 size={48} className="opacity-40" />
         </div>
         <h2 className="text-3xl font-black font-playfair uppercase tracking-tight mb-3">
-          Tu carrito esta vacio
+          Tu carrito está vacío
         </h2>
-        <p className="max-w-xs text-sm italic opacity-60 mb-10 leading-relaxed">
-          "Las piezas mas exclusivas no suelen esperar demasiado. Encuentra hoy ese diseno que te hara sentir unica."
+        <p className="max-w-xs italic opacity-70 mb-10 leading-relaxed">
+          "Las piezas más exclusivas no suelen esperar demasiado. Encuentra hoy ese diseño que te hará sentir única."
         </p>
         <Link
           href="/productos"
@@ -84,16 +84,16 @@ export default function CartPage() {
                       <div className="flex flex-col justify-between flex-grow">
                         <div className="flex justify-between items-start gap-2">
                           <div>
-                            <h3 className="text-sm md:text-base font-bold leading-tight text-[#361531] group-hover:text-[#4a1d44] transition-colors">{item.nombre}</h3>
+                            <h3 className="text-base font-bold leading-tight text-[#361531] group-hover:text-[#4a1d44] transition-colors">{item.nombre}</h3>
                             <div className="flex gap-2 mt-1">
                               <div className="inline-block px-2 py-0.5 bg-[#4a1d44]/5 rounded-full border border-[#4a1d44]/10 text-center w-fit">
-                                <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-[#4a1d44]/70">
-                                  {item.producto_colores?.[0]?.colores?.nombre || "Color unico"}
+                                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/70">
+                                  {item.producto_colores?.[0]?.colores?.nombre || "Color único"}
                                 </p>
                               </div>
                               {item.talla && (
                                 <div className="inline-block px-2 py-0.5 bg-[#4a1d44] rounded-full text-center w-fit">
-                                  <p className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-white">
+                                  <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white">
                                     Talla: {item.talla.nombre}
                                   </p>
                                 </div>
@@ -102,7 +102,7 @@ export default function CartPage() {
                           </div>
                           <button
                             onClick={() => removeFromCart(item.id, item.talla_id)}
-                            className="p-1.5 md:p-2.5 text-[#4a1d44]/30 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-300 active:scale-90 flex-shrink-0"
+                            className="p-1.5 md:p-2.5 text-[#4a1d44]/60 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-300 active:scale-90 flex-shrink-0"
                             title="Eliminar producto"
                             aria-label="Eliminar producto"
                           >
@@ -130,7 +130,7 @@ export default function CartPage() {
                               </button>
                             </div>
                             {isMax && (
-                              <p className="text-[8px] font-black uppercase text-[#4a1d44]/40 ml-2">Stock Máximo</p>
+                              <p className="text-[9px] md:text-[10px] font-black uppercase text-[#4a1d44]/60 ml-2">Stock Máximo</p>
                             )}
                           </div>
                           <div className="text-right flex flex-col justify-end">
@@ -153,14 +153,14 @@ export default function CartPage() {
             <div className="p-8 md:p-10 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.12)] border border-white/60 ring-1 ring-[#4a1d44]/5 sticky top-24 backdrop-blur-xl">
               <div className="flex flex-col gap-8 mb-8">
                 <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Total a pagar</p>
+                  <p className="text-[12px] font-black uppercase tracking-widest opacity-70 mb-1">Total a pagar</p>
                   <div className="flex items-baseline gap-2 justify-center lg:justify-start">
                     <p className="text-4xl font-black text-[#4a1d44]">
                       ${totalPrice.toLocaleString('es-CO')}
                     </p>
-                    <span className="text-sm font-black opacity-30 tracking-widest">COP</span>
+                    <span className="text-sm font-black opacity-60 tracking-widest">COP</span>
                   </div>
-                  <p className="text-[10px] font-bold italic opacity-40 mt-2 text-[#4a1d44]">
+                  <p className="text-[12px] font-bold italic opacity-60 mt-2 text-[#4a1d44]">
                     * El costo de envío se calculará en el siguiente paso.
                   </p>
                 </div>
@@ -176,20 +176,20 @@ export default function CartPage() {
 
               {/* METODOS DE PAGO */}
               <div className="flex flex-col items-center gap-6 pt-8 border-t border-[#4a1d44]/5">
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 text-center">
+                <p className="text-[12px] font-black uppercase tracking-[0.3em] opacity-70 text-center">
                   Aceptamos tus medios de pago favoritos
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-700 ease-in-out">
-                  <img src="https://juntanacional.co/wp-content/uploads/2015/08/logo_380.png" alt="PSE" className="h-6 object-contain" />
-                  <img src="https://unicentro.com/wp-content/uploads/2025/07/BANCOLOMBIA.png" alt="Bancolombia" className="h-4 object-contain" />
-                  <img src="https://images.seeklogo.com/logo-png/50/3/nequi-colombia-logo-png_seeklogo-505078.png" alt="Nequi" className="h-5 object-contain" />
-                  <img src="https://app.redecom.co/396-medium_default/recarga-claro.jpg" alt="Daviplata" className="h-7 object-contain mix-blend-multiply" />
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 opacity-70  hover:opacity-100 transition-all duration-700 ease-in-out">
+                  <img src="https://juntanacional.co/wp-content/uploads/2015/08/logo_380.png" alt="PSE" className="h-10 object-contain" />
+                  <img src="https://unicentro.com/wp-content/uploads/2025/07/BANCOLOMBIA.png" alt="Bancolombia" className="h-10 object-contain" />
+                  <img src="https://images.seeklogo.com/logo-png/50/3/nequi-colombia-logo-png_seeklogo-505078.png" alt="Nequi" className="h-10 object-contain" />
+                  <img src="https://app.redecom.co/396-medium_default/recarga-claro.jpg" alt="Daviplata" className="h-10 object-contain mix-blend-multiply" />
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-[#4a1d44]/5 flex items-center justify-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.2em] opacity-30 italic text-center">
-                <ShieldCheck size={14} className="text-green-600 opacity-70" />
-                Transaccion Privada & Segura
+              <div className="mt-8 pt-6 border-t border-[#4a1d44]/5 flex items-center justify-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.2em] italic text-center">
+                <ShieldCheck size={24} className="text-green-600 opacity-70" />
+                Transacción Privada y Segura
               </div>
             </div>
           </div>

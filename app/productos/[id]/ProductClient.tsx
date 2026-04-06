@@ -3,34 +3,54 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ShoppingCart, ArrowLeft, Loader2, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
 import SizeGuideModal from '@/components/SizeGuideModal';
-import { supabase } from '@/app/lib/supabase';
 import {
   getProductoImage,
   getProductoImageCount,
   toAbsolutePublicUrl,
 } from '@/app/lib/image-helper';
 
-export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales }: { 
+export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales, tallasPorVarianteIniciales }: { 
   producto: any, 
   variantesIniciales: any[], 
-  relacionadosIniciales: any[] 
+  relacionadosIniciales: any[],
+  tallasPorVarianteIniciales: Record<string, any[]>
 }) {
   const router = useRouter();
   const { addToCart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [variantes, setVariantes] = useState<any[]>(variantesIniciales);
+  const [variantes] = useState<any[]>(variantesIniciales);
   const [varianteActiva, setVarianteActiva] = useState<any>(producto);
-  const [tallasDisponibles, setTallasDisponibles] = useState<any[]>([]);
-  const [tallaSeleccionada, setTallaSeleccionada] = useState<any>(null);
+  const getTallasOrdenadas = (productoId: any): any[] => {
+    const ordenTallas: Record<string, number> = {
+      XS: 1, xs: 1,
+      S: 2, s: 2,
+      M: 3, m: 3,
+      L: 4, l: 4,
+      XL: 5, xl: 5,
+      XXL: 6, xxl: 6,
+      'Única': 10, UNICA: 10, Unica: 10,
+    };
+    const lista = tallasPorVarianteIniciales[String(productoId)] || [];
+    return [...lista].sort((a: any, b: any) => {
+      const nombreA = a.nombre?.trim() || "";
+      const nombreB = b.nombre?.trim() || "";
+      return (ordenTallas[nombreA] || 99) - (ordenTallas[nombreB] || 99);
+    });
+  };
+
+  const [tallasDisponibles, setTallasDisponibles] = useState<any[]>(() => getTallasOrdenadas(producto.id));
+  const [tallaSeleccionada, setTallaSeleccionada] = useState<any>(() => {
+    const iniciales = getTallasOrdenadas(producto.id);
+    return iniciales.find((t: any) => t.stock > 0) || null;
+  });
   const [cantidad, setCantidad] = useState(1);
   const [relacionados] = useState<any[]>(relacionadosIniciales);
-  const [tallasLoading, setTallasLoading] = useState(false);
   const [currentImg, setCurrentImg] = useState(0);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
@@ -40,52 +60,22 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   };
 
   useEffect(() => {
-    if (producto.id) fetchTallas(producto.id);
+    // Si cambia el producto base por navegación interna, re-hidrata tallas sin roundtrip.
+    const tallasIniciales = getTallasOrdenadas(producto.id);
+    setTallasDisponibles(tallasIniciales);
+    setTallaSeleccionada(tallasIniciales.find((t: any) => t.stock > 0) || null);
+    setCantidad(1);
   }, [producto.id]);
 
-  const fetchTallas = async (productoId: any) => {
-    setTallasLoading(true);
-    const { data: tallasRel, error: errorTallas } = await supabase
-      .from('producto_tallas')
-      .select('*, tallas(*)')
-      .eq('producto_id', productoId);
-    
-    if (!errorTallas && tallasRel) {
-      // Definir el orden lógico de las tallas
-      const ordenTallas: Record<string, number> = {
-        'XS': 1, 'xs': 1,
-        'S': 2, 's': 2,
-        'M': 3, 'm': 3,
-        'L': 4, 'l': 4,
-        'XL': 5, 'xl': 5,
-        'XXL': 6, 'xxl': 6,
-        'Única': 10, 'UNICA': 10, 'Unica': 10
-      };
-
-      const tallasConStock = tallasRel.map(r => ({
-        ...r.tallas,
-        stock: r.stock_talla || 0
-      })).sort((a, b) => {
-        const nombreA = a.nombre?.trim() || "";
-        const nombreB = b.nombre?.trim() || "";
-        return (ordenTallas[nombreA] || 99) - (ordenTallas[nombreB] || 99);
-      });
-      
-      setTallasDisponibles(tallasConStock);
-      const primeraDisponible = tallasConStock.find(t => t.stock > 0);
-      setTallaSeleccionada(primeraDisponible || null);
-      setCantidad(1);
-    }
-    setTallasLoading(false);
-  };
-
-  const handleVarianteChange = async (v: any) => {
+  const handleVarianteChange = (v: any) => {
     if (v.id === varianteActiva.id) return;
     setVarianteActiva(v);
     setCurrentImg(0);
-    setTallaSeleccionada(null);
+    // Cambio instantáneo: toma tallas ya precargadas desde el servidor.
+    const tallasDeVariante = getTallasOrdenadas(v.id);
+    setTallasDisponibles(tallasDeVariante);
+    setTallaSeleccionada(tallasDeVariante.find((t: any) => t.stock > 0) || null);
     setCantidad(1);
-    await fetchTallas(v.id);
   };
 
   const handleAddToCart = () => {
@@ -264,13 +254,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
               </button>
             </div>
 
-            {tallasLoading ? (
-              <div className="flex gap-2 animate-pulse">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-12 h-10 bg-gray-100 rounded-xl" />
-                ))}
-              </div>
-            ) : tallasDisponibles.length > 0 ? (
+            {tallasDisponibles.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {tallasDisponibles.map((t) => {
                   const agotado = t.stock <= 0;
@@ -323,10 +307,10 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           <div className="pt-2 min-h-[64px]">
             <button
               onClick={handleAddToCart}
-              disabled={tallasLoading || !tallaSeleccionada || tallaSeleccionada.stock <= 0}
+              disabled={!tallaSeleccionada || tallaSeleccionada.stock <= 0}
               className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
             >
-              {tallasLoading ? <Loader2 className="animate-spin" size={18} /> : <ShoppingCart size={18} />} 
+              <ShoppingCart size={18} />
               AÑADIR AL CARRITO
             </button>
           </div>

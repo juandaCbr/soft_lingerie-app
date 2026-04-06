@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import ProductClient from './ProductClient';
 import { Metadata } from 'next';
+import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getProductoImage, toAbsolutePublicUrl } from '@/app/lib/image-helper';
 
@@ -12,16 +13,37 @@ const supabaseAdmin = createClient(
 // ISR: Revalidar cada 60 segundos
 export const revalidate = 60;
 
+const PRODUCTO_BASE_SELECT = `
+  id,
+  nombre,
+  descripcion,
+  precio,
+  stock,
+  created_at,
+  grupo_id,
+  categoria,
+  imagenes_urls,
+  imagenes_locales,
+  producto_colores ( colores (hex, nombre) )
+`;
+
+const getProductoBase = cache(async (id: string) => {
+  const { data } = await supabaseAdmin
+    .from('productos')
+    .select(PRODUCTO_BASE_SELECT)
+    .eq('id', id)
+    .single();
+
+  return data;
+});
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id: rawId } = await params;
   // Extraer el ID real (la última parte después del último guion) para que el SEO funcione igual que la página
   const id = rawId.split('-').pop() || rawId;
 
-  const { data: producto } = await supabaseAdmin
-    .from('productos')
-    .select('nombre, descripcion, imagenes_urls, imagenes_locales')
-    .eq('id', id)
-    .single();
+  // Reutiliza la misma query cacheada que usa la página para evitar trabajo duplicado.
+  const producto = await getProductoBase(id);
 
   if (!producto) return { title: "Soft Lingerie | Producto" };
 
@@ -45,6 +67,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export async function generateStaticParams() {
+  // En desarrollo, evita pre-generar params para reducir latencia en la primera navegación.
+  if (process.env.NODE_ENV !== 'production') return [];
+
   const { data: productos } = await supabaseAdmin
     .from('productos')
     .select('id')
@@ -62,37 +87,64 @@ export default async function ProductoDetallePage({ params }: { params: Promise<
   // Esto permite que /productos/nombre-del-producto-123 funcione
   const id = rawId.split('-').pop() || rawId;
 
-  // 1. Obtener producto principal
-  const { data: producto, error } = await supabaseAdmin
-    .from('productos')
-    .select(`*, producto_colores ( colores (hex, nombre) )`)
-    .eq('id', id)
-    .single();
+  // 1. Producto base cacheado: evita doble roundtrip entre metadata y page.
+  const producto = await getProductoBase(id);
 
-  if (error || !producto) {
+  if (!producto) {
     notFound();
   }
 
-  // 2. Obtener variantes del mismo grupo
-  let variantes = [producto];
-  if (producto.grupo_id) {
-    const { data: todasLasVariantes } = await supabaseAdmin
+  // 2 y 3 en paralelo para bajar tiempo total de render en servidor.
+  const [variantesResp, relacionadosResp] = await Promise.all([
+    producto.grupo_id
+      ? supabaseAdmin
+          .from('productos')
+          .select(PRODUCTO_BASE_SELECT)
+          .eq('grupo_id', producto.grupo_id)
+          .eq('activo', true)
+      : Promise.resolve({ data: [producto] }),
+    supabaseAdmin
       .from('productos')
-      .select(`*, producto_colores ( colores (hex, nombre) )`)
-      .eq('grupo_id', producto.grupo_id)
-      .eq('activo', true);
-    if (todasLasVariantes) variantes = todasLasVariantes;
-  }
+      .select(`
+        id,
+        nombre,
+        descripcion,
+        precio,
+        stock,
+        created_at,
+        grupo_id,
+        categoria,
+        imagenes_urls,
+        imagenes_locales,
+        producto_colores ( colores (hex, nombre) )
+      `)
+      .eq('activo', true)
+      .gt('stock', 0)
+      .neq('id', producto.id)
+      .limit(12),
+  ]);
 
-  // 3. Obtener productos relacionados (solo con stock disponible)
-  const { data: dataRelacionados } = await supabaseAdmin
-    .from('productos')
-    .select(`*, producto_colores ( colores (hex, nombre) )`)
-    .eq('activo', true)
-    .gt('stock', 0)
-    .neq('id', producto.id)
-    .limit(12);
-// ... resto del archivo
+  const variantes = variantesResp.data && variantesResp.data.length > 0 ? variantesResp.data : [producto];
+
+  // 2.1 Traer tallas de todas las variantes en servidor para evitar fetch adicional en cliente.
+  const variantesIds = variantes.map((v) => v.id);
+  const { data: tallasRelaciones } = await supabaseAdmin
+    .from('producto_tallas')
+    .select('producto_id, stock_talla, tallas(id, nombre, orden)')
+    .in('producto_id', variantesIds);
+
+  // Estructura: { [productoId]: [{ id, nombre, stock }, ...] }
+  const tallasPorVariante: Record<string, any[]> = {};
+  (tallasRelaciones || []).forEach((rel: any) => {
+    const key = String(rel.producto_id);
+    if (!tallasPorVariante[key]) tallasPorVariante[key] = [];
+    tallasPorVariante[key].push({
+      ...rel.tallas,
+      stock: rel.stock_talla || 0,
+    });
+  });
+
+  const dataRelacionados = relacionadosResp.data;
 
   let relacionados: any[] = [];
   if (dataRelacionados) {
@@ -114,6 +166,7 @@ export default async function ProductoDetallePage({ params }: { params: Promise<
       producto={producto} 
       variantesIniciales={variantes} 
       relacionadosIniciales={relacionados} 
+      tallasPorVarianteIniciales={tallasPorVariante}
     />
   );
 }

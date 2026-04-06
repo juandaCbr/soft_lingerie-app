@@ -85,8 +85,8 @@ function GraciasContent() {
                                 <Truck size={40} />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black uppercase tracking-widest opacity-40">Envío Nacional</h3>
-                                <p className="text-sm opacity-60 font-medium mt-2 leading-relaxed">
+                                <h3 className="text-base font-black uppercase tracking-widest opacity-40">Envío Nacional</h3>
+                                <p className="text-base opacity-60 font-medium mt-2 leading-relaxed">
                                     Estamos preparando tu paquete para entregarlo a la transportadora lo antes posible.
                                 </p>
                             </div>
@@ -96,10 +96,10 @@ function GraciasContent() {
 
                 {/* CUADRO DE REFERENCIA */}
                 <div className="bg-white p-6 rounded-3xl border border-[#4a1d44]/10 mb-10 shadow-inner">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Referencia de Pedido</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Referencia de Pedido</p>
                     <div className="flex items-center justify-center gap-3">
                         <code className="text-xl font-black tracking-tight text-[#4a1d44]">{referencia}</code>
-                        <button onClick={copiarReferencia} className="p-2 hover:bg-[#fdf8f6] rounded-full transition-all text-[#4a1d44]/40 hover:text-[#4a1d44]">
+                        <button onClick={copiarReferencia} className="p-2 hover:bg-[#fdf8f6] rounded-full transition-all text-[#4a1d44]/60 hover:text-[#4a1d44]">
                             <ClipboardCheck size={20} />
                         </button>
                     </div>

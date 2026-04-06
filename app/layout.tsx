@@ -24,14 +24,6 @@ export const metadata: Metadata = {
     description: "Elegancia y seducción en cada prenda. Envíos nacionales.",
     url: "https://soft-lingerie-app.vercel.app",
     siteName: "Soft Lingerie",
-    images: [
-      {
-        url: "https://soft-lingerie-app.vercel.app/home.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Soft Lingerie Boutique",
-      },
-    ],
     locale: "es_CO",
     type: "website",
   },

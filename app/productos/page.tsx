@@ -1,7 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Metadata } from "next";
 import CatalogoClient from "./CatalogoClient";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Catálogo de Lencería | Soft Lingerie",
+  description:
+    "Explora el catálogo de Soft Lingerie: conjuntos, babydolls, ligueros y más. Filtra por talla, color y precio para encontrar tu diseño ideal.",
+  alternates: {
+    canonical: "/productos",
+  },
+  openGraph: {
+    title: "Catálogo de Lencería | Soft Lingerie",
+    description:
+      "Encuentra tu diseño ideal en nuestro catálogo de lencería con filtros por talla, color y precio.",
+    url: "https://soft-lingerie-app.vercel.app/productos",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Catálogo de Lencería | Soft Lingerie",
+    description:
+      "Catálogo completo con filtros por talla, color y precio.",
+  },
+};
 
 const CATALOGO_PRODUCTOS_SELECT = `
   id,

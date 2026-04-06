@@ -13,6 +13,7 @@ import {
   getProductoImageCount,
   toAbsolutePublicUrl,
 } from '@/app/lib/image-helper';
+import { slugify } from '@/app/lib/utils';
 
 export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales, tallasPorVarianteIniciales }: { 
   producto: any, 
@@ -114,6 +115,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   const imagenes = Array.from({ length: imageCount }, (_, i) =>
     getProductoImage(varianteActiva, i, 'detail'),
   );
+  const canonicalProductUrl = `https://soft-lingerie-app.vercel.app/productos/${slugify(varianteActiva.nombre)}-${varianteActiva.id}`;
 
   // Datos estructurados JSON-LD para Google (Rich Snippets)
   const jsonLd = {
@@ -128,7 +130,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://soft-lingerie-app.vercel.app/productos/${varianteActiva.id}`,
+      "url": canonicalProductUrl,
       "priceCurrency": "COP",
       "price": varianteActiva.precio,
       "availability": tallasDisponibles.some(t => t.stock > 0) 

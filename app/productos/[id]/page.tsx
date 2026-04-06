@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getProductoImage, toAbsolutePublicUrl } from '@/app/lib/image-helper';
+import { slugify } from '@/app/lib/utils';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,14 +48,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!producto) return { title: "Soft Lingerie | Producto" };
 
+  const canonicalPath = `/productos/${slugify(producto.nombre)}-${id}`;
   const image = toAbsolutePublicUrl(getProductoImage(producto, 0, 'detail'));
 
   return {
     title: `Soft Lingerie | ${producto.nombre}`,
     description: producto.descripcion?.substring(0, 160) || `Compra ${producto.nombre} en Soft Lingerie Valledupar. Calidad premium y diseños exclusivos.`,
+    alternates: {
+      canonical: canonicalPath,
+    },
     openGraph: {
       title: `Soft Lingerie | ${producto.nombre}`,
       description: producto.descripcion?.substring(0, 160),
+      url: `https://soft-lingerie-app.vercel.app${canonicalPath}`,
       images: [image],
     },
     twitter: {

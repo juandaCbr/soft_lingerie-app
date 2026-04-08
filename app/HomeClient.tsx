@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Star, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { slugify } from "./lib/utils";
-import { getProductoImage, withSupabaseListThumbnailParams } from "./lib/image-helper";
+import { getProductoImage, withSupabaseListThumbnailParams, PLACEHOLDER_IMAGE } from "./lib/image-helper";
 
 type HomeClientProps = {
   productosIniciales: any[];
@@ -201,7 +201,12 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
 
 function ProductCard({ prod, etiqueta }: { prod: any; etiqueta: string }) {
   const fotoUrl = withSupabaseListThumbnailParams(getProductoImage(prod, 0, "thumb"));
+  const [imgSrc, setImgSrc] = useState(fotoUrl);
   const slug = slugify(prod.nombre);
+
+  useEffect(() => {
+    setImgSrc(withSupabaseListThumbnailParams(getProductoImage(prod, 0, "thumb")));
+  }, [prod.id]);
 
   return (
     <Link
@@ -210,11 +215,12 @@ function ProductCard({ prod, etiqueta }: { prod: any; etiqueta: string }) {
     >
       <div className="relative aspect-[3/4] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden mb-4 shadow-sm bg-white border border-[#4a1d44]/5">
         <Image
-          src={fotoUrl}
+          src={imgSrc}
           alt={prod.nombre}
           fill
           sizes="(max-width: 768px) 45vw, 280px"
           className="object-cover group-hover:scale-110 transition duration-700 ease-in-out"
+          onError={() => setImgSrc(PLACEHOLDER_IMAGE)}
         />
 
         {prod.categoria && (

@@ -12,6 +12,7 @@ import {
   getProductoImage,
   getProductoImageCount,
   toAbsolutePublicUrl,
+  PLACEHOLDER_IMAGE,
 } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
 
@@ -53,6 +54,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   const [cantidad, setCantidad] = useState(1);
   const [relacionados] = useState<any[]>(relacionadosIniciales);
   const [currentImg, setCurrentImg] = useState(0);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
 
@@ -72,6 +74,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     if (v.id === varianteActiva.id) return;
     setVarianteActiva(v);
     setCurrentImg(0);
+    setImgErrors({});
     // Cambio instantáneo: toma tallas ya precargadas desde el servidor.
     const tallasDeVariante = getTallasOrdenadas(v.id);
     setTallasDisponibles(tallasDeVariante);
@@ -166,17 +169,21 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden bg-[#fdf8f6] shadow-sm border border-[#4a1d44]/5 shrink-0">
-            {imagenes.map((img: string, index: number) => (
-              <Image
-                key={`${varianteActiva.id}-${index}`}
-                src={img}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority={index === 0}
-                className={`object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
-                alt={varianteActiva.nombre}
-              />
-            ))}
+            {imagenes.map((img: string, index: number) => {
+              const imgKey = `${varianteActiva.id}-${index}`;
+              return (
+                <Image
+                  key={imgKey}
+                  src={imgErrors[imgKey] ? PLACEHOLDER_IMAGE : img}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority={index === 0}
+                  className={`object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
+                  alt={varianteActiva.nombre}
+                  onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
+                />
+              );
+            })}
             <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-1.5 z-10">
               {imagenes.map((_: string, i: number) => (
                 <div key={i} className={`h-[2px] rounded-full transition-all duration-500 ${i === currentImg ? 'w-8 bg-white' : 'w-3 bg-white/40'}`} />
@@ -185,11 +192,21 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           <div className="flex gap-3 overflow-x-auto py-2 px-1 scrollbar-hide items-center">
-            {imagenes.map((img: string, i: number) => (
-              <button key={i} onClick={() => setCurrentImg(i)} className={`relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${i === currentImg ? 'border-[#4a1d44] scale-105 shadow-md' : 'border-transparent opacity-40 hover:opacity-100'}`}>
-                <Image src={img} fill sizes="64px" className="object-cover" alt="miniatura" />
-              </button>
-            ))}
+            {imagenes.map((img: string, i: number) => {
+              const thumbKey = `${varianteActiva.id}-${i}`;
+              return (
+                <button key={i} onClick={() => setCurrentImg(i)} className={`relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${i === currentImg ? 'border-[#4a1d44] scale-105 shadow-md' : 'border-transparent opacity-40 hover:opacity-100'}`}>
+                  <Image
+                    src={imgErrors[thumbKey] ? PLACEHOLDER_IMAGE : img}
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                    alt="miniatura"
+                    onError={() => setImgErrors(prev => ({ ...prev, [thumbKey]: true }))}
+                  />
+                </button>
+              );
+            })}
           </div>
         </div>
 

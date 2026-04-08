@@ -11,6 +11,7 @@ import {
   getProductoImage,
   getProductoImageCount,
   withSupabaseListThumbnailParams,
+  PLACEHOLDER_IMAGE,
 } from '@/app/lib/image-helper';
 
 /** Determina si una variante tiene stock disponible (columna stock O stock_talla). */
@@ -32,11 +33,16 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   const [varianteActiva, setVarianteActiva] = useState(varianteInicial);
   const [currentImg, setCurrentImg] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const { addToCart } = useCart();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setImgErrors({});
+  }, [varianteActiva.id]);
 
   useEffect(() => {
     if (producto.variantes) {
@@ -118,16 +124,18 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
                 // Si no es la actual ni la siguiente, no la renderizamos para ahorrar recursos
                 if (!isCurrent && !isNext) return null;
 
+                const imgKey = `${varianteActiva.id}-${index}`;
                 return (
                   <Image
-                    key={`${varianteActiva.id}-${index}`}
-                    src={img}
+                    key={imgKey}
+                    src={imgErrors[imgKey] ? PLACEHOLDER_IMAGE : img}
                     alt={`${varianteActiva.nombre} - ${index}`}
                     fill
                     sizes="(max-width: 768px) 50vw, 33vw"
                     className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.6]' : ''}`}
                     priority={priority && index === 0}
                     loading={priority && index === 0 ? 'eager' : 'lazy'}
+                    onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
                   />
                 );
               })}

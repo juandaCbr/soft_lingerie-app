@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler, Plus, Minus } from 'lucide-react';
+import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { uploadConReintento } from '@/app/lib/upload-with-retry';
 
 export default function NuevoProductoPage() {
   const router = useRouter();
@@ -172,6 +173,10 @@ export default function NuevoProductoPage() {
   /**
    * Alta: insert mínimo en `productos` para obtener id → /api/upload con ese id → update con imagenes_locales.
    * Luego color y tallas (orden acorde a las FKs).
+   *
+   * Si el upload falla DESPUÉS de que el producto ya fue insertado en Supabase, no tiramos
+   * error genérico (el usuario podría volver a hacer submit y crear un duplicado). En su lugar
+   * redirigimos al formulario de edición del producto recién creado para que añada las imágenes allí.
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,21 +196,12 @@ export default function NuevoProductoPage() {
 
     setLoading(true);
 
+    // Guardamos el id del producto recién creado; si falla algo posterior
+    // redirigimos a editar en vez de lanzar un error que provoque re-submit duplicado.
+    let productoRecienCreado: string | null = null;
+
     try {
       const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => Number(a) + Number(b || 0), 0);
-
-      /* --- Flujo anterior: subida a Supabase Storage y URLs públicas ---
-      const urlsSubidas = [];
-      for (const archivo of archivosImagenes) {
-        const fileExt = archivo.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `lenceria/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from('productos').upload(filePath, archivo);
-        if (uploadError) throw uploadError;
-        const { data: publicUrlData } = supabase.storage.from('productos').getPublicUrl(filePath);
-        urlsSubidas.push(publicUrlData.publicUrl);
-      }
-      */
 
       const { data: nuevoProducto, error: dbError } = await supabase
         .from('productos')
@@ -224,42 +220,57 @@ export default function NuevoProductoPage() {
 
       if (dbError) throw dbError;
 
-      let imagenesLocales: { thumb: string; detail: string }[] = [];
+      productoRecienCreado = String(nuevoProducto.id);
+
+      // --- Subida de imágenes ---
       if (archivosImagenes.length > 0) {
         const fd = new FormData();
         fd.append('nombre_producto', formData.nombre);
-        fd.append('producto_id', String(nuevoProducto.id));
+        fd.append('producto_id', productoRecienCreado);
         fd.append('indice_inicio', '1');
         archivosImagenes.forEach((f) => fd.append('files', f));
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (!res.ok || !json.success) {
-          throw new Error(json.error || 'Error al subir imágenes al servidor');
+
+        let uploadOk = false;
+        try {
+          const { ok, json } = await uploadConReintento(fd);
+          if (ok && json.success) {
+            const imagenesLocales: { thumb: string; detail: string }[] = json.imagenes_locales || [];
+            const { error: upErr } = await supabase
+              .from('productos')
+              .update({ imagenes_locales: imagenesLocales, imagenes_urls: [] })
+              .eq('id', nuevoProducto.id);
+            if (!upErr) uploadOk = true;
+          } else {
+            console.error('[nuevo producto] upload error:', json.error);
+          }
+        } catch (uploadErr) {
+          console.error('[nuevo producto] upload fetch error:', uploadErr);
         }
-        imagenesLocales = json.imagenes_locales || [];
-        const { error: upErr } = await supabase
-          .from('productos')
-          .update({
-            imagenes_locales: imagenesLocales,
-            imagenes_urls: [],
-          })
-          .eq('id', nuevoProducto.id);
-        if (upErr) throw upErr;
+
+        if (!uploadOk) {
+          // El producto quedó creado sin imágenes; llevamos al usuario a editarlo para que
+          // pueda añadir las fotos sin riesgo de crear un duplicado.
+          toast.error(
+            `Producto creado (ID ${productoRecienCreado}), pero las imágenes no se pudieron subir. Redirigiendo a edición...`,
+            { duration: 5000 },
+          );
+          setTimeout(() => router.push(`/admin/productos/editar/${productoRecienCreado}`), 2000);
+          return;
+        }
       }
 
+      // --- Color ---
       const { error: colorError } = await supabase
         .from('producto_colores')
-        .insert([{
-          producto_id: nuevoProducto.id,
-          color_id: colorSeleccionado
-        }]);
+        .insert([{ producto_id: nuevoProducto.id, color_id: colorSeleccionado }]);
 
       if (colorError) throw colorError;
 
+      // --- Tallas (talla_id como entero para coincidir con el tipo de la columna) ---
       const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
         producto_id: nuevoProducto.id,
-        talla_id: tallaId,
-        stock_talla: Number(stockVal || 0)
+        talla_id: parseInt(tallaId, 10),
+        stock_talla: Number(stockVal || 0),
       }));
 
       const { error: tallasError } = await supabase
@@ -273,7 +284,17 @@ export default function NuevoProductoPage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
-      toast.error(error.message || 'Error al publicar');
+      // Si el producto ya fue creado, redirigir a edición en lugar de dejar el formulario
+      // en estado que permita un segundo submit (y un duplicado).
+      if (productoRecienCreado) {
+        toast.error(
+          `Error al completar el producto. Redirigiendo a edición (ID ${productoRecienCreado})...`,
+          { duration: 5000 },
+        );
+        setTimeout(() => router.push(`/admin/productos/editar/${productoRecienCreado}`), 2000);
+      } else {
+        toast.error(error.message || 'Error al publicar');
+      }
     } finally {
       setLoading(false);
     }

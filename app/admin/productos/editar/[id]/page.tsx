@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
-import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Ruler, Hash } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Ruler, Hash, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { uploadConReintento } from '@/app/lib/upload-with-retry';
 
 export default function EditarProductoPage() {
   const params = useParams();
@@ -24,6 +25,8 @@ export default function EditarProductoPage() {
   const [imagenesUrls, setImagenesUrls] = useState<string[]>([]);
   const [nuevasImagenes, setNuevasImagenes] = useState<File[]>([]);
   const [previsualizaciones, setPrevisualizaciones] = useState<string[]>([]);
+  // Índices de imagenesLocales que no cargan (404 / archivo no disponible en este equipo)
+  const [rotasLocales, setRotasLocales] = useState<Set<number>>(new Set());
   
   const [tallasDB, setTallasDB] = useState<any[]>([]);
   const [categoriasDB, setCategoriasDB] = useState<any[]>([]);
@@ -254,9 +257,8 @@ export default function EditarProductoPage() {
         const indiceInicio = localesMut.length > 0 ? localesMut.length + 1 : 1;
         fd.append('indice_inicio', String(indiceInicio));
         nuevasImagenes.forEach((f) => fd.append('files', f));
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (!res.ok || !json.success) {
+        const { ok, json } = await uploadConReintento(fd);
+        if (!ok || !json.success) {
           throw new Error(json.error || 'Error al subir nuevas imágenes');
         }
         localesMut = [...localesMut, ...(json.imagenes_locales || [])];
@@ -355,22 +357,75 @@ export default function EditarProductoPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
             <h2 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Fotos</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {imagenesLocales.map((img, i) => (
-                <div key={`loc-${i}-${img.thumb}`} className="relative aspect-square">
-                  <img src={img.thumb} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" />
-                  <button
-                    type="button"
-                    onClick={() => setImagenesLocales(imagenesLocales.filter((_, j) => j !== i))}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"
-                  >
-                    <X size={12} strokeWidth={3} />
-                  </button>
+
+            {/* Banner de advertencia cuando hay imágenes no disponibles en este equipo */}
+            {rotasLocales.size > 0 && (
+              <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-amber-700">
+                    {rotasLocales.size} {rotasLocales.size === 1 ? 'imagen no disponible' : 'imágenes no disponibles'} en este dispositivo
+                  </p>
+                  <p className="text-[10px] text-amber-600 mt-0.5">
+                    Elimínalas con la ✕ y sube las fotos nuevamente para que queden guardadas aquí.
+                  </p>
                 </div>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Quitar automáticamente todas las imágenes rotas
+                    setImagenesLocales(prev => prev.filter((_, i) => !rotasLocales.has(i)));
+                    setRotasLocales(new Set());
+                  }}
+                  className="text-[9px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap shrink-0"
+                >
+                  Limpiar rotas
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-3">
+              {imagenesLocales.map((img, i) => {
+                const rota = rotasLocales.has(i);
+                return (
+                  <div key={`loc-${i}-${img.thumb}`} className={`relative aspect-square ${rota ? 'ring-2 ring-amber-400 rounded-2xl' : ''}`}>
+                    <img
+                      src={img.thumb}
+                      className="w-full h-full object-cover rounded-2xl border shadow-inner"
+                      alt="Prenda"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/placeholder.svg';
+                        setRotasLocales(prev => new Set([...prev, i]));
+                      }}
+                    />
+                    {rota && (
+                      <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none rounded-2xl bg-amber-400/10">
+                        <span className="text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                          No disponible
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagenesLocales(imagenesLocales.filter((_, j) => j !== i));
+                        // Reindexar el set de rotas después de eliminar
+                        setRotasLocales(prev => {
+                          const next = new Set<number>();
+                          prev.forEach(idx => { if (idx !== i) next.add(idx > i ? idx - 1 : idx); });
+                          return next;
+                        });
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                  </div>
+                );
+              })}
               {imagenesUrls.map((url, i) => (
                 <div key={`old-${i}`} className="relative aspect-square">
-                  <img src={url} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" />
+                  <img src={url} className="w-full h-full object-cover rounded-2xl border shadow-inner" alt="Prenda" onError={(e) => { e.currentTarget.src = '/images/placeholder.svg'; }} />
                   <button type="button" onClick={() => setImagenesUrls(imagenesUrls.filter(u => u !== url))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"><X size={12} strokeWidth={3} /></button>
                 </div>
               ))}

@@ -7,7 +7,7 @@ export type ProductoImagenes = {
   imagen_url?: string | null;
 };
 
-export const PLACEHOLDER_IMAGE = '/images/placeholder.webp';
+export const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
 function parseImagenesLocales(raw: unknown): ImagenLocal[] {
   if (raw == null) return [];

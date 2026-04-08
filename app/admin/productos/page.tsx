@@ -271,6 +271,7 @@ export default function GestionProductosPage() {
                         alt={producto.nombre}
                         loading="lazy"
                         decoding="async"
+                        onError={(e) => { e.currentTarget.src = '/images/placeholder.svg'; }}
                       />
                       {producto.stock <= 0 && (
                         <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">

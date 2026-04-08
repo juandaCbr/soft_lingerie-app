@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
       { pathname: '/uploads/**', search: '' },
       { pathname: '/logo.jpg', search: '' },
     ],
+    // Permite SVG en next/image (nuestro placeholder /images/placeholder.svg).
+    // La CSP restringe ejecución de scripts dentro del SVG.
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

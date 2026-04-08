@@ -9,27 +9,72 @@ export type ProductoImagenes = {
 
 export const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
-function parseImagenesLocales(raw: unknown): ImagenLocal[] {
-  if (raw == null) return [];
-  if (Array.isArray(raw)) {
-    return raw.filter(
-      (x): x is ImagenLocal =>
-        typeof x === 'object' &&
-        x !== null &&
-        typeof (x as ImagenLocal).thumb === 'string' &&
-        typeof (x as ImagenLocal).detail === 'string' &&
-        Boolean((x as ImagenLocal).thumb.trim()) &&
-        Boolean((x as ImagenLocal).detail.trim()),
-    );
+function asTrimmedString(v: unknown): string {
+  if (typeof v !== 'string') return '';
+  return v.trim();
+}
+
+/** Rutas relativas de app: asegura `/` inicial para que el navegador resuelva bien en admin y tienda. */
+function normalizePublicPath(url: string): string {
+  const s = url.trim();
+  if (!s) return s;
+  if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('//')) return s;
+  if (s.startsWith('/')) return s;
+  return `/${s}`;
+}
+
+/**
+ * Convierte un elemento suelto del JSON de Supabase al par { thumb, detail }.
+ * Tolera: strings (ruta única), solo thumb, solo detail, claves alternativas (Thumb, url…).
+ */
+function coerceLocalEntry(entry: unknown): ImagenLocal | null {
+  if (entry == null) return null;
+  if (typeof entry === 'string') {
+    const s = normalizePublicPath(entry);
+    if (!s) return null;
+    return { thumb: s, detail: s };
   }
+  if (typeof entry === 'object') {
+    const o = entry as Record<string, unknown>;
+    const thumb = normalizePublicPath(asTrimmedString(o.thumb ?? o.Thumb ?? o.thumbnail));
+    const detail = normalizePublicPath(asTrimmedString(o.detail ?? o.Detail ?? o.full ?? o.large));
+    const url = normalizePublicPath(asTrimmedString(o.url ?? o.src));
+    let t = thumb || url;
+    let d = detail || url;
+    if (!t && d) t = d;
+    if (!d && t) d = t;
+    if (!t && !d) return null;
+    return { thumb: t, detail: d };
+  }
+  return null;
+}
+
+/**
+ * Normaliza `imagenes_locales` tal como puede venir de PostgREST (jsonb, string JSON, formas legacy).
+ * Usar en admin (editar/crear) y misma lógica interna que el catálogo.
+ */
+export function normalizeImagenesLocales(raw: unknown): ImagenLocal[] {
+  if (raw == null) return [];
   if (typeof raw === 'string') {
+    const s = raw.trim();
+    if (!s) return [];
     try {
-      return parseImagenesLocales(JSON.parse(raw));
+      return normalizeImagenesLocales(JSON.parse(s));
     } catch {
       return [];
     }
   }
-  return [];
+  if (!Array.isArray(raw)) return [];
+  const out: ImagenLocal[] = [];
+  for (const item of raw) {
+    const c = coerceLocalEntry(item);
+    if (c) out.push(c);
+  }
+  return out;
+}
+
+function parseImagenesLocales(raw: unknown): ImagenLocal[] {
+  return normalizeImagenesLocales(raw);
 }
 
 /** Cantidad de fotos disponibles (0 si solo habría placeholder). */

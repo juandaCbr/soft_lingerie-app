@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Rul
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
+import { normalizeImagenesLocales } from '@/app/lib/image-helper';
 
 export default function EditarProductoPage() {
   const params = useParams();
@@ -36,7 +37,10 @@ export default function EditarProductoPage() {
   const [esCategoriaManual, setEsCategoriaManual] = useState(false);
 
   const cargarProducto = useCallback(async () => {
-    if (!idProducto) return;
+    if (!idProducto) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data: catData, error: catError } = await supabase.from('categorias').select('*').order('nombre');
       let currentCats = [];
@@ -63,23 +67,8 @@ export default function EditarProductoPage() {
         setCategoria(data.categoria || "");
         setDescripcion(data.descripcion || ""); 
         setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
-        let locales: { thumb: string; detail: string }[] = [];
-        const raw = data.imagenes_locales as unknown;
-        if (Array.isArray(raw)) {
-          locales = raw.filter(
-            (x): x is { thumb: string; detail: string } =>
-              typeof x === 'object' &&
-              x !== null &&
-              typeof (x as { thumb: string }).thumb === 'string' &&
-              typeof (x as { detail: string }).detail === 'string',
-          );
-        } else if (typeof raw === 'string' && raw.trim()) {
-          try {
-            const p = JSON.parse(raw);
-            if (Array.isArray(p)) locales = p;
-          } catch { /* ignore */ }
-        }
-        setImagenesLocales(locales);
+        setImagenesLocales(normalizeImagenesLocales(data.imagenes_locales));
+        setRotasLocales(new Set());
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
@@ -246,7 +235,7 @@ export default function EditarProductoPage() {
           throw new Error(rj.error || 'Error al renombrar carpeta de imágenes');
         }
         if (rj.changed && Array.isArray(rj.imagenes_locales)) {
-          localesMut = rj.imagenes_locales;
+          localesMut = normalizeImagenesLocales(rj.imagenes_locales);
         }
       }
 
@@ -261,7 +250,7 @@ export default function EditarProductoPage() {
         if (!ok || !json.success) {
           throw new Error(json.error || 'Error al subir nuevas imágenes');
         }
-        localesMut = [...localesMut, ...(json.imagenes_locales || [])];
+        localesMut = [...localesMut, ...normalizeImagenesLocales(json.imagenes_locales || [])];
       }
 
       const listaFinalUrls = [...imagenesUrls];

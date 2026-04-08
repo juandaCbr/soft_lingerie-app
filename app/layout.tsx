@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import DiscountModal from "@/components/DiscountModal";
+// import DiscountModal from "@/components/DiscountModal"; // Desactivado: popup de bienvenida/descuento al cargar
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
@@ -58,7 +58,7 @@ export default function RootLayout({
         <CartProvider>
           <Toaster position="bottom-right" />
           <Navbar />
-          <DiscountModal />
+          {/* <DiscountModal /> */}
           
           {/* AJUSTE GLOBAL: 
               pt-16 (para móviles) y md:pt-20 (para desktop) 

@@ -118,6 +118,13 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   const imagenes = Array.from({ length: imageCount }, (_, i) =>
     getProductoImage(varianteActiva, i, 'detail'),
   );
+
+  // Variante completamente agotada: sin tallas asignadas con stock > 0,
+  // o columna stock = 0 cuando no hay tallas configuradas.
+  const isVarianteAgotada =
+    tallasDisponibles.length === 0
+      ? Number(varianteActiva.stock ?? 0) <= 0
+      : tallasDisponibles.every((t: any) => t.stock <= 0);
   const canonicalProductUrl = `https://soft-lingerie-app.vercel.app/productos/${slugify(varianteActiva.nombre)}-${varianteActiva.id}`;
 
   // Datos estructurados JSON-LD para Google (Rich Snippets)
@@ -178,12 +185,22 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority={index === 0}
-                  className={`object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'}`}
+                  className={`object-cover transition-opacity duration-700 ease-in-out ${index === currentImg ? 'opacity-100' : 'opacity-0'} ${isVarianteAgotada ? 'grayscale-[0.5]' : ''}`}
                   alt={varianteActiva.nombre}
                   onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
                 />
               );
             })}
+
+            {/* Overlay agotado sobre la galería */}
+            {isVarianteAgotada && (
+              <div className="absolute inset-0 z-20 bg-white/30 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                <div className="bg-[#4a1d44] text-white px-8 py-3 rounded-full shadow-2xl transform -rotate-12 border-2 border-white/20">
+                  <span className="text-xs md:text-sm font-black uppercase tracking-[0.35em]">Agotado</span>
+                </div>
+              </div>
+            )}
+
             <div className="absolute bottom-5 left-0 right-0 flex justify-center gap-1.5 z-10">
               {imagenes.map((_: string, i: number) => (
                 <div key={i} className={`h-[2px] rounded-full transition-all duration-500 ${i === currentImg ? 'w-8 bg-white' : 'w-3 bg-white/40'}`} />
@@ -241,14 +258,27 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                     if (nombreBajo === 'lila') colorHex = '#D8B4FE';
                     if (nombreBajo === 'amarillo pastel') colorHex = '#FEF9C3';
 
+                    // Variante sin stock en ninguna de sus tallas
+                    const vTallas = tallasPorVarianteIniciales[String(v.id)] || [];
+                    const vAgotada =
+                      vTallas.length === 0
+                        ? Number(v.stock ?? 0) <= 0
+                        : vTallas.every((t: any) => t.stock <= 0);
+
                     return (
-                      <button
-                        key={v.id}
-                        onClick={() => handleVarianteChange(v)}
-                        className={`relative w-9 h-9 rounded-full border transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20' : 'hover:scale-110 border-black/10'}`}
-                        style={{ backgroundColor: colorHex }}
-                        title={color?.nombre}
-                      />
+                      <div key={v.id} className="relative">
+                        <button
+                          onClick={() => handleVarianteChange(v)}
+                          className={`relative w-9 h-9 rounded-full border transition-all duration-300 ${isSelected ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20' : 'hover:scale-110 border-black/10'} ${vAgotada ? 'opacity-40' : ''}`}
+                          style={{ backgroundColor: colorHex }}
+                          title={`${color?.nombre ?? ''}${vAgotada ? ' (Agotado)' : ''}`}
+                        />
+                        {vAgotada && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-[130%] h-[1.5px] bg-gray-500/60 -rotate-45 rounded-full" />
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -327,10 +357,14 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             <button
               onClick={handleAddToCart}
               disabled={!tallaSeleccionada || tallaSeleccionada.stock <= 0}
-              className="w-full bg-[#4a1d44] text-white py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl hover:bg-[#5c2454] active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+              className={`w-full py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all disabled:pointer-events-none ${
+                isVarianteAgotada
+                  ? 'bg-gray-100 text-gray-400 shadow-none'
+                  : 'bg-[#4a1d44] text-white hover:bg-[#5c2454] disabled:opacity-30'
+              }`}
             >
               <ShoppingCart size={18} />
-              AÑADIR AL CARRITO
+              {isVarianteAgotada ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
             </button>
           </div>
 

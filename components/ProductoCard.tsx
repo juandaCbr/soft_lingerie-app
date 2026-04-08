@@ -236,10 +236,17 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
           {/* BOTÓN ALINEADO SIEMPRE ABAJO */}
           <button
             onClick={handleAddToCart}
-            className="w-full bg-[#4a1d44] text-white py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 hover:bg-[#5d2555] transition-all duration-300 shadow-md active:scale-95 z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden"
+            disabled={isAgotado}
+            className={`w-full py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 transition-all duration-300 shadow-md z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden ${
+              isAgotado
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                : 'bg-[#4a1d44] text-white hover:bg-[#5d2555] active:scale-95'
+            }`}
           >
             <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
-            <span className="whitespace-nowrap">AÑADIR AL CARRITO</span>
+            <span className="whitespace-nowrap">
+              {isAgotado ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
+            </span>
           </button>
         </div>
       </div>

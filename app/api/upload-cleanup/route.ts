@@ -22,7 +22,7 @@ export const runtime = 'nodejs';
 function uploadRootDir(): string {
   const raw = process.env.UPLOAD_DIR?.trim() || 'uploads';
   const normalized = raw.replace(/^\.\//, '');
-  return path.join(process.cwd(), normalized);
+  return path.resolve(normalized);
 }
 
 function basenameFromPublicPath(u: string): string | null {

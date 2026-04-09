@@ -18,7 +18,9 @@ type FileError = { index: number; message: string };
 function uploadRootDir(): string {
   const raw = process.env.UPLOAD_DIR?.trim() || 'uploads';
   const normalized = raw.replace(/^\.\//, '');
-  return path.join(process.cwd(), normalized);
+  // path.resolve maneja rutas absolutas (servidor VPS: UPLOAD_DIR=/home/…) y relativas (local: uploads).
+  // path.join en cambio concatena aunque el segundo argumento sea absoluto, produciendo rutas incorrectas.
+  return path.resolve(normalized);
 }
 
 /**

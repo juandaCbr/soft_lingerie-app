@@ -12,7 +12,8 @@ import {
   DollarSign,
   Award,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Palette,
 } from 'lucide-react';
 
 // Interfaz para el mapeo de registros de ventas desde Supabase
@@ -202,6 +203,35 @@ export default function AdminDashboard() {
               Ver Reportes <ArrowRight size={12} />
             </div>
           </Link>
+        </div>
+
+        {/* Fila de herramientas del catálogo — espacio para hasta 4 tarjetas en pantallas grandes */}
+        <div className="mt-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-25 mb-4 ml-1">
+            Configuración del Catálogo
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              href="/admin/colores"
+              className="group bg-white p-6 rounded-[2rem] border border-[#4a1d44]/5 hover:border-[#4a1d44]/30 transition-all flex flex-col items-center text-center hover:shadow-md"
+            >
+              <div className="w-12 h-12 bg-[#fdf8f6] rounded-2xl flex items-center justify-center text-[#4a1d44] mb-4 group-hover:scale-110 transition-transform">
+                <Palette size={24} strokeWidth={1.5} />
+              </div>
+              <h2 className="text-base font-bold text-[#4a1d44] mb-1">Colores</h2>
+              <p className="text-[10px] text-[#4a1d44]/50">Crea y gestiona la paleta de colores.</p>
+            </Link>
+
+            {/* Placeholder futuras opciones */}
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="bg-white/40 rounded-[2rem] border border-dashed border-[#4a1d44]/8 flex items-center justify-center min-h-[120px]"
+              >
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-15">Próximamente</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Indicador de ventas del dia actual */}

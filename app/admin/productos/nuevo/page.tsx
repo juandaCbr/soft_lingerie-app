@@ -33,7 +33,7 @@ export default function NuevoProductoPage() {
 
   useEffect(() => {
     const fetchDatos = async () => {
-      const { data: colores } = await supabase.from('colores').select('*').order('nombre');
+      const { data: colores } = await supabase.from('colores').select('*').eq('activo', true).order('nombre');
       if (colores) setColoresDB(colores);
 
       const { data: tallas } = await supabase.from('tallas').select('*').order('orden');

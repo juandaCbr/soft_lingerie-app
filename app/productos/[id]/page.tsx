@@ -11,8 +11,11 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ISR: Revalidar cada 60 segundos
-export const revalidate = 60;
+/**
+ * Datos siempre frescos desde Supabase (imagenes_locales cambia al editar en admin).
+ * La revalidación explícita sigue en POST /api/admin/revalidate-display tras guardar.
+ */
+export const dynamic = 'force-dynamic';
 
 const PRODUCTO_BASE_SELECT = `
   id,

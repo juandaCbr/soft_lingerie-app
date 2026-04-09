@@ -1,4 +1,5 @@
-import { mkdir, readdir, rm, writeFile } from 'fs/promises';
+import { randomBytes } from 'crypto';
+import { mkdir, rm, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { NextResponse, type NextRequest } from 'next/server';
@@ -164,11 +165,14 @@ export async function POST(request: NextRequest) {
     const publicBase = `/uploads/productos/${folderName}`;
     const imagenesLocales: { thumb: string; detail: string }[] = [];
 
-    // indice_inicio permite añadir fotos sin pisar las ya guardadas (flujo editar).
+    // indice_inicio = posición lógica (1,2,3…). Cada subida añade un sufijo único para que la URL
+    // en BD cambie siempre; así se evita caché del navegador/next/image al "reemplazar" una foto
+    // en el mismo índice (antes se sobrescribía el mismo nombre de archivo).
     for (let i = 0; i < buffers.length; i++) {
       const n = indiceInicio + i;
-      const thumbName = `${slug}-${n}-thumb.webp`;
-      const detailName = `${slug}-${n}-detail.webp`;
+      const uniq = randomBytes(4).toString('hex');
+      const thumbName = `${slug}-${n}-${uniq}-thumb.webp`;
+      const detailName = `${slug}-${n}-${uniq}-detail.webp`;
       const buffer = buffers[i]!;
 
       try {

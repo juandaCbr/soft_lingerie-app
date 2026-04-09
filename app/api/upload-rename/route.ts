@@ -17,6 +17,16 @@ function uploadRootDir(): string {
   return path.join(process.cwd(), normalized);
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Índice de foto N en `slug-N-thumb.webp` o `slug-N-<hash>-thumb.webp`. */
+function extractSlot(filename: string, slug: string): number {
+  const m = filename.match(new RegExp(`^${escapeRegex(slug)}-(\\d+)-`));
+  return m ? parseInt(m[1], 10) : 99999;
+}
+
 type Body = {
   producto_id: string | number;
   nombre_anterior: string;
@@ -86,9 +96,10 @@ export async function POST(request: Request) {
     const thumbs = inner
       .filter((f) => f.includes('-thumb.webp'))
       .sort((a, b) => {
-        const na = parseInt(a.match(/-(\d+)-thumb\.webp$/)?.[1] || '0', 10);
-        const nb = parseInt(b.match(/-(\d+)-thumb\.webp$/)?.[1] || '0', 10);
-        return na - nb;
+        const na = extractSlot(a, newSlug);
+        const nb = extractSlot(b, newSlug);
+        if (na !== nb) return na - nb;
+        return a.localeCompare(b);
       });
 
     const publicBase = `/uploads/productos/${newSlug}-${id}`;

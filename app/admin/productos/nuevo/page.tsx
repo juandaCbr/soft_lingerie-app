@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ruler, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
+import { slugify } from '@/app/lib/utils';
 
 export default function NuevoProductoPage() {
   const router = useRouter();
@@ -278,6 +279,18 @@ export default function NuevoProductoPage() {
         .insert(insertTallas);
 
       if (tallasError) throw tallasError;
+
+      try {
+        const productPath = `/productos/${slugify(formData.nombre.trim())}-${nuevoProducto.id}`;
+        await fetch('/api/admin/revalidate-display', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ productPath }),
+        });
+      } catch (revErr) {
+        console.warn('[nuevo producto] revalidate-display:', revErr);
+      }
 
       toast.success('¡Producto publicado con éxito! Formulario listo para el siguiente.', { duration: 4000 });
       resetFormulario();

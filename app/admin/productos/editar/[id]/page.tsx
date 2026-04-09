@@ -8,6 +8,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { normalizeImagenesLocales } from '@/app/lib/image-helper';
+import { slugify } from '@/app/lib/utils';
 
 export default function EditarProductoPage() {
   const params = useParams();
@@ -323,6 +324,18 @@ export default function EditarProductoPage() {
       setNombreInicial(nombre.trim());
       setImagenesLocales(localesMut);
 
+      try {
+        const productPath = `/productos/${slugify(nombre.trim())}-${cleanId}`;
+        await fetch('/api/admin/revalidate-display', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ productPath }),
+        });
+      } catch (revErr) {
+        console.warn('[editar producto] revalidate-display:', revErr);
+      }
+
       router.push("/admin/productos");
       router.refresh();
     } catch (error: any) {
@@ -379,6 +392,7 @@ export default function EditarProductoPage() {
                 return (
                   <div key={`loc-${i}-${img.thumb}`} className={`relative aspect-square ${rota ? 'ring-2 ring-amber-400 rounded-2xl' : ''}`}>
                     <img
+                      key={img.thumb}
                       src={img.thumb}
                       className="w-full h-full object-cover rounded-2xl border shadow-inner"
                       alt="Prenda"

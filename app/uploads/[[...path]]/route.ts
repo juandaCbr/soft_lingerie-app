@@ -50,7 +50,9 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        // Sin `immutable`: al reemplazar una imagen en el mismo slot, la URL en BD cambia (sufijo único
+        // en /api/upload); si algún cliente aún pidiera la misma ruta, puede revalidar.
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
       },
     });
   } catch {

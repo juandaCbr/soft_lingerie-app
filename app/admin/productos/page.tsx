@@ -2,14 +2,15 @@
 
 /**
  * Panel de inventario: listado de productos, búsqueda/filtros, activar-ocultar en tienda,
- * y eliminación delegada a /api/admin/producto-delete (validaciones + carpeta uploads).
+ * duplicación vía /api/admin/producto-duplicate, y eliminación delegada a /api/admin/producto-delete.
  * La lista se sincroniza con Supabase Realtime en la tabla `productos` para reflejar cambios sin recargar.
  */
 
 import { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
 import Link from 'next/link';
-import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getProductoImage } from '@/app/lib/image-helper';
 
@@ -27,6 +28,7 @@ type Producto = {
 };
 
 export default function GestionProductosPage() {
+  const router = useRouter();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
@@ -36,6 +38,7 @@ export default function GestionProductosPage() {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [productoAEliminar, setProductoAEliminar] = useState<{ id: string, nombre: string } | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
 
   // Carga inicial + suscripción Realtime: otra pestaña o el webhook de pago pueden mutar `productos`.
   useEffect(() => {
@@ -156,6 +159,38 @@ export default function GestionProductosPage() {
   }, [productos, busqueda, filtroStock]);
 
   // Alterna el estado de visibilidad del producto en la tienda
+  /**
+   * Copia producto en servidor (sin fotos, color ni tallas; oculto). Abre edición del nuevo registro.
+   */
+  const duplicarProducto = async (id: string) => {
+    setDuplicandoId(id);
+    try {
+      const res = await fetch('/api/admin/producto-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ producto_id: id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success || json.nuevo_id == null) {
+        const msg =
+          typeof json.error === 'string'
+            ? json.error
+            : res.status === 401 || res.status === 403
+              ? 'No tienes permiso para duplicar o la sesión expiró.'
+              : 'No se pudo duplicar el producto.';
+        toast.error(msg);
+        return;
+      }
+      toast.success('Copia creada (oculta). Completa fotos, color y stock en edición.');
+      router.push(`/admin/productos/editar/${json.nuevo_id}`);
+    } catch (e) {
+      console.error(e);
+      toast.error('Error de red al duplicar.');
+    } finally {
+      setDuplicandoId(null);
+    }
+  };
+
   const toggleActivo = async (id: string, estadoActual: boolean) => {
     try {
       const { error } = await supabase
@@ -318,6 +353,20 @@ export default function GestionProductosPage() {
                     >
                       <Edit3 size={18} />
                     </Link>
+
+                    <button
+                      type="button"
+                      title="Duplicar (sin fotos; queda oculto hasta que completes edición)"
+                      disabled={duplicandoId === producto.id}
+                      onClick={() => duplicarProducto(producto.id)}
+                      className="p-3 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors disabled:opacity-50"
+                    >
+                      {duplicandoId === producto.id ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <Copy size={18} />
+                      )}
+                    </button>
 
                     <button
                       onClick={() => abrirModalEliminar(producto.id, producto.nombre)}

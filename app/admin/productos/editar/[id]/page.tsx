@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
-import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Ruler, Hash, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, X, Plus, ChevronDown, Image as ImageIcon, Ruler, Hash, AlertTriangle, Palette } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
@@ -36,6 +36,9 @@ export default function EditarProductoPage() {
   const [stocksPorTalla, setStocksPorTalla] = useState<{[key: string]: number}>({});
   
   const [esCategoriaManual, setEsCategoriaManual] = useState(false);
+  const [grupoId, setGrupoId] = useState("");
+  const [coloresDB, setColoresDB] = useState<any[]>([]);
+  const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
 
   const cargarProducto = useCallback(async () => {
     if (!idProducto) {
@@ -70,11 +73,23 @@ export default function EditarProductoPage() {
         setImagenesUrls(Array.isArray(data.imagenes_urls) ? data.imagenes_urls : []);
         setImagenesLocales(normalizeImagenesLocales(data.imagenes_locales));
         setRotasLocales(new Set());
+        setGrupoId(data.grupo_id != null && data.grupo_id !== '' ? String(data.grupo_id) : '');
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
         }
       }
+
+      const { data: colores } = await supabase.from('colores').select('*').eq('activo', true).order('nombre');
+      if (colores) setColoresDB(colores);
+
+      const { data: colorRows } = await supabase
+        .from('producto_colores')
+        .select('color_id')
+        .eq('producto_id', idProducto)
+        .limit(1);
+      const cid = colorRows?.[0]?.color_id;
+      setColorSeleccionado(cid != null ? String(cid) : '');
 
       const { data: tallas } = await supabase.from('tallas').select('*').order('orden');
       if (tallas) setTallasDB(tallas);
@@ -204,6 +219,10 @@ export default function EditarProductoPage() {
       toast.error("Selecciona al menos una talla");
       return;
     }
+    if (!colorSeleccionado) {
+      toast.error("Selecciona un color");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -265,6 +284,7 @@ export default function EditarProductoPage() {
         stock: stockTotal,
         categoria,
         descripcion,
+        grupo_id: grupoId.trim() || null,
         imagenes_urls: listaFinalUrls,
         imagenes_locales: localesMut.length > 0 ? localesMut : null,
       }).eq('id', cleanId);
@@ -311,11 +331,19 @@ export default function EditarProductoPage() {
           .insert(insertTallas);
 
         if (tallasError) throw tallasError;
+
+        const { error: delColorErr } = await supabase.from('producto_colores').delete().eq('producto_id', cleanId);
+        if (delColorErr) throw delColorErr;
+
+        const { error: colorErr } = await supabase
+          .from('producto_colores')
+          .insert([{ producto_id: cleanId, color_id: colorSeleccionado }]);
+        if (colorErr) throw colorErr;
         
         toast.success("¡Producto e inventario actualizados!");
       } catch (tallaErr: any) {
-        console.error("Error en tallas:", tallaErr);
-        toast.error("Precio actualizado, pero hubo un error de permisos al guardar el desglose de tallas. Revisa el SQL de RLS.");
+        console.error("Error en tallas/color:", tallaErr);
+        toast.error("Datos guardados parcialmente: revisa permisos (tallas/color) en RLS o inténtalo de nuevo.");
       }
 
       previsualizaciones.forEach((u) => URL.revokeObjectURL(u));
@@ -460,6 +488,41 @@ export default function EditarProductoPage() {
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner" 
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de grupo (variantes por color)</label>
+                <div className="relative">
+                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <input
+                    type="text"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm border border-transparent focus:border-[#4a1d44]/10 transition-colors"
+                    placeholder="Ej: conjunto-seda"
+                    value={grupoId}
+                    onChange={(e) => setGrupoId(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
+                <div className="relative">
+                  <Palette className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
+                  <select
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm appearance-none cursor-pointer border border-transparent focus:border-[#4a1d44]/10 transition-colors"
+                    value={colorSeleccionado}
+                    onChange={(e) => setColorSeleccionado(e.target.value)}
+                  >
+                    <option value="">Elegir color…</option>
+                    {coloresDB.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" size={18} />
+                </div>
+              </div>
             </div>
 
             {/* TALLAS Y STOCKS ESPECÍFICOS */}

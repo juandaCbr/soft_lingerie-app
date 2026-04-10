@@ -13,6 +13,9 @@ import Link from 'next/link';
 import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getProductoImage } from '@/app/lib/image-helper';
+import { adminSlicePage } from '@/app/lib/admin-pagination';
+import { useAdminListPagination } from '@/app/hooks/useAdminListPagination';
+import { AdminPaginationBar } from '@/components/admin/AdminPaginationBar';
 
 // Definicion de la estructura del producto basada en la base de datos
 type Producto = {
@@ -158,7 +161,17 @@ export default function GestionProductosPage() {
     });
   }, [productos, busqueda, filtroStock]);
 
-  // Alterna el estado de visibilidad del producto en la tienda
+  const { page, setPage, totalPages, pageSize } = useAdminListPagination(
+    productosFiltrados.length,
+    busqueda,
+    filtroStock,
+  );
+
+  const productosPagina = useMemo(
+    () => adminSlicePage(productosFiltrados, page, pageSize),
+    [productosFiltrados, page, pageSize],
+  );
+
   /**
    * Copia producto en servidor (sin fotos, color ni tallas; oculto). Abre edición del nuevo registro.
    */
@@ -279,8 +292,9 @@ export default function GestionProductosPage() {
             <h3 className="text-xl font-bold text-[#4a1d44]">{busqueda ? "No hay resultados" : "No hay prendas"}</h3>
           </div>
         ) : (
-          <div className="grid gap-4">
-            {productosFiltrados.map((producto) => {
+          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {productosPagina.map((producto) => {
               const miniatura = getProductoImage(producto, 0, 'thumb');
 
               const nombreCategoria = typeof producto.categoria === 'object' && producto.categoria !== null
@@ -290,12 +304,12 @@ export default function GestionProductosPage() {
               return (
                 <div
                   key={producto.id}
-                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 100px' }}
-                  className={`bg-white p-4 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col md:flex-row md:items-center gap-4 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''} ${producto.stock <= 0 ? 'border-red-200' : ''}`}
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 120px' }}
+                  className={`bg-white p-4 sm:p-5 rounded-[2.5rem] border border-[#4a1d44]/10 shadow-sm flex flex-col gap-3 min-w-0 transition-all ${!producto.activo ? 'opacity-60 grayscale-[0.5]' : ''} ${producto.stock <= 0 ? 'border-red-200' : ''}`}
                 >
-                  {/* Informacion basica del producto */}
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="relative w-16 h-16 shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-black/5">
+                  {/* Fila 1: miniatura + nombre (sin flex-1 que estire el hueco en pantallas anchas) */}
+                  <div className="flex gap-3 sm:gap-4 items-start min-w-0">
+                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 bg-gray-50 rounded-2xl overflow-hidden shadow-sm border border-black/5">
                       <img
                         src={
                           miniatura.includes('supabase.co') && !miniatura.includes('?')
@@ -316,69 +330,87 @@ export default function GestionProductosPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-[#4a1d44] leading-tight">{producto.nombre}</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full w-fit mt-1">
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <span className="font-bold text-[#4a1d44] leading-snug line-clamp-2 sm:line-clamp-3 break-words">
+                        {producto.nombre}
+                      </span>
+                      <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full max-w-full truncate mt-1.5">
                         {nombreCategoria}
                       </span>
                     </div>
                   </div>
 
-                  {/* Metricas: Precio y Stock */}
-                  <div className="grid grid-cols-2 md:flex md:gap-8 border-y md:border-none border-[#4a1d44]/5 py-3 md:py-0 px-2 md:px-0 min-w-[200px]">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-gray-400">Precio</span>
-                      <span className="font-black text-[#4a1d44]">${Number(producto.precio).toLocaleString('es-CO')}</span>
+                  {/* Fila 2: móvil centrado; desde md fila con espacio entre métricas y acciones */}
+                  <div className="flex w-full flex-col gap-3 pt-3 border-t border-[#4a1d44]/5 items-center md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-4 md:gap-y-2">
+                    <div className="flex items-start justify-center gap-6 md:gap-8 shrink-0">
+                      <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
+                        <span className="text-[9px] uppercase font-bold text-gray-400">Precio</span>
+                        <span className="font-black text-[#4a1d44] text-sm tabular-nums">
+                          ${Number(producto.precio).toLocaleString('es-CO')}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
+                        <span className="text-[9px] uppercase font-bold text-gray-400">Stock</span>
+                        <span className={`font-bold text-sm tabular-nums ${producto.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>
+                          {producto.stock} uds.
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[9px] uppercase font-bold text-gray-400">Stock</span>
-                      <span className={`font-bold ${producto.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>
-                        {producto.stock} uds.
-                      </span>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 md:justify-end md:ml-auto">
+                      <button
+                        type="button"
+                        onClick={() => toggleActivo(producto.id, producto.activo)}
+                        className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 py-2.5 px-4 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+                      >
+                        {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
+                      </button>
+
+                      <Link
+                        href={`/admin/productos/editar/${producto.id}`}
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2.5 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors"
+                        title="Editar"
+                      >
+                        <Edit3 size={18} />
+                      </Link>
+
+                      <button
+                        type="button"
+                        title="Duplicar (sin fotos; queda oculto hasta que completes edición)"
+                        disabled={duplicandoId === producto.id}
+                        onClick={() => duplicarProducto(producto.id)}
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2.5 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors disabled:opacity-50"
+                      >
+                        {duplicandoId === producto.id ? (
+                          <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                          <Copy size={18} />
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => abrirModalEliminar(producto.id, producto.nombre)}
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2.5 bg-red-50 border border-red-100 rounded-2xl text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                        title="Eliminar"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Controles de accion */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleActivo(producto.id, producto.activo)}
-                      className={`flex-1 md:flex-none w-full md:w-[120px] flex items-center justify-center gap-2 py-3 px-5 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
-                    >
-                      {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
-                    </button>
-
-                    <Link
-                      href={`/admin/productos/editar/${producto.id}`}
-                      className="p-3 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors"
-                    >
-                      <Edit3 size={18} />
-                    </Link>
-
-                    <button
-                      type="button"
-                      title="Duplicar (sin fotos; queda oculto hasta que completes edición)"
-                      disabled={duplicandoId === producto.id}
-                      onClick={() => duplicarProducto(producto.id)}
-                      className="p-3 bg-white border border-[#4a1d44]/10 rounded-2xl text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors disabled:opacity-50"
-                    >
-                      {duplicandoId === producto.id ? (
-                        <Loader2 size={18} className="animate-spin" />
-                      ) : (
-                        <Copy size={18} />
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => abrirModalEliminar(producto.id, producto.nombre)}
-                      className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                    >
-                      <Trash2 size={18} />
-                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+          <AdminPaginationBar
+            totalItems={productosFiltrados.length}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            entityPlural="productos"
+            pageSize={pageSize}
+          />
+          </>
         )}
       </div>
 

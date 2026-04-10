@@ -40,3 +40,24 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* react-colorful: panel admin colores — tamaño táctil (pointer: coarse en JS añade .admin-colorful-touch) */
+.admin-colorful-touch .react-colorful {
+  width: 100% !important;
+  height: min(52vw, 280px) !important;
+  max-width: 100%;
+}
+
+.admin-colorful-touch .react-colorful__hue {
+  height: 36px !important;
+  border-radius: 0 0 10px 10px;
+}
+
+.admin-colorful-touch .react-colorful__saturation {
+  border-radius: 10px 10px 0 0;
+}
+
+.admin-colorful-touch .react-colorful__pointer {
+  width: 32px !important;
+  height: 32px !important;
+}

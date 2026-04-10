@@ -26,13 +26,13 @@ import {
   Bike,
   AlertTriangle,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Calendar
 } from 'lucide-react';
+import { adminSlicePage } from '@/app/lib/admin-pagination';
+import { useAdminListPagination } from '@/app/hooks/useAdminListPagination';
+import { AdminPaginationBar } from '@/components/admin/AdminPaginationBar';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Domicilio Local', 'Otro'];
-const PEDIDOS_POR_PAGINA = 20;
 
 /** Pedidos cuya `fecha` cae en el día calendario actual (zona horaria del navegador). */
 function esVentaDelDiaActual(fechaIso: string): boolean {
@@ -56,7 +56,6 @@ function AdminPedidosContent() {
   const [filtroLogistica, setFiltroLogistica] = useState('POR_DESPACHAR'); 
   const [filtroCiudad, setFiltroCiudad] = useState('Todas');
   const [ordenPrioridad, setOrdenPrioridad] = useState('Recientes');
-  const [pagina, setPagina] = useState(1);
 
   const [pedidoADespachar, setPedidoADespachar] = useState<any>(null);
   const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
@@ -188,28 +187,19 @@ function AdminPedidosContent() {
     }
   }, [soloPedidosHoy]);
 
-  useEffect(() => {
-    setPagina(1);
-  }, [filtroEstadoPago, filtroLogistica, filtroCiudad, ordenPrioridad, soloPedidosHoy]);
-
-  const totalPaginas = useMemo(
-    () => Math.max(1, Math.ceil(ventasFinales.length / PEDIDOS_POR_PAGINA)),
-    [ventasFinales.length]
+  const { page, setPage, totalPages, pageSize } = useAdminListPagination(
+    ventasFinales.length,
+    filtroEstadoPago,
+    filtroLogistica,
+    filtroCiudad,
+    ordenPrioridad,
+    soloPedidosHoy,
   );
 
-  useEffect(() => {
-    setPagina((p) => Math.min(p, totalPaginas));
-  }, [totalPaginas]);
-
-  const ventasPagina = useMemo(() => {
-    const inicio = (pagina - 1) * PEDIDOS_POR_PAGINA;
-    return ventasFinales.slice(inicio, inicio + PEDIDOS_POR_PAGINA);
-  }, [ventasFinales, pagina]);
-
-  const rangoTexto =
-    ventasFinales.length === 0
-      ? '0 pedidos'
-      : `${(pagina - 1) * PEDIDOS_POR_PAGINA + 1}–${Math.min(pagina * PEDIDOS_POR_PAGINA, ventasFinales.length)} de ${ventasFinales.length}`;
+  const ventasPagina = useMemo(
+    () => adminSlicePage(ventasFinales, page, pageSize),
+    [ventasFinales, page, pageSize],
+  );
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] font-playfair animate-pulse text-[#4a1d44]">Cargando gestión logística...</div>;
 
@@ -406,34 +396,14 @@ function AdminPedidosContent() {
           )}
         </div>
 
-        {ventasFinales.length > 0 && totalPaginas > 1 && (
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-7xl mx-auto pt-4 border-t border-[#4a1d44]/10">
-            <p className="text-[11px] font-bold text-[#4a1d44]/50 uppercase tracking-widest">
-              Mostrando {rangoTexto}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                disabled={pagina <= 1}
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-[#4a1d44]/15 text-[#4a1d44] text-[11px] font-black uppercase tracking-widest hover:bg-[#4a1d44]/5 disabled:opacity-40 disabled:pointer-events-none transition-all"
-              >
-                <ChevronLeft size={18} /> Anterior
-              </button>
-              <span className="text-xs font-black text-[#4a1d44] tabular-nums px-3 min-w-[5rem] text-center">
-                {pagina} / {totalPaginas}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
-                disabled={pagina >= totalPaginas}
-                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-[#4a1d44]/15 text-[#4a1d44] text-[11px] font-black uppercase tracking-widest hover:bg-[#4a1d44]/5 disabled:opacity-40 disabled:pointer-events-none transition-all"
-              >
-                Siguiente <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
+        <AdminPaginationBar
+          totalItems={ventasFinales.length}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          entityPlural="pedidos"
+          pageSize={pageSize}
+        />
       </div>
 
       {/* MODALS */}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
+import { HexColorPicker } from 'react-colorful';
 import { supabase } from '@/app/lib/supabase';
 import {
   ArrowLeft,
@@ -28,6 +29,31 @@ type Color = {
 
 const EMPTY_FORM = { nombre: '', hex: '#4a1d44' };
 
+function hexValid6(h: string): boolean {
+  return /^#[0-9A-Fa-f]{6}$/.test(h);
+}
+
+/** Evita valores incompletos al escribir HEX en el input; react-colorful exige #RRGGBB válido. */
+function hexParaPicker(h: string, fallback: string): string {
+  return hexValid6(h) ? h : fallback;
+}
+
+function subscribeCoarsePointer(cb: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const mq = window.matchMedia('(pointer: coarse)');
+  mq.addEventListener('change', cb);
+  return () => mq.removeEventListener('change', cb);
+}
+
+function getCoarsePointerSnapshot(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(pointer: coarse)').matches;
+}
+
+function usePrefersCoarsePointer(): boolean {
+  return useSyncExternalStore(subscribeCoarsePointer, getCoarsePointerSnapshot, () => false);
+}
+
 /** PostgREST / Realtime a veces entregan `activo` de forma inconsistente; forzamos booleano real. */
 function parseActivo(v: unknown): boolean {
   if (v === true) return true;
@@ -51,6 +77,7 @@ function ordenarPorNombre(list: Color[]): Color[] {
 }
 
 export default function GestionColoresPage() {
+  const pointerTactil = usePrefersCoarsePointer();
   const [colores, setColores] = useState<Color[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
@@ -293,29 +320,48 @@ export default function GestionColoresPage() {
               {modo === 'nuevo' ? '✦ Crear nuevo color' : '✦ Editar color'}
             </p>
 
-            {/* Swatch grande + campos */}
+            {/* Swatch + picker: react-colorful en táctil; nativo en ratón/lápiz fino */}
             <div className="flex flex-col sm:flex-row gap-5 items-start">
-              {/* Swatch / color picker */}
-              <label className="shrink-0 cursor-pointer group relative self-center sm:self-auto">
-                <div
-                  className="w-20 h-20 rounded-2xl shadow-md border-4 border-white ring-2 ring-[#4a1d44]/10 group-hover:ring-[#4a1d44]/30 transition-all"
-                  style={{ backgroundColor: form.hex }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl bg-black/10">
-                  <Palette size={22} className="text-white drop-shadow" />
+              {pointerTactil ? (
+                <div className="w-full sm:max-w-[min(100%,320px)] shrink-0 flex flex-col gap-3 self-stretch sm:self-auto">
+                  <div className="admin-colorful-touch touch-manipulation rounded-2xl overflow-hidden border border-[#4a1d44]/15 shadow-md bg-[#fdf8f6] p-2">
+                    <HexColorPicker
+                      color={hexParaPicker(form.hex, EMPTY_FORM.hex)}
+                      onChange={(hex) => setForm((f) => ({ ...f, hex }))}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 justify-center sm:justify-start">
+                    <div
+                      className="w-14 h-14 rounded-xl shadow-md border-4 border-white ring-2 ring-[#4a1d44]/10 shrink-0"
+                      style={{ backgroundColor: hexParaPicker(form.hex, EMPTY_FORM.hex) }}
+                    />
+                    <p className="text-[10px] font-bold text-[#4a1d44]/50 leading-snug max-w-[11rem]">
+                      Arrastra en el cuadro y en la franja de colores para afinar el tono.
+                    </p>
+                  </div>
                 </div>
-                <input
-                  type="color"
-                  value={form.hex}
-                  onChange={e => setForm(f => ({ ...f, hex: e.target.value }))}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                />
-                <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-40 mt-1">
-                  Toca para elegir
-                </p>
-              </label>
+              ) : (
+                <label className="shrink-0 cursor-pointer group relative self-center sm:self-auto">
+                  <div
+                    className="w-20 h-20 rounded-2xl shadow-md border-4 border-white ring-2 ring-[#4a1d44]/10 group-hover:ring-[#4a1d44]/30 transition-all"
+                    style={{ backgroundColor: form.hex }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl bg-black/10">
+                    <Palette size={22} className="text-white drop-shadow" />
+                  </div>
+                  <input
+                    type="color"
+                    value={hexParaPicker(form.hex, EMPTY_FORM.hex)}
+                    onChange={(e) => setForm((f) => ({ ...f, hex: e.target.value }))}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                  <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-40 mt-1">
+                    Elegir color
+                  </p>
+                </label>
+              )}
 
-              <div className="flex-1 space-y-4 w-full">
+              <div className="flex-1 space-y-4 w-full min-w-0">
                 {/* Nombre */}
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest opacity-40 ml-1">

@@ -13,9 +13,14 @@ import {
   ArrowUp,
 } from "lucide-react";
 import ProductoCard from "@/components/ProductoCard";
+import type {
+  ProductoCatalogoGrupo,
+  ProductoCatalogoVariante,
+} from "@/app/lib/catalog-types";
+import { getColorInfo } from "@/app/lib/catalog-helpers";
 
 type CatalogoClientProps = {
-  rawDataInicial: any[];
+  rawDataInicial: ProductoCatalogoVariante[];
 };
 
 const CATALOGO_PRODUCTOS_SELECT = `
@@ -38,13 +43,13 @@ const CATALOGO_PRODUCTOS_SELECT = `
   )
 `;
 
-const fetcher = async () => {
+const fetcher = async (): Promise<ProductoCatalogoVariante[]> => {
   const { data, error } = await supabase
     .from("productos")
     .select(CATALOGO_PRODUCTOS_SELECT)
     .eq("activo", true);
   if (error) throw error;
-  return data;
+  return (data || []) as unknown as ProductoCatalogoVariante[];
 };
 
 export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) {
@@ -68,7 +73,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
     };
   }, [mutate]);
 
-  const [productos, setProductos] = useState<any[]>([]);
+  const [productos, setProductos] = useState<ProductoCatalogoGrupo[]>([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todas");
   const [colorSeleccionado, setColorSeleccionado] = useState("Todos");
   const [tallaSeleccionada, setTallaSeleccionada] = useState("Todas");
@@ -86,17 +91,18 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
 
   useEffect(() => {
     if (rawData) {
-      const tempGrupos: any = {};
-      rawData.forEach((item: any) => {
-        const gid = item.grupo_id || `item-${item.id}`;
-        if (!tempGrupos[gid]) {
+      const tempGrupos: Record<string, ProductoCatalogoGrupo> = {};
+      rawData.forEach((item) => {
+        const gid = String(item.grupo_id || `item-${item.id}`);
+        const existing = tempGrupos[gid];
+        if (!existing) {
           tempGrupos[gid] = { ...item, variantes: [item] };
         } else {
-          tempGrupos[gid].variantes.push(item);
+          existing.variantes.push(item);
         }
       });
       const gruposFinales = Object.values(tempGrupos).filter(
-        (g: any) => g.variantes && g.variantes.length > 0,
+        (g) => g.variantes.length > 0,
       );
       setProductos(gruposFinales);
     } else {
@@ -123,11 +129,12 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
       const catNombre = typeof p.categoria === "object" ? p.categoria?.nombre : p.categoria;
       if (catNombre) cats.add(String(catNombre).trim());
 
-      p.variantes.forEach((v: any) => {
-        v.producto_colores?.forEach((pc: any) => {
-          if (pc.colores) cols.set(pc.colores.nombre, pc.colores.hex);
+      p.variantes.forEach((v) => {
+        v.producto_colores?.forEach((pc) => {
+          const ci = getColorInfo(pc);
+          if (ci) cols.set(ci.nombre, ci.hex ?? "");
         });
-        v.producto_tallas?.forEach((pt: any) => {
+        v.producto_tallas?.forEach((pt) => {
           if (pt.tallas) {
             tals.set(pt.tallas.nombre, { nombre: pt.tallas.nombre, orden: pt.tallas.orden || 0 });
           }
@@ -153,20 +160,20 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
       const matchCat = categoriaSeleccionada === "Todas" || String(catProd).trim() === categoriaSeleccionada;
       const matchColor =
         colorSeleccionado === "Todos" ||
-        p.variantes.some((v: any) =>
-          v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorSeleccionado),
+        p.variantes.some((v) =>
+          v.producto_colores?.some((pc) => getColorInfo(pc)?.nombre === colorSeleccionado),
         );
       const matchTalla =
         tallaSeleccionada === "Todas" ||
-        p.variantes.some((v: any) =>
+        p.variantes.some((v) =>
           v.producto_tallas?.some(
-            (pt: any) => pt.tallas?.nombre === tallaSeleccionada && pt.stock_talla > 0,
+            (pt) => pt.tallas?.nombre === tallaSeleccionada && Number(pt.stock_talla ?? 0) > 0,
           ),
         );
 
-      const varianteTieneStock = (v: any): boolean => {
+      const varianteTieneStock = (v: ProductoCatalogoVariante): boolean => {
         if (Number(v.stock ?? 0) > 0) return true;
-        return (v.producto_tallas ?? []).some((pt: any) => Number(pt.stock_talla ?? 0) > 0);
+        return (v.producto_tallas ?? []).some((pt) => Number(pt.stock_talla ?? 0) > 0);
       };
       const tieneStock = p.variantes.some(varianteTieneStock);
       const matchStock = mostrarAgotados || tieneStock;
@@ -175,8 +182,8 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
     });
 
     return [...resultado].sort((a, b) => {
-      if (ordenarPor === "precio-menor") return a.precio - b.precio;
-      if (ordenarPor === "precio-mayor") return b.precio - a.precio;
+      if (ordenarPor === "precio-menor") return Number(a.precio) - Number(b.precio);
+      if (ordenarPor === "precio-mayor") return Number(b.precio) - Number(a.precio);
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor, mostrarAgotados]);

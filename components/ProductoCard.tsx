@@ -13,19 +13,24 @@ import {
   withSupabaseListThumbnailParams,
   PLACEHOLDER_IMAGE,
 } from '@/app/lib/image-helper';
+import type {
+  ProductoCardProducto,
+  ProductoCatalogoVariante,
+} from '@/app/lib/catalog-types';
+import { getColorInfo } from '@/app/lib/catalog-helpers';
 
 /** Determina si una variante tiene stock disponible (columna stock O stock_talla). */
-function varianteTieneStock(v: any): boolean {
+function varianteTieneStock(v: ProductoCatalogoVariante): boolean {
   if (Number(v.stock ?? 0) > 0) return true;
-  return (v.producto_tallas ?? []).some((pt: any) => Number(pt.stock_talla ?? 0) > 0);
+  return (v.producto_tallas ?? []).some((pt) => Number(pt.stock_talla ?? 0) > 0);
 }
 
 /** Devuelve la primera variante con stock > 0, o la primera si todas están agotadas. */
-function primeraVarianteConStock(variantes: any[]): any {
+function primeraVarianteConStock(variantes: ProductoCatalogoVariante[]): ProductoCatalogoVariante {
   return variantes.find(varianteTieneStock) ?? variantes[0];
 }
 
-export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: any, colorFiltro?: string, priority?: boolean }) {
+export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: ProductoCardProducto, colorFiltro?: string, priority?: boolean }) {
   const varianteInicial = producto.variantes
     ? primeraVarianteConStock(producto.variantes)
     : producto;
@@ -48,8 +53,8 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
     if (producto.variantes) {
       // Si hay un filtro de color activo, buscamos la variante que coincida
       if (colorFiltro && colorFiltro !== 'Todos') {
-        const varianteMatch = producto.variantes.find((v: any) =>
-          v.producto_colores?.some((pc: any) => pc.colores?.nombre === colorFiltro)
+        const varianteMatch = producto.variantes.find((v) =>
+          v.producto_colores?.some((pc) => getColorInfo(pc)?.nombre === colorFiltro)
         );
         if (varianteMatch) {
           setVarianteActiva(varianteMatch);
@@ -83,7 +88,7 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
     toast.success(`¡${varianteActiva.nombre} añadido!`);
   };
 
-  const cambiarVariante = (e: React.MouseEvent, nuevaVariante: any) => {
+  const cambiarVariante = (e: React.MouseEvent, nuevaVariante: ProductoCatalogoVariante) => {
     e.preventDefault();
     setVarianteActiva(nuevaVariante);
     setCurrentImg(0);
@@ -110,7 +115,11 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
           {/* Tag de Categoría Flotante */}
           <div className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-black/5" suppressHydrationWarning>
             <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]">
-              {mounted ? (typeof varianteActiva.categoria === 'object' ? varianteActiva.categoria.nombre : (varianteActiva.categoria || 'Lencería')) : 'Lencería'}
+              {mounted
+                ? typeof varianteActiva.categoria === "object" && varianteActiva.categoria !== null
+                  ? varianteActiva.categoria.nombre ?? "Lencería"
+                  : varianteActiva.categoria || "Lencería"
+                : "Lencería"}
             </span>
           </div>
 
@@ -176,8 +185,8 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
             {/* SELECTOR DE COLORES */}
             {producto.variantes && producto.variantes.length > 1 && (
               <div className="flex justify-center items-center gap-2.5 mb-4">
-                {producto.variantes.map((v: any) => {
-                  const colorInfo = v.producto_colores?.[0]?.colores;
+                {producto.variantes.map((v) => {
+                  const colorInfo = v.producto_colores?.[0] ? getColorInfo(v.producto_colores[0]) : null;
                   const isSelected = varianteActiva.id === v.id;
 
                   // Override manual para asegurar que los colores se vean bien

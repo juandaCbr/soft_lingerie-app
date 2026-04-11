@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import CatalogoClient from "./CatalogoClient";
 import { getSiteUrl } from "@/app/lib/site-url";
+import type { ProductoCatalogoVariante } from "@/app/lib/catalog-types";
 
 export const revalidate = 60;
 
@@ -102,7 +103,7 @@ export default async function CatalogoPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CatalogoClient rawDataInicial={data || []} />
+      <CatalogoClient rawDataInicial={(data || []) as unknown as ProductoCatalogoVariante[]} />
     </>
   );
 }

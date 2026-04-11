@@ -4,6 +4,7 @@ import { cache } from "react";
 import HomeClient from "./HomeClient";
 import { getProductoImage, toAbsolutePublicUrl } from "./lib/image-helper";
 import { getSiteUrl } from "./lib/site-url";
+import type { HomeProducto, VentaDetalleHome } from "./lib/home-types";
 
 /** @id estable en JSON-LD para enlazar Organization ↔ WebSite (mismo sitio que en schema.org). */
 const ORGANIZATION_ID = "#organization";
@@ -38,24 +39,28 @@ const getHomeData = cache(async () => {
       .eq("estado_pago", "APROBADO"),
   ]);
 
-  const productos = prods || [];
-  const ventas = vnts || [];
+  const productos = (prods || []) as HomeProducto[];
+  const ventas = (vnts || []) as VentaDetalleHome[];
 
   const conteo: Record<string, number> = {};
-  ventas.forEach((v: any) => {
+  ventas.forEach((v) => {
     if (!v || !Array.isArray(v.detalle_compra)) return;
-    v.detalle_compra.forEach((item: any) => {
-      if (!item?.id) return;
-      conteo[item.id] = (conteo[item.id] || 0) + (Number(item.quantity) || 1);
+    v.detalle_compra.forEach((item) => {
+      if (item?.id == null || item.id === "") return;
+      const key = String(item.id);
+      conteo[key] = (conteo[key] || 0) + (Number(item.quantity) || 1);
     });
   });
 
   const ordenadosPorVentas = [...productos]
-    .filter((p: any) => conteo[p.id] && conteo[p.id] > 0)
-    .sort((a: any, b: any) => conteo[b.id] - conteo[a.id]);
+    .filter((p) => {
+      const k = String(p.id);
+      return conteo[k] && conteo[k] > 0;
+    })
+    .sort((a, b) => conteo[String(b.id)] - conteo[String(a.id)]);
 
   const fallbackNovedad = [...productos].sort(
-    (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   )[0];
 
   const heroProducto = ordenadosPorVentas[0] || fallbackNovedad || null;

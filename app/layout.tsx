@@ -7,12 +7,15 @@ import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import SiteFooter from "@/components/SiteFooter";
+import { getSiteUrl } from "@/app/lib/site-url";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://soft-lingerie-app.vercel.app'),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Soft Lingerie | Lencería Valledupar y Boutique Online",
     template: "%s | Soft Lingerie"
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Soft Lingerie | Lencería Valledupar",
     description: "Elegancia y seducción en cada prenda. Envíos nacionales.",
-    url: "https://soft-lingerie-app.vercel.app",
+    url: siteUrl,
     siteName: "Soft Lingerie",
     locale: "es_CO",
     type: "website",

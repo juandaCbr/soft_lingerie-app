@@ -1,28 +1,48 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import CatalogoClient from "./CatalogoClient";
+import { getSiteUrl } from "@/app/lib/site-url";
 
 export const revalidate = 60;
 
+const siteUrl = getSiteUrl();
+
+/**
+ * Metadatos del listado /productos: título corto para combinar con template del layout
+ * ("Catálogo de Lencería | Soft Lingerie"), canonical, OG/Twitter con imagen fija en /public,
+ * robots index/follow. Las keywords apoyan búsquedas de intención comercial locales.
+ */
 export const metadata: Metadata = {
-  title: "Catálogo de Lencería | Soft Lingerie",
+  title: "Catálogo de Lencería",
   description:
     "Explora el catálogo de Soft Lingerie: conjuntos, babydolls, ligueros y más. Filtra por talla, color y precio para encontrar tu diseño ideal.",
+  keywords: [
+    "catálogo lencería",
+    "conjuntos de encaje",
+    "lencería Valledupar",
+    "comprar ropa interior Colombia",
+    "Soft Lingerie",
+  ],
   alternates: {
     canonical: "/productos",
   },
+  robots: { index: true, follow: true },
   openGraph: {
     title: "Catálogo de Lencería | Soft Lingerie",
     description:
       "Encuentra tu diseño ideal en nuestro catálogo de lencería con filtros por talla, color y precio.",
-    url: "https://soft-lingerie-app.vercel.app/productos",
+    url: `${siteUrl}/productos`,
+    siteName: "Soft Lingerie",
+    locale: "es_CO",
     type: "website",
+    images: [{ url: `${siteUrl}/home.jpg`, alt: "Soft Lingerie — catálogo" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Catálogo de Lencería | Soft Lingerie",
     description:
       "Catálogo completo con filtros por talla, color y precio.",
+    images: [`${siteUrl}/home.jpg`],
   },
 };
 
@@ -60,5 +80,29 @@ export default async function CatalogoPage() {
     .select(CATALOGO_PRODUCTOS_SELECT)
     .eq("activo", true);
 
-  return <CatalogoClient rawDataInicial={data || []} />;
+  /**
+   * CollectionPage: indica a los buscadores que esta URL es el índice del catálogo.
+   * isPartOf apunta al mismo WebSite (#website) que define la home para coherencia del grafo.
+   */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Catálogo de lencería — Soft Lingerie",
+    description:
+      "Catálogo de conjuntos, babydolls y lencería fina con envíos a Colombia.",
+    url: `${siteUrl}/productos`,
+    isPartOf: { "@id": `${siteUrl}/#website` },
+    inLanguage: "es-CO",
+  };
+
+  return (
+    <>
+      {/* JSON-LD de catálogo: complementa las meta tags con tipo de página explícito. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <CatalogoClient rawDataInicial={data || []} />
+    </>
+  );
 }

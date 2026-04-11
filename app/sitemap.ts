@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { slugify } from './lib/utils'
+import { getSiteUrl } from './lib/site-url'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +9,7 @@ const supabaseAdmin = createClient(
 )
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://soft-lingerie-app.vercel.app'
+  const baseUrl = getSiteUrl()
 
   // 1. Obtener todos los productos activos para generar sus URLs
   const { data: productos } = await supabaseAdmin

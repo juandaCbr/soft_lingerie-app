@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import HomeClient from "./HomeClient";
 import { getProductoImage, toAbsolutePublicUrl } from "./lib/image-helper";
+import { getSiteUrl } from "./lib/site-url";
+
+/** @id estable en JSON-LD para enlazar Organization ↔ WebSite (mismo sitio que en schema.org). */
+const ORGANIZATION_ID = "#organization";
 
 export const revalidate = 60;
 
@@ -60,31 +64,53 @@ const getHomeData = cache(async () => {
   return { productos, ventas, heroImage };
 });
 
+/**
+ * SEO página de inicio: título explícito (absolute evita duplicar el sufijo del layout),
+ * canonical "/", Open Graph + Twitter con imagen (producto destacado o fallback en /public),
+ * robots index/follow para indexación clara.
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const { heroImage } = await getHomeData();
   const absoluteHeroImage = heroImage ? toAbsolutePublicUrl(heroImage) : undefined;
+  const site = getSiteUrl();
+  /** Imagen OG por defecto si aún no hay hero desde catálogo (evita compartidos sin imagen). */
+  const defaultOg = `${site}/home.jpg`;
 
   return {
-    title: "Soft Lingerie | Lencería Valledupar y Boutique Online",
+    title: {
+      absolute: "Soft Lingerie | Lencería Valledupar y Boutique Online",
+    },
     description:
       "Descubre lencería exclusiva en Valledupar. Catálogo premium de conjuntos, bodies y prendas de seducción con envíos seguros a toda Colombia.",
+    keywords: [
+      "lencería Valledupar",
+      "lencería Colombia",
+      "ropa interior femenina",
+      "boutique lencería online",
+      "Soft Lingerie",
+    ],
     alternates: {
       canonical: "/",
     },
+    robots: { index: true, follow: true },
     openGraph: {
       title: "Soft Lingerie | Lencería Valledupar y Boutique Online",
       description:
         "Descubre lencería exclusiva en Valledupar. Catálogo premium de conjuntos, bodies y prendas de seducción.",
-      url: "https://soft-lingerie-app.vercel.app/",
+      url: `${site}/`,
+      siteName: "Soft Lingerie",
+      locale: "es_CO",
       type: "website",
-      images: absoluteHeroImage ? [absoluteHeroImage] : undefined,
+      images: absoluteHeroImage
+        ? [{ url: absoluteHeroImage, alt: "Soft Lingerie — destacado" }]
+        : [{ url: defaultOg, alt: "Soft Lingerie Valledupar" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Soft Lingerie | Lencería Valledupar y Boutique Online",
       description:
         "Catálogo premium de lencería con envíos seguros a toda Colombia.",
-      images: absoluteHeroImage ? [absoluteHeroImage] : undefined,
+      images: absoluteHeroImage ? [absoluteHeroImage] : [defaultOg],
     },
   };
 }
@@ -93,11 +119,44 @@ export default async function HomePage() {
   // Render server + ISR: evita loader inicial y entrega HTML listo desde CDN.
   // Además, seleccionamos solo columnas usadas por las cards para reducir tiempo/transferencia.
   const { productos, ventas } = await getHomeData();
+  const site = getSiteUrl();
+  /**
+   * JSON-LD (schema.org): Organization + WebSite enlazados por @id.
+   * Ayuda a Google a entender marca, URL canónica del sitio e idioma (rich results / Knowledge Graph).
+   */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${site}${ORGANIZATION_ID}`,
+        name: "Soft Lingerie",
+        url: site,
+        description:
+          "Boutique de lencería en Valledupar con envíos a toda Colombia.",
+        areaServed: { "@type": "Country", name: "Colombia" },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${site}/#website`,
+        url: site,
+        name: "Soft Lingerie",
+        description:
+          "Lencería exclusiva en Valledupar. Catálogo online con envíos nacionales.",
+        publisher: { "@id": `${site}${ORGANIZATION_ID}` },
+        inLanguage: "es-CO",
+      },
+    ],
+  };
 
   return (
-    <HomeClient
-      productosIniciales={productos}
-      ventasIniciales={ventas}
-    />
+    <>
+      {/* Datos estructurados en el HTML inicial (rastreables sin depender solo del cliente). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomeClient productosIniciales={productos} ventasIniciales={ventas} />
+    </>
   );
 }

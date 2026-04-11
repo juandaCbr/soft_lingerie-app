@@ -4,7 +4,9 @@ import { Metadata } from 'next';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getProductoImage, toAbsolutePublicUrl } from '@/app/lib/image-helper';
+import { getSiteUrl } from '@/app/lib/site-url';
 import { slugify } from '@/app/lib/utils';
+import { toMetaDescription } from '@/app/lib/seo-text';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,37 +43,67 @@ const getProductoBase = cache(async (id: string) => {
   return data;
 });
 
+/**
+ * SEO por producto: URL canónica con slug+nombre (alineada al sitemap),
+ * descripción limpia (sin HTML), OG/Twitter con imagen principal, robots index.
+ * El título usa solo el nombre del producto; el layout añade " | Soft Lingerie".
+ * Si el ID no existe, notFound() evita indexar una página vacía con meta genérica.
+ */
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id: rawId } = await params;
-  // Extraer el ID real (la última parte después del último guion) para que el SEO funcione igual que la página
+  // Misma regla que la página: slug opcional + id al final (/productos/nombre-id).
   const id = rawId.split('-').pop() || rawId;
 
   // Reutiliza la misma query cacheada que usa la página para evitar trabajo duplicado.
   const producto = await getProductoBase(id);
 
-  if (!producto) return { title: "Soft Lingerie | Producto" };
+  if (!producto) {
+    notFound();
+  }
 
   const canonicalPath = `/productos/${slugify(producto.nombre)}-${id}`;
   const image = toAbsolutePublicUrl(getProductoImage(producto, 0, 'detail'));
+  const description = toMetaDescription(
+    producto.descripcion,
+    `Compra ${producto.nombre} en Soft Lingerie Valledupar. Lencería premium con envíos a Colombia.`,
+  );
+  const site = getSiteUrl();
+  // Palabra clave extra si la categoría viene como string o como objeto con nombre (Supabase).
+  const categoriaLabel =
+    typeof producto.categoria === 'string'
+      ? producto.categoria
+      : producto.categoria && typeof producto.categoria === 'object' && 'nombre' in producto.categoria
+        ? String((producto.categoria as { nombre?: string }).nombre ?? '')
+        : '';
 
   return {
-    title: `Soft Lingerie | ${producto.nombre}`,
-    description: producto.descripcion?.substring(0, 160) || `Compra ${producto.nombre} en Soft Lingerie Valledupar. Calidad premium y diseños exclusivos.`,
+    title: producto.nombre,
+    description,
+    keywords: [
+      producto.nombre,
+      'lencería Valledupar',
+      'lencería Colombia',
+      ...(categoriaLabel ? [categoriaLabel] : []),
+    ],
     alternates: {
       canonical: canonicalPath,
     },
+    robots: { index: true, follow: true },
     openGraph: {
-      title: `Soft Lingerie | ${producto.nombre}`,
-      description: producto.descripcion?.substring(0, 160),
-      url: `https://soft-lingerie-app.vercel.app${canonicalPath}`,
-      images: [image],
+      title: `${producto.nombre} | Soft Lingerie`,
+      description,
+      url: `${site}${canonicalPath}`,
+      siteName: 'Soft Lingerie',
+      locale: 'es_CO',
+      type: 'website',
+      images: [{ url: image, alt: producto.nombre }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Soft Lingerie | ${producto.nombre}`,
-      description: producto.descripcion?.substring(0, 160),
+      title: `${producto.nombre} | Soft Lingerie`,
+      description,
       images: [image],
-    }
+    },
   };
 }
 

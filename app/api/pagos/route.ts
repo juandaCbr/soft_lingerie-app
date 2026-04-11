@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getSiteUrl } from '@/app/lib/site-url';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     const integrity_signature = crypto.createHash('sha256').update(chainToHash).digest('hex');
 
     // 3. Determinar URL de redireccion dinamicamente
-    const origin = req.headers.get('origin') || 'https://soft-lingerie-app.vercel.app';
+    const origin = req.headers.get('origin') || getSiteUrl();
     const redirectUrlValid = `${origin}/gracias?ref=${referencia}${ciudad ? '&city=' + encodeURIComponent(ciudad) : ''}`;
 
     // Limpieza de telefono para Colombia (10 digitos empezando por 3)

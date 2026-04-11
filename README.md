@@ -64,7 +64,7 @@ npm run lint   # ESLint
 
 ## Despliegue
 
-Genera un build con `npm run build`, configura las mismas variables de entorno en tu proveedor (Vercel, etc.) y asegúrate de que `NEXT_PUBLIC_SITE_URL` apunte al dominio público.
+Genera un build con `npm run build`, configura las mismas variables de entorno en tu servidor (VPS, hosting, etc.) y asegúrate de que `NEXT_PUBLIC_SITE_URL` apunte al dominio público (por ejemplo `https://tu-dominio.com`).
 
 ## Licencia
 

@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
     for (const pedido of pedidosEnviados) {
       // 2. Simulación de Scraping (Aquí es donde el robot "lee" la web de la transportadora)
-      // Nota: En un entorno real de Vercel, el scraping directo es complejo por bloqueos.
+      // Nota: En producción el scraping directo a la transportadora puede estar bloqueado o limitado.
       // Implementamos una lógica de "Auto-entrega" si han pasado más de 3 días para esta demo,
       // pero dejaremos la estructura preparada para la transportadora.
       

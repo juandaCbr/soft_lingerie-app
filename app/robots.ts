@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
- 
+import { getSiteUrl } from './lib/site-url'
+
 export default function robots(): MetadataRoute.Robots {
+  const base = getSiteUrl()
   return {
     rules: {
       userAgent: '*',
@@ -13,6 +15,6 @@ export default function robots(): MetadataRoute.Robots {
         '/gracias'
       ],
     },
-    sitemap: 'https://soft-lingerie-app.vercel.app/sitemap.xml',
+    sitemap: `${base}/sitemap.xml`,
   }
 }

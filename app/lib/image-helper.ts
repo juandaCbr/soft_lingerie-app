@@ -1,3 +1,5 @@
+import { getSiteUrl } from "./site-url";
+
 /** Entrada alineada con filas de producto / variante en Supabase + imágenes locales. */
 export type ImagenLocal = { thumb: string; detail: string };
 
@@ -125,10 +127,7 @@ export function toAbsolutePublicUrl(pathOrUrl: string): string {
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
   }
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || 'https://soft-lingerie-app.vercel.app').replace(
-    /\/$/,
-    '',
-  );
+  const base = getSiteUrl();
   if (trimmed.startsWith('/')) {
     return `${base}${trimmed}`;
   }

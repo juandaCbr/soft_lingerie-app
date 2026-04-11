@@ -15,6 +15,8 @@ import {
   PLACEHOLDER_IMAGE,
 } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
+import { getSiteUrl } from '@/app/lib/site-url';
+import { toMetaDescription } from '@/app/lib/seo-text';
 
 export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales, tallasPorVarianteIniciales }: { 
   producto: any, 
@@ -125,34 +127,73 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     tallasDisponibles.length === 0
       ? Number(varianteActiva.stock ?? 0) <= 0
       : tallasDisponibles.every((t: any) => t.stock <= 0);
-  const canonicalProductUrl = `https://soft-lingerie-app.vercel.app/productos/${slugify(varianteActiva.nombre)}-${varianteActiva.id}`;
+  const canonicalProductUrl = `${getSiteUrl()}/productos/${slugify(varianteActiva.nombre)}-${varianteActiva.id}`;
+  const baseUrl = getSiteUrl();
+  /** Descripción larga para schema Product (Google recomienda texto completo; meta del servidor sigue ~160). */
+  const descPlain = toMetaDescription(
+    varianteActiva.descripcion,
+    `Compra ${varianteActiva.nombre} en Soft Lingerie. Lencería en Valledupar con envíos a Colombia.`,
+    5000,
+  );
 
-  // Datos estructurados JSON-LD para Google (Rich Snippets)
+  /**
+   * JSON-LD en el cliente pero renderizado en SSR: BreadcrumbList + Product.
+   * - Migas: ayudan a entender jerarquía Inicio → Catálogo → Producto.
+   * - Product + Offer: precio, moneda COP, disponibilidad acorde a tallas/stock, SKU = id interno.
+   * Debe coincidir con la URL canónica y con generateMetadata del servidor.
+   */
   const jsonLd = {
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    "name": varianteActiva.nombre,
-    "image": imagenes.map((src) => toAbsolutePublicUrl(src)),
-    "description": varianteActiva.descripcion,
-    "brand": {
-      "@type": "Brand",
-      "name": "Soft Lingerie"
-    },
-    "offers": {
-      "@type": "Offer",
-      "url": canonicalProductUrl,
-      "priceCurrency": "COP",
-      "price": varianteActiva.precio,
-      "availability": tallasDisponibles.some(t => t.stock > 0) 
-        ? "https://schema.org/InStock" 
-        : "https://schema.org/OutOfStock",
-      "itemCondition": "https://schema.org/NewCondition"
-    }
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Inicio",
+            "item": baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Catálogo",
+            "item": `${baseUrl}/productos`,
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": varianteActiva.nombre,
+            "item": canonicalProductUrl,
+          },
+        ],
+      },
+      {
+        "@type": "Product",
+        "name": varianteActiva.nombre,
+        "sku": String(varianteActiva.id),
+        "image": imagenes.map((src) => toAbsolutePublicUrl(src)),
+        "description": descPlain,
+        "brand": {
+          "@type": "Brand",
+          "name": "Soft Lingerie",
+        },
+        "offers": {
+          "@type": "Offer",
+          "url": canonicalProductUrl,
+          "priceCurrency": "COP",
+          "price": String(varianteActiva.precio),
+          "availability": isVarianteAgotada
+            ? "https://schema.org/OutOfStock"
+            : "https://schema.org/InStock",
+          "itemCondition": "https://schema.org/NewCondition",
+        },
+      },
+    ],
   };
 
   return (
     <main className="max-w-7xl mx-auto px-4 pt-12 md:pt-24 pb-20 text-[#4a1d44]">
-      {/* Script de Datos Estructurados */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -163,18 +204,19 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
         </button>
       </div>
 
+      {/* Un solo <h1> por URL (mejor para SEO que duplicar título en móvil/desktop). */}
+      <div className="mb-8 max-w-5xl mx-auto px-1 text-center md:text-left">
+        <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] opacity-40 block mb-2">
+          {varianteActiva.categoria?.nombre || varianteActiva.categoria || "Colección"}
+        </span>
+        <h1 className="text-3xl md:text-5xl font-black font-playfair leading-tight text-[#4a1d44]">
+          {varianteActiva.nombre}
+        </h1>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-12 max-w-5xl mx-auto items-start">
         {/* COLUMNA IZQUIERDA: GALERÍA */}
         <div className="space-y-4 w-full max-w-[360px] md:max-w-[420px] mx-auto md:mx-0 flex flex-col">
-          <div className="md:hidden text-left mb-1.5 px-1">
-            <span className="text-xs font-black uppercase tracking-[0.2em] opacity-40 block mb-1">
-              {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
-            </span>
-            <h1 className="text-3xl font-black font-playfair leading-tight text-[#4a1d44]">
-              {varianteActiva.nombre}
-            </h1>
-          </div>
-
           <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden bg-[#fdf8f6] shadow-sm border border-[#4a1d44]/5 shrink-0">
             {imagenes.map((img: string, index: number) => {
               const imgKey = `${varianteActiva.id}-${index}`;
@@ -218,7 +260,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                     fill
                     sizes="64px"
                     className="object-cover"
-                    alt="miniatura"
+                    alt={`${varianteActiva.nombre} — vista ${i + 1}`}
                     onError={() => setImgErrors(prev => ({ ...prev, [thumbKey]: true }))}
                   />
                 </button>
@@ -230,14 +272,6 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
         {/* COLUMNA DERECHA: INFORMACIÓN (panel blanco) */}
         <div className="mx-auto flex w-full max-w-[420px] flex-col gap-6 rounded-[1.75rem] border border-[#4a1d44]/10 bg-white p-6 shadow-sm sm:p-7 md:sticky md:top-28 md:mx-0 md:rounded-[2rem] md:p-8 md:shadow-md">
           <div className="space-y-2">
-            <div className="hidden md:block">
-              <span className="text-sm font-black uppercase tracking-[0.2em] opacity-40 block mb-2">
-                {varianteActiva.categoria?.nombre || varianteActiva.categoria || 'Colección'}
-              </span>
-              <h1 className="text-5xl font-black font-playfair leading-tight text-[#4a1d44] mb-4">
-                {varianteActiva.nombre}
-              </h1>
-            </div>
             <p className="text-2xl md:text-2xl font-black opacity-90 text-left">
               ${Number(varianteActiva.precio).toLocaleString('es-CO')} COP
             </p>

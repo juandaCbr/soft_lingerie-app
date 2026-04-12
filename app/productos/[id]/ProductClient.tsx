@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { ShoppingCart, ArrowLeft, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -25,6 +25,9 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   tallasPorVarianteIniciales: Record<string, any[]>
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  /** Query string del catálogo (p. ej. `q=a&cat=b`) para volver con filtros si no hay historial. */
+  const catalogReturnQuery = searchParams.get('cv');
   const { addToCart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -107,13 +110,17 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   };
 
   const handleBack = () => {
-    // Si hay historial previo en esta pestaña, vuelve atrás (mantiene filtros/scroll)
-    // Si no (ventana nueva), va directo al catálogo
-    if (window.history.length > 1) {
+    // Historial típico: catálogo filtrado → producto (atrás restaura URL y scroll).
+    if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back();
-    } else {
-      router.push('/productos');
+      return;
     }
+    // Entrada directa o pestaña nueva: usar `cv` si vino desde el listado con filtros.
+    if (catalogReturnQuery) {
+      router.push(`/productos?${catalogReturnQuery}`);
+      return;
+    }
+    router.push('/productos');
   };
 
   const imageCount = Math.max(1, getProductoImageCount(varianteActiva));
@@ -276,10 +283,13 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
               ${Number(varianteActiva.precio).toLocaleString('es-CO')} COP
             </p>
 
-            {/* Selector de colores */}
-            {variantes.length > 1 && (
+            {/* Selector de colores (también si solo hay una variante con color asignado) */}
+            {(variantes.length > 1 ||
+              Boolean(varianteActiva?.producto_colores?.[0]?.colores)) && (
               <div className="py-2 flex flex-col items-start">
-                <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Colores Disponibles</h3>
+                <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">
+                  {variantes.length > 1 ? 'Colores Disponibles' : 'Color'}
+                </h3>
                 <div className="flex gap-3">
                   {variantes.map((v) => {
                     let color = v.producto_colores?.[0]?.colores;
@@ -433,7 +443,10 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             {relacionados.map((prod) => (
               <div key={prod.id} className="min-w-[190px] w-[190px] md:min-w-[280px] md:w-[280px] snap-start shrink-0">
                 <div className="h-full transition-transform duration-500 hover:translate-y-[-4px]">
-                  <ProductoCard producto={prod} />
+                  <ProductoCard
+                    producto={prod}
+                    returnCatalogQuery={catalogReturnQuery ?? undefined}
+                  />
                 </div>
               </div>
             ))}

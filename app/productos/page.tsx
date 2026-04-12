@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
-import CatalogoClient from "./CatalogoClient";
+import { Suspense } from "react";
+import CatalogoClient, { CatalogoSkeleton } from "./CatalogoClient";
 import { getSiteUrl } from "@/app/lib/site-url";
 import type { ProductoCatalogoVariante } from "@/app/lib/catalog-types";
 
@@ -103,7 +104,9 @@ export default async function CatalogoPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CatalogoClient rawDataInicial={(data || []) as unknown as ProductoCatalogoVariante[]} />
+      <Suspense fallback={<CatalogoSkeleton />}>
+        <CatalogoClient rawDataInicial={(data || []) as unknown as ProductoCatalogoVariante[]} />
+      </Suspense>
     </>
   );
 }

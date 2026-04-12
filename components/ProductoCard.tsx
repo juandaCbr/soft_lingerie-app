@@ -30,7 +30,18 @@ function primeraVarianteConStock(variantes: ProductoCatalogoVariante[]): Product
   return variantes.find(varianteTieneStock) ?? variantes[0];
 }
 
-export default function ProductoCard({ producto, colorFiltro, priority = false }: { producto: ProductoCardProducto, colorFiltro?: string, priority?: boolean }) {
+export default function ProductoCard({
+  producto,
+  colorFiltro,
+  priority = false,
+  /** Query del catálogo (sin `?`) para volver con los mismos filtros; se pasa como `cv` en la URL del producto. */
+  returnCatalogQuery,
+}: {
+  producto: ProductoCardProducto;
+  colorFiltro?: string;
+  priority?: boolean;
+  returnCatalogQuery?: string;
+}) {
   const varianteInicial = producto.variantes
     ? primeraVarianteConStock(producto.variantes)
     : producto;
@@ -99,6 +110,12 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
 
   const slug = slugify(varianteActiva.nombre);
 
+  const cv = returnCatalogQuery?.trim();
+  const productHref =
+    cv && cv.length > 0
+      ? `/productos/${slug}-${varianteActiva.id}?cv=${encodeURIComponent(cv)}`
+      : `/productos/${slug}-${varianteActiva.id}`;
+
   /** Antes solo se mostraban colores si había 2+ variantes; una sola variante con color en BD no mostraba nada. */
   const mostrarSelectorColores =
     !!producto.variantes?.length &&
@@ -106,7 +123,7 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
       producto.variantes.some((v) => firstColorFromVariante(v) != null));
 
   return (
-    <Link href={`/productos/${slug}-${varianteActiva.id}`} className="block h-full">
+    <Link href={productHref} className="block h-full">
       <div className={`group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${isAgotado ? 'opacity-70' : ''}`}>
 
         {/* Contenedor de Imagen */}

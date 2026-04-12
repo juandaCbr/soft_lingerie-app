@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import useSWR from "swr";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import {
   Heart,
@@ -52,7 +53,63 @@ const fetcher = async (): Promise<ProductoCatalogoVariante[]> => {
   return (data || []) as unknown as ProductoCatalogoVariante[];
 };
 
+/** Estado de filtros derivado de la URL (única fuente de verdad) para que «atrás» restaure el catálogo. */
+type CatalogoFiltrosUrl = {
+  q: string;
+  categoriaSeleccionada: string;
+  colorSeleccionado: string;
+  tallaSeleccionada: string;
+  ordenarPor: string;
+  mostrarAgotados: boolean;
+};
+
+function parseCatalogSearchParams(sp: URLSearchParams): CatalogoFiltrosUrl {
+  const orden = sp.get("orden") ?? "novedades";
+  return {
+    q: sp.get("q") ?? "",
+    categoriaSeleccionada: sp.get("cat") ?? "Todas",
+    colorSeleccionado: sp.get("color") ?? "Todos",
+    tallaSeleccionada: sp.get("talla") ?? "Todas",
+    ordenarPor: ["novedades", "precio-menor", "precio-mayor"].includes(orden) ? orden : "novedades",
+    mostrarAgotados: sp.get("agotados") === "1",
+  };
+}
+
+function buildCatalogSearchParams(f: CatalogoFiltrosUrl): string {
+  const p = new URLSearchParams();
+  if (f.q.trim()) p.set("q", f.q.trim());
+  if (f.categoriaSeleccionada !== "Todas") p.set("cat", f.categoriaSeleccionada);
+  if (f.colorSeleccionado !== "Todos") p.set("color", f.colorSeleccionado);
+  if (f.tallaSeleccionada !== "Todas") p.set("talla", f.tallaSeleccionada);
+  if (f.ordenarPor === "precio-menor" || f.ordenarPor === "precio-mayor") p.set("orden", f.ordenarPor);
+  if (f.mostrarAgotados) p.set("agotados", "1");
+  return p.toString();
+}
+
 export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const filtros = useMemo(() => parseCatalogSearchParams(searchParams), [searchParams]);
+  const filtrosRef = useRef(filtros);
+  filtrosRef.current = filtros;
+
+  /** Texto de búsqueda en vivo (la URL puede ir un tick detrás al escribir rápido). */
+  const [busquedaLive, setBusquedaLive] = useState(() => parseCatalogSearchParams(searchParams).q);
+  useEffect(() => {
+    setBusquedaLive(filtros.q);
+  }, [filtros.q]);
+
+  const patchFiltros = useCallback(
+    (patch: Partial<CatalogoFiltrosUrl>) => {
+      const next: CatalogoFiltrosUrl = { ...filtrosRef.current, ...patch };
+      const qs = buildCatalogSearchParams(next);
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router],
+  );
+
   // Hidrata con datos del servidor para evitar "pantalla vacía" al primer render.
   const { data: rawData, mutate, isLoading } = useSWR("productos-catalogo-v2", fetcher, {
     fallbackData: rawDataInicial,
@@ -74,18 +131,14 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
   }, [mutate]);
 
   const [productos, setProductos] = useState<ProductoCatalogoGrupo[]>([]);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todas");
-  const [colorSeleccionado, setColorSeleccionado] = useState("Todos");
-  const [tallaSeleccionada, setTallaSeleccionada] = useState("Todas");
-  const [ordenarPor, setOrdenarPor] = useState("novedades");
-  const [busqueda, setBusqueda] = useState("");
+  const { categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor, mostrarAgotados } =
+    filtros;
 
   const [isColorFilterOpen, setIsColorFilterOpen] = useState(false);
   const [isTallaFilterOpen, setIsTallaFilterOpen] = useState(false);
   const [isCatFilterOpen, setIsCatFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [productosVisibles, setProductosVisibles] = useState(12);
-  const [mostrarAgotados, setMostrarAgotados] = useState(false);
 
   const numeroWhatsApp = "573118897646";
 
@@ -118,7 +171,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
 
   useEffect(() => {
     setProductosVisibles(12);
-  }, [categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, busqueda, ordenarPor, mostrarAgotados]);
+  }, [searchParams]);
 
   const { categoriasDisponibles, coloresDisponibles, tallasDisponibles } = useMemo(() => {
     const cats = new Set<string>();
@@ -150,7 +203,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
   }, [productos]);
 
   const productosFinales = useMemo(() => {
-    const query = busqueda.toLowerCase().trim();
+    const query = busquedaLive.toLowerCase().trim();
     const resultado = productos.filter((p) => {
       const catProd = typeof p.categoria === "object" ? p.categoria?.nombre : p.categoria;
       const catString = String(catProd || "").toLowerCase();
@@ -186,7 +239,15 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
       if (ordenarPor === "precio-mayor") return Number(b.precio) - Number(a.precio);
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [productos, busqueda, categoriaSeleccionada, colorSeleccionado, tallaSeleccionada, ordenarPor, mostrarAgotados]);
+  }, [
+    productos,
+    busquedaLive,
+    categoriaSeleccionada,
+    colorSeleccionado,
+    tallaSeleccionada,
+    ordenarPor,
+    mostrarAgotados,
+  ]);
 
   if (isLoading && productos.length === 0) return <CatalogoSkeleton />;
 
@@ -232,8 +293,12 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               type="text"
               placeholder="Buscar..."
               className="w-full bg-white py-4 pl-6 pr-14 rounded-2xl outline-none text-xs font-bold border border-[#4a1d44]/5 focus:border-[#4a1d44]/20 transition-all shadow-sm"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              value={busquedaLive}
+              onChange={(e) => {
+                const v = e.target.value;
+                setBusquedaLive(v);
+                patchFiltros({ q: v });
+              }}
             />
             <Search size={18} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20" />
           </div>
@@ -242,7 +307,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
             <ArrowUpDown size={14} className="opacity-30" />
             <select
               value={ordenarPor}
-              onChange={(e) => setOrdenarPor(e.target.value)}
+              onChange={(e) => patchFiltros({ ordenarPor: e.target.value })}
               className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer"
             >
               <option value="novedades">Novedades</option>
@@ -266,7 +331,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               {isCatFilterOpen && (
                 <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
                   <button
-                    onClick={() => setCategoriaSeleccionada("Todas")}
+                    onClick={() => patchFiltros({ categoriaSeleccionada: "Todas" })}
                     className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === "Todas" ? "bg-[#4a1d44] text-white font-bold" : "hover:bg-[#fdf8f6]"}`}
                   >
                     Ver Todo
@@ -274,7 +339,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
                   {categoriasDisponibles.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setCategoriaSeleccionada(cat)}
+                      onClick={() => patchFiltros({ categoriaSeleccionada: cat })}
                       className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === cat ? "bg-[#4a1d44] text-white font-bold" : "hover:bg-[#fdf8f6]"}`}
                     >
                       {cat}
@@ -294,7 +359,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               {isTallaFilterOpen && (
                 <div className="grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
                   <button
-                    onClick={() => setTallaSeleccionada("Todas")}
+                    onClick={() => patchFiltros({ tallaSeleccionada: "Todas" })}
                     className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === "Todas" ? "bg-[#4a1d44] text-white border-[#4a1d44]" : "bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30"}`}
                   >
                     ALL
@@ -302,7 +367,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
                   {tallasDisponibles.map((t) => (
                     <button
                       key={t.nombre}
-                      onClick={() => setTallaSeleccionada(t.nombre)}
+                      onClick={() => patchFiltros({ tallaSeleccionada: t.nombre })}
                       className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === t.nombre ? "bg-[#4a1d44] text-white border-[#4a1d44]" : "bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30"}`}
                     >
                       {t.nombre}
@@ -322,7 +387,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               {isColorFilterOpen && (
                 <div className="grid grid-cols-4 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-500">
                   <button
-                    onClick={() => setColorSeleccionado("Todos")}
+                    onClick={() => patchFiltros({ colorSeleccionado: "Todos" })}
                     className={`w-10 h-10 rounded-full border text-[8px] font-black flex items-center justify-center border-[#4a1d44]/10 ${colorSeleccionado === "Todos" ? "bg-[#4a1d44] text-white" : "bg-white"}`}
                   >
                     TODO
@@ -340,7 +405,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
                       <button
                         key={col.nombre}
                         title={col.nombre}
-                        onClick={() => setColorSeleccionado(col.nombre)}
+                        onClick={() => patchFiltros({ colorSeleccionado: col.nombre })}
                         className={`w-10 h-10 rounded-full border transition-all hover:scale-110 ${colorSeleccionado === col.nombre ? "border-[#4a1d44] ring-2 ring-offset-2 ring-[#4a1d44]/20 scale-110" : "border-black/10"}`}
                         style={{ backgroundColor: colorHex }}
                       />
@@ -353,7 +418,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
             <div className="pt-6 border-t border-[#4a1d44]/5 mt-2">
               <button
                 type="button"
-                onClick={() => setMostrarAgotados((prev) => !prev)}
+                onClick={() => patchFiltros({ mostrarAgotados: !mostrarAgotados })}
                 className="w-full flex items-center justify-between gap-3 group"
               >
                 <span className="text-[12px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all">
@@ -369,19 +434,13 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               </button>
             </div>
 
-            {(busqueda ||
+            {(busquedaLive.trim() ||
               categoriaSeleccionada !== "Todas" ||
               colorSeleccionado !== "Todos" ||
               tallaSeleccionada !== "Todas" ||
               mostrarAgotados) && (
               <button
-                onClick={() => {
-                  setBusqueda("");
-                  setCategoriaSeleccionada("Todas");
-                  setColorSeleccionado("Todos");
-                  setTallaSeleccionada("Todas");
-                  setMostrarAgotados(false);
-                }}
+                onClick={() => router.replace(pathname, { scroll: false })}
                 className="mt-6 w-full py-4 text-[12px] font-black uppercase tracking-widest bg-red-50 text-red-400 border border-red-100 rounded-2xl hover:bg-red-100 transition-all"
               >
                 Limpiar
@@ -405,6 +464,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
                     producto={prod}
                     colorFiltro={colorSeleccionado}
                     priority={productosFinales.indexOf(prod) < 4}
+                    returnCatalogQuery={searchParams.toString() || undefined}
                   />
                 ))}
               </div>
@@ -440,7 +500,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
   );
 }
 
-function CatalogoSkeleton() {
+export function CatalogoSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 animate-pulse">
       <div className="h-16 w-80 bg-gray-100 rounded-full mx-auto mb-20" />

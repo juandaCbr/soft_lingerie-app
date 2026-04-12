@@ -321,7 +321,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           <div className="text-left space-y-3">
-            <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50">Descripción</h3>
+            <h3 className="text-[#4a1d44] text-[14px] font-bold uppercase tracking-widest ">Descripción</h3>
             <p className="text-base leading-relaxed text-[#4a1d44]/80">
               {varianteActiva.descripcion || "Diseño exclusivo de Soft Lingerie. Confeccionado con materiales premium para garantizar suavidad, comodidad y elegancia en todo momento."}
             </p>
@@ -329,10 +329,10 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
 
           <div className="py-2 flex flex-col items-start w-full min-h-[110px]">
             <div className="flex justify-between items-center w-full mb-3">
-              <h3 className="text-[9px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
                 <Ruler size={12} /> Selecciona tu Talla
               </h3>
-              <button onClick={() => setIsSizeGuideOpen(true)} className="text-[9px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all">
+              <button onClick={() => setIsSizeGuideOpen(true)} className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all">
                 Guía de Tallas
               </button>
             </div>
@@ -366,7 +366,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
 
             <div className="h-6 mt-3">
               {tallaSeleccionada && (
-                <p className="text-[10px] font-bold text-[#4a1d44]/40 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-[#4a1d44]/60 uppercase tracking-widest">
                   {tallaSeleccionada.stock > 0 ? 'Disponible en stock' : 'Agotado'}
                 </p>
               )}
@@ -374,7 +374,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           <div className="py-2 flex flex-col items-start min-h-[80px]">
-            <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">Cantidad</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-60">Cantidad</h3>
             <div className={`flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm transition-opacity duration-300 ${!tallaSeleccionada || tallaSeleccionada.stock <= 0 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
               <button onClick={() => setCantidad(prev => Math.max(1, prev - 1))} className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"><Minus size={16} /></button>
               <span className="w-12 text-center font-black text-sm">{cantidad}</span>
@@ -383,8 +383,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           </div>
 
           <div className="flex flex-row gap-6 pt-2 justify-start items-center">
-            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60"><Check size={14} className="text-[#4a1d44]" /> Compra Segura</div>
-            <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest opacity-60"><Check size={14} className="text-[#4a1d44]" /> Envíos Nacionales</div>
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-60"><Check size={14} className="text-[#4a1d44]" /> Compra Segura</div>
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-60"><Check size={14} className="text-[#4a1d44]" /> Envíos Nacionales</div>
           </div>
 
           <div className="pt-2 min-h-[64px]">

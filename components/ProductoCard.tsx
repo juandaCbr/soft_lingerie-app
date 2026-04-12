@@ -17,7 +17,7 @@ import type {
   ProductoCardProducto,
   ProductoCatalogoVariante,
 } from '@/app/lib/catalog-types';
-import { getColorInfo } from '@/app/lib/catalog-helpers';
+import { firstColorFromVariante, getColorInfo } from '@/app/lib/catalog-helpers';
 
 /** Determina si una variante tiene stock disponible (columna stock O stock_talla). */
 function varianteTieneStock(v: ProductoCatalogoVariante): boolean {
@@ -53,9 +53,12 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
     if (producto.variantes) {
       // Si hay un filtro de color activo, buscamos la variante que coincida
       if (colorFiltro && colorFiltro !== 'Todos') {
-        const varianteMatch = producto.variantes.find((v) =>
-          v.producto_colores?.some((pc) => getColorInfo(pc)?.nombre === colorFiltro)
-        );
+        const varianteMatch = producto.variantes.find((v) => {
+          for (const pc of v.producto_colores ?? []) {
+            if (getColorInfo(pc)?.nombre === colorFiltro) return true;
+          }
+          return false;
+        });
         if (varianteMatch) {
           setVarianteActiva(varianteMatch);
           setCurrentImg(0);
@@ -95,6 +98,12 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
   };
 
   const slug = slugify(varianteActiva.nombre);
+
+  /** Antes solo se mostraban colores si había 2+ variantes; una sola variante con color en BD no mostraba nada. */
+  const mostrarSelectorColores =
+    !!producto.variantes?.length &&
+    (producto.variantes.length > 1 ||
+      producto.variantes.some((v) => firstColorFromVariante(v) != null));
 
   return (
     <Link href={`/productos/${slug}-${varianteActiva.id}`} className="block h-full">
@@ -183,10 +192,10 @@ export default function ProductoCard({ producto, colorFiltro, priority = false }
             </h3>
 
             {/* SELECTOR DE COLORES */}
-            {producto.variantes && producto.variantes.length > 1 && (
+            {mostrarSelectorColores && (
               <div className="flex justify-center items-center gap-2.5 mb-4">
-                {producto.variantes.map((v) => {
-                  const colorInfo = v.producto_colores?.[0] ? getColorInfo(v.producto_colores[0]) : null;
+                {(producto.variantes ?? []).map((v) => {
+                  const colorInfo = firstColorFromVariante(v);
                   const isSelected = varianteActiva.id === v.id;
 
                   // Override manual para asegurar que los colores se vean bien

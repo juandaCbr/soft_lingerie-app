@@ -1,5 +1,9 @@
 import crypto from "crypto";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import {
+  aplicarDescuentoStockDesdeDetalle,
+  normalizarDetalleCompra,
+} from "@/app/lib/ventas-detalle-stock";
 
 function getAdmin(): SupabaseClient {
   return createClient(
@@ -60,18 +64,6 @@ async function enviarNotificacionPushover(mensaje: string) {
   } catch (err) {
     console.error("Error enviando push:", err);
   }
-}
-
-function normalizarDetalleCompra(raw: unknown): unknown[] {
-  let detalle: unknown = raw;
-  if (typeof detalle === "string") {
-    try {
-      detalle = JSON.parse(detalle);
-    } catch {
-      return [];
-    }
-  }
-  return Array.isArray(detalle) ? detalle : [];
 }
 
 /**
@@ -144,41 +136,12 @@ export async function procesarPedidoWompiAprobado(
   const detalle = normalizarDetalleCompra(pedido.detalle_compra);
 
   let resumenArticulos = "";
-  for (const item of detalle) {
-    const line = item as Record<string, unknown>;
+  for (const line of detalle) {
     if (line.es_envio) continue;
-
     resumenArticulos += `• ${line.nombre} (Talla: ${(line.talla as { nombre?: string } | null)?.nombre || "Única"}) x${line.quantity}\n`;
-
-    const productId = line.id as string | number | undefined;
-    if (productId == null) continue;
-
-    const qty = Number(line.quantity ?? 0);
-
-    const { data: prod } = await supabaseAdmin.from("productos").select("stock").eq("id", productId).single();
-    if (prod) {
-      await supabaseAdmin
-        .from("productos")
-        .update({ stock: Math.max(0, Number(prod.stock) - qty) })
-        .eq("id", productId);
-    }
-
-    if (line.talla_id) {
-      const { data: relTalla } = await supabaseAdmin
-        .from("producto_tallas")
-        .select("stock_talla")
-        .eq("producto_id", productId)
-        .eq("talla_id", line.talla_id)
-        .single();
-      if (relTalla) {
-        await supabaseAdmin
-          .from("producto_tallas")
-          .update({ stock_talla: Math.max(0, Number(relTalla.stock_talla) - qty) })
-          .eq("producto_id", productId)
-          .eq("talla_id", line.talla_id);
-      }
-    }
   }
+
+  await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
 
   const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
   await enviarNotificacionPushover(mensajePush);

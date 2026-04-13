@@ -26,7 +26,8 @@ import {
   Bike,
   AlertTriangle,
   Trash2,
-  Calendar
+  Calendar,
+  CircleDollarSign,
 } from 'lucide-react';
 import { adminSlicePage } from '@/app/lib/admin-pagination';
 import { useAdminListPagination } from '@/app/hooks/useAdminListPagination';
@@ -61,6 +62,8 @@ function AdminPedidosContent() {
   const [pedidoADomicilio, setPedidoADomicilio] = useState<any>(null);
   const [pedidoAFinalizar, setPedidoAFinalizar] = useState<any>(null);
   const [pedidoAEliminar, setPedidoAEliminar] = useState<any>(null);
+  const [pedidoAMarcarPagado, setPedidoAMarcarPagado] = useState<any>(null);
+  const [pedidoAEliminarPendiente, setPedidoAEliminarPendiente] = useState<any>(null);
 
   const [guiaForm, setGuiaForm] = useState({ numero: '', empresa: 'Interrapidisimo' });
   const [procesandoAccion, setProcesandoAccion] = useState(false);
@@ -151,6 +154,50 @@ function AdminPedidosContent() {
       setPedidoAEliminar(null);
       scrollToTop();
     } catch (e: any) { toast.error("Error"); } finally { setProcesandoAccion(false); }
+  };
+
+  const handleConfirmarMarcarPagado = async () => {
+    if (!pedidoAMarcarPagado?.id) return;
+    setProcesandoAccion(true);
+    try {
+      const res = await fetch("/api/admin/venta-marcar-pagada", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ventaId: pedidoAMarcarPagado.id }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || "No se pudo actualizar");
+      toast.success(j.duplicado ? "Este pedido ya estaba marcado como pagado." : "Pedido marcado como pagado e inventario actualizado.");
+      setPedidoAMarcarPagado(null);
+      await cargarVentas();
+      scrollToTop();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    } finally {
+      setProcesandoAccion(false);
+    }
+  };
+
+  const handleConfirmarEliminarPendiente = async () => {
+    if (!pedidoAEliminarPendiente?.id) return;
+    setProcesandoAccion(true);
+    try {
+      const res = await fetch("/api/admin/venta-eliminar-pendiente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ventaId: pedidoAEliminarPendiente.id }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || "No se pudo eliminar");
+      toast.success("Pedido eliminado y unidades devueltas al inventario.");
+      setPedidoAEliminarPendiente(null);
+      await cargarVentas();
+      scrollToTop();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Error");
+    } finally {
+      setProcesandoAccion(false);
+    }
   };
 
   const ventasSegunPagoYLogistica = useMemo(() => {
@@ -371,6 +418,30 @@ function AdminPedidosContent() {
                         )}
                       </div>
                       <div className="w-full flex flex-col gap-3">
+                        {(venta.estado_pago || 'PENDIENTE') !== 'APROBADO' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setPedidoAMarcarPagado(venta)}
+                              className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                            >
+                              <CircleDollarSign size={16} /> Marcar como pagado
+                            </button>
+                            <p className="text-[8px] text-center opacity-50 font-medium leading-relaxed px-1">
+                              Tras comprobar el cobro en Wompi: pasa a pagado y descuenta stock como una venta aprobada.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setPedidoAEliminarPendiente(venta)}
+                              className="w-full bg-amber-50 text-amber-800 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-200 transition-all flex items-center justify-center gap-2 border border-amber-200"
+                            >
+                              <Trash2 size={14} /> Eliminar pedido pendiente
+                            </button>
+                            <p className="text-[8px] text-center opacity-50 font-medium leading-relaxed px-1">
+                              Borra el pedido y suma de vuelta las unidades al inventario según las líneas del carrito.
+                            </p>
+                          </>
+                        )}
                         {venta.estado_pago === 'APROBADO' && (
                           <>
                             {(venta.estado_logistico || 'PREPARANDO') === 'PREPARANDO' && (
@@ -432,6 +503,69 @@ function AdminPedidosContent() {
       {pedidoAEliminar && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative"><div className="text-center mb-8"><div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600"><AlertTriangle size={48} /></div><h2 className="text-2xl font-black font-playfair">¿Eliminar definitivamente?</h2><p className="text-sm opacity-60 mt-2 px-4 text-balance text-red-800/60">Esta acción borrará el pedido de tu base de datos para siempre. Úsalo solo para registros de prueba o basura.</p></div><div className="flex flex-col gap-3"><button disabled={procesandoAccion} onClick={handleConfirmarEliminar} className="w-full bg-red-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">{procesandoAccion ? <Loader2 className="animate-spin" /> : <Trash2 size={18} />}ELIMINAR PARA SIEMPRE</button><button onClick={() => setPedidoAEliminar(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button></div></div>
+        </div>
+      )}
+
+      {pedidoAMarcarPagado && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <CircleDollarSign size={48} />
+              </div>
+              <h2 className="text-2xl font-black font-playfair">¿Marcar como pagado?</h2>
+              <p className="text-sm opacity-60 mt-3 px-2 text-balance">
+                Confirma solo si ya verificaste el pago en Wompi (o transferencia). El pedido pasará a <strong>pagado</strong> y se <strong>descontará stock</strong> como en una venta aprobada automáticamente.
+              </p>
+              <p className="text-xs font-bold text-[#4a1d44] mt-4">{pedidoAMarcarPagado.nombre_cliente}</p>
+              <p className="text-[10px] opacity-40 mt-1">${Number(pedidoAMarcarPagado.monto_total).toLocaleString("es-CO")}</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={procesandoAccion}
+                onClick={handleConfirmarMarcarPagado}
+                className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
+                Confirmar pago e inventario
+              </button>
+              <button type="button" onClick={() => setPedidoAMarcarPagado(null)} className="w-full bg-gray-50 text-gray-500 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pedidoAEliminarPendiente && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-amber-200/80">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+                <Trash2 size={40} />
+              </div>
+              <h2 className="text-2xl font-black font-playfair">¿Eliminar pedido pendiente?</h2>
+              <p className="text-sm opacity-60 mt-3 px-2 text-balance">
+                Se borrará el registro y las <strong>unidades de cada producto</strong> en el detalle se <strong>sumarán de vuelta</strong> al inventario (producto y talla). Úsalo para pedidos duplicados, pruebas o carritos abandonados.
+              </p>
+              <p className="text-xs font-bold text-[#4a1d44] mt-4">{pedidoAEliminarPendiente.nombre_cliente}</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={procesandoAccion}
+                onClick={handleConfirmarEliminarPendiente}
+                className="w-full bg-amber-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {procesandoAccion ? <Loader2 className="animate-spin" /> : <Trash2 size={18} />}
+                Eliminar y devolver stock
+              </button>
+              <button type="button" onClick={() => setPedidoAEliminarPendiente(null)} className="w-full bg-gray-50 text-gray-500 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

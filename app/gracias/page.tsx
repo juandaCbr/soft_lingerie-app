@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle, ShoppingBag, Search, ClipboardCheck, Bike, Truck } from "lucide-react";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCart } from "@/context/CartContext";
@@ -13,6 +13,7 @@ function GraciasContent() {
     const [referencia, setReferencia] = useState('---');
     const [ciudad, setCiudad] = useState('');
     const [esValledupar, setEsValledupar] = useState(false);
+    const confirmEnviado = useRef(false);
 
     const cartContext = useCart();
     const clearCart = cartContext?.clearCart;
@@ -33,6 +34,21 @@ function GraciasContent() {
             clearCart();
         }
     }, [searchParams, clearCart]);
+
+    // Tras PSE / checkout hosted, Wompi suele añadir el id de transacción a la URL de retorno.
+    useEffect(() => {
+        const txId =
+            searchParams.get("id") ||
+            searchParams.get("transactionId") ||
+            searchParams.get("transaction_id");
+        if (!txId || confirmEnviado.current) return;
+        confirmEnviado.current = true;
+        void fetch("/api/wompi/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transactionId: txId }),
+        });
+    }, [searchParams]);
 
     const copiarReferencia = () => {
         if (typeof navigator !== 'undefined' && navigator.clipboard) {

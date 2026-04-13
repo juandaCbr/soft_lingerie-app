@@ -52,6 +52,19 @@ export default function BotonWompi({
         };
     }, [pedidoId, verificando, onExito]);
 
+    /** Alinea pedido, stock y notificación si el webhook falló o aún no llegó. */
+    const sincronizarVentaAprobada = async (transactionId: string) => {
+        try {
+            await fetch("/api/wompi/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transactionId }),
+            });
+        } catch {
+            /* no bloquear la UX */
+        }
+    };
+
     // Comentario: Sistema de polling (Fallback en caso de que Realtime falle o sea lento)
     const iniciarPolling = (transactionId: string) => {
         setVerificando(true);
@@ -68,6 +81,7 @@ export default function BotonWompi({
                 
                 if (data.status === 'APPROVED') {
                     clearInterval(interval);
+                    await sincronizarVentaAprobada(transactionId);
                     onExito(data);
                 } else if (['DECLINED', 'VOIDED', 'ERROR'].includes(data.status)) {
                     clearInterval(interval);
@@ -158,6 +172,7 @@ export default function BotonWompi({
                 iniciarPolling(result.data.id);
             } else if (result.data?.status === 'APPROVED') {
                 toast.success("¡Pago aprobado!", { id: toastId });
+                await sincronizarVentaAprobada(result.data.id);
                 onExito(result.data);
             } else {
                 iniciarPolling(result.data.id);

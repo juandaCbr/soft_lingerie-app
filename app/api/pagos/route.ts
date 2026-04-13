@@ -43,6 +43,12 @@ export async function POST(req: Request) {
     }
     const cleanPhone = rawPhone.substring(0, 10);
 
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const clientIp =
+      forwardedFor?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip")?.trim() ||
+      undefined;
+
     let transactionPayload: any = {
       amount_in_cents: amountInCents,
       currency: "COP",
@@ -56,19 +62,43 @@ export async function POST(req: Request) {
       customer_data: {
         phone_number: cleanPhone,
         full_name: (nombre || "Cliente Soft").trim().substring(0, 50)
-      }
+      },
+      ...(clientIp && { ip: clientIp }),
     };
 
+    // Wompi exige payment_method_type además de payment_method (docs actualizadas).
+    // Sin esto, producción suele responder con error de validación sobre payment_method.
     if (metodo === 'NEQUI') {
-      transactionPayload.payment_method = { 
-        type: "NEQUI", 
-        phone_number: paymentData.phoneNequi 
+      let nequiDigits = String(paymentData?.phoneNequi ?? "").replace(/\D/g, "");
+      if (nequiDigits.startsWith("57") && nequiDigits.length > 10) {
+        nequiDigits = nequiDigits.slice(2);
+      }
+      const nequiPhone = nequiDigits.slice(0, 10);
+      if (nequiPhone.length !== 10) {
+        return NextResponse.json(
+          { error: "Número Nequi inválido: debe tener 10 dígitos." },
+          { status: 400 },
+        );
+      }
+      transactionPayload.payment_method_type = "NEQUI";
+      transactionPayload.payment_method = {
+        type: "NEQUI",
+        phone_number: nequiPhone,
       };
     } else if (metodo === 'CARD' || metodo === 'CREDIT_CARD' || metodo === 'DEBIT_CARD') {
-      transactionPayload.payment_method = { 
-        type: "CARD", 
-        installments: (metodo === 'DEBIT_CARD') ? 1 : (Number(paymentData.installments) || 1), 
-        token: paymentData.token 
+      const token = paymentData?.token;
+      if (!token || typeof token !== "string") {
+        return NextResponse.json(
+          { error: "No se pudo obtener el token de la tarjeta. Intenta de nuevo." },
+          { status: 400 },
+        );
+      }
+      transactionPayload.payment_method_type = "CARD";
+      transactionPayload.payment_method = {
+        type: "CARD",
+        installments:
+          metodo === "DEBIT_CARD" ? 1 : Number(paymentData?.installments) || 1,
+        token,
       };
     } else if (metodo === 'PSE' || metodo === 'BANCOLOMBIA') {
       // Solo PSE y Bancolombia usan el Checkout Web Hosted de Wompi
@@ -89,6 +119,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ 
           url: hostedUrl 
       });
+    }
+
+    if (!transactionPayload.payment_method) {
+      return NextResponse.json(
+        {
+          error: `Método de pago no válido o no soportado por esta vía: ${String(metodo ?? "")}`,
+        },
+        { status: 400 },
+      );
     }
 
     const wompiRes = await fetch(`${process.env.NEXT_PUBLIC_WOMPI_API_URL}/transactions`, {

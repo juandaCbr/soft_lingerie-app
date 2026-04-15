@@ -17,6 +17,7 @@ const HOME_PRODUCTOS_SELECT = `
   precio,
   categoria,
   created_at,
+  grupo_id,
   imagenes_urls,
   imagenes_locales
 `;
@@ -32,7 +33,9 @@ const getHomeData = cache(async () => {
     supabaseAdmin
       .from("productos")
       .select(HOME_PRODUCTOS_SELECT)
-      .eq("activo", true),
+      .eq("activo", true)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
     supabaseAdmin
       .from("ventas_realizadas")
       .select("detalle_compra")

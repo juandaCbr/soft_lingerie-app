@@ -290,7 +290,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                 <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">
                   {variantes.length > 1 ? 'Colores Disponibles' : 'Color'}
                 </h3>
-                <div className="flex gap-3">
+                <div className="flex w-full max-w-full flex-wrap gap-3 p-1">
                   {variantes.map((v) => {
                     let color = v.producto_colores?.[0]?.colores;
                     const isSelected = varianteActiva.id === v.id;

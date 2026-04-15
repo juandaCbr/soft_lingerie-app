@@ -19,14 +19,54 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
   const scrollNovedades = useRef<HTMLDivElement>(null);
   const scrollFavoritos = useRef<HTMLDivElement>(null);
 
-  const novedades = useMemo(() => {
-    return [...productos]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 8);
+  const getSafeTimestamp = (value: string) => {
+    const ts = new Date(value).getTime();
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  const toNumericId = (id: string | number) => {
+    const n = Number(id);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const sortByRecientes = (a: HomeProducto, b: HomeProducto) => {
+    const diffFecha = getSafeTimestamp(b.created_at) - getSafeTimestamp(a.created_at);
+    if (diffFecha !== 0) return diffFecha;
+    return toNumericId(b.id) - toNumericId(a.id);
+  };
+
+  const normalizedGroupId = (p: HomeProducto) => {
+    const gid = typeof p.grupo_id === "string" ? p.grupo_id.trim() : "";
+    return gid.length > 0 ? `g:${gid}` : `id:${String(p.id)}`;
+  };
+
+  const productosAgrupados = useMemo(() => {
+    const grouped = new Map<string, HomeProducto[]>();
+    productos.forEach((p) => {
+      const key = normalizedGroupId(p);
+      const arr = grouped.get(key);
+      if (arr) arr.push(p);
+      else grouped.set(key, [p]);
+    });
+
+    const representativeByGroup = new Map<string, HomeProducto>();
+    const variantIdsByGroup = new Map<string, Set<string>>();
+
+    grouped.forEach((items, groupKey) => {
+      const orderedItems = [...items].sort(sortByRecientes);
+      representativeByGroup.set(groupKey, orderedItems[0]);
+      variantIdsByGroup.set(groupKey, new Set(items.map((item) => String(item.id))));
+    });
+
+    return { representativeByGroup, variantIdsByGroup };
   }, [productos]);
 
+  const novedades = useMemo(() => {
+    return [...productosAgrupados.representativeByGroup.values()].sort(sortByRecientes).slice(0, 8);
+  }, [productosAgrupados]);
+
   const masVendidos = useMemo(() => {
-    const conteo: { [key: string]: number } = {};
+    const conteoVariante: { [key: string]: number } = {};
 
     ventas.forEach((v) => {
       if (v && Array.isArray(v.detalle_compra)) {
@@ -34,26 +74,31 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
           const id = item.id;
           if (id == null || id === "") return;
           const key = String(id);
-          conteo[key] = (conteo[key] || 0) + (Number(item.quantity) || 1);
+          conteoVariante[key] = (conteoVariante[key] || 0) + (Number(item.quantity) || 1);
         });
       }
     });
 
-    const conVentas = [...productos]
-      .filter((p) => {
-        const k = String(p.id);
-        return conteo[k] && conteo[k] > 0;
-      })
-      .sort((a, b) => conteo[String(b.id)] - conteo[String(a.id)]);
+    const conteoPorGrupo = new Map<string, number>();
+    productosAgrupados.variantIdsByGroup.forEach((variantIds, groupKey) => {
+      let total = 0;
+      variantIds.forEach((variantId) => {
+        total += conteoVariante[variantId] || 0;
+      });
+      if (total > 0) conteoPorGrupo.set(groupKey, total);
+    });
+
+    const conVentas = [...conteoPorGrupo.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([groupKey]) => productosAgrupados.representativeByGroup.get(groupKey))
+      .filter((p): p is HomeProducto => Boolean(p));
 
     if (conVentas.length === 0) {
-      return [...productos]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 8);
+      return [...productosAgrupados.representativeByGroup.values()].sort(sortByRecientes).slice(0, 8);
     }
 
     return conVentas.slice(0, 8);
-  }, [productos, ventas]);
+  }, [productosAgrupados, ventas]);
 
   const scrollHorizontal = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
     if (ref.current) {

@@ -142,6 +142,16 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
 
   const numeroWhatsApp = "573118897646";
 
+  const getSafeTimestamp = (value?: string) => {
+    const ts = new Date(value || "").getTime();
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  const toNumericId = (id: string | number) => {
+    const n = Number(id);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   useEffect(() => {
     if (rawData) {
       const tempGrupos: Record<string, ProductoCatalogoGrupo> = {};
@@ -237,7 +247,9 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
     return [...resultado].sort((a, b) => {
       if (ordenarPor === "precio-menor") return Number(a.precio) - Number(b.precio);
       if (ordenarPor === "precio-mayor") return Number(b.precio) - Number(a.precio);
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      const diffFecha = getSafeTimestamp(b.created_at) - getSafeTimestamp(a.created_at);
+      if (diffFecha !== 0) return diffFecha;
+      return toNumericId(b.id) - toNumericId(a.id);
     });
   }, [
     productos,
@@ -457,7 +469,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-4 gap-y-10 sm:gap-y-12 md:gap-x-7 md:gap-y-14 xl:gap-x-8 xl:gap-y-16">
                 {productosFinales.slice(0, productosVisibles).map((prod) => (
                   <ProductoCard
                     key={prod.id}

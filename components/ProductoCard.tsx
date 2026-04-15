@@ -204,13 +204,13 @@ export default function ProductoCard({
         <div className="p-4 md:p-6 text-center flex-grow flex flex-col justify-between bg-white relative z-10 pt-5">
           <div className="flex flex-col items-center">
 
-            <h3 className="font-playfair font-bold text-[#4a1d44] text-sm md:text-lg mb-4 truncate w-full">
+            <h3 className="font-playfair font-bold text-[#4a1d44] text-lg md:text-2xl mb-4 truncate w-full">
               {varianteActiva.nombre}
             </h3>
 
             {/* SELECTOR DE COLORES */}
             {mostrarSelectorColores && (
-              <div className="flex justify-center items-center gap-2.5 mb-4">
+              <div className="mb-4 flex w-full max-w-full flex-wrap items-center justify-center gap-2.5 p-1">
                 {(producto.variantes ?? []).map((v) => {
                   const colorInfo = firstColorFromVariante(v);
                   const isSelected = varianteActiva.id === v.id;
@@ -249,7 +249,7 @@ export default function ProductoCard({
             {/* PRECIO CON COP INTEGRADO Y BENEFICIO */}
             <div className="flex flex-col items-center mb-4 w-full">
               <div className="flex items-baseline justify-center gap-1" suppressHydrationWarning>
-                <p className="text-[#4a1d44] font-black text-sm md:text-base">
+                <p className="text-[#4a1d44] font-black text-lg md:text-xl">
                   {mounted ? `$${Number(varianteActiva.precio).toLocaleString('es-CO')}` : `$${varianteActiva.precio}`}
                 </p>
                 <span className="text-[9px] md:text-[10px] font-black opacity-40 tracking-widest uppercase">

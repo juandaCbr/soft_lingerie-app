@@ -29,6 +29,7 @@ export default function NuevoProductoPage() {
     precio: '',
     categoria: '',
     grupo_id: '',
+    destacado_home: false,
   });
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function NuevoProductoPage() {
       precio: '',
       categoria: '',
       grupo_id: '',
+      destacado_home: false,
     });
     setArchivosImagenes([]);
     setPrevisualizaciones([]);
@@ -213,6 +215,7 @@ export default function NuevoProductoPage() {
           stock: stockTotal,
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null,
+          destacado_home: formData.destacado_home,
           imagenes_urls: [],
           imagenes_locales: [],
         }])
@@ -378,6 +381,35 @@ export default function NuevoProductoPage() {
                   </select>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">
+                ¿Producto destacado?
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, destacado_home: !prev.destacado_home }))
+                }
+                className="w-full flex items-center justify-between bg-[#fdf8f6] border border-[#4a1d44]/10 rounded-2xl px-4 py-3.5"
+                aria-pressed={formData.destacado_home}
+              >
+                <span className="text-sm font-bold text-[#4a1d44]">
+                  {formData.destacado_home ? "Sí, mostrar como destacado" : "No destacado"}
+                </span>
+                <span
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    formData.destacado_home ? "bg-[#4a1d44]" : "bg-[#4a1d44]/20"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      formData.destacado_home ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </span>
+              </button>
             </div>
 
             <div className="space-y-4">

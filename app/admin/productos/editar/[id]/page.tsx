@@ -39,6 +39,7 @@ export default function EditarProductoPage() {
   const [grupoId, setGrupoId] = useState("");
   const [coloresDB, setColoresDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
+  const [destacadoHome, setDestacadoHome] = useState(false);
 
   const cargarProducto = useCallback(async () => {
     if (!idProducto) {
@@ -74,6 +75,7 @@ export default function EditarProductoPage() {
         setImagenesLocales(normalizeImagenesLocales(data.imagenes_locales));
         setRotasLocales(new Set());
         setGrupoId(data.grupo_id != null && data.grupo_id !== '' ? String(data.grupo_id) : '');
+        setDestacadoHome(data.destacado_home === true);
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
@@ -285,6 +287,7 @@ export default function EditarProductoPage() {
         categoria,
         descripcion,
         grupo_id: grupoId.trim() || null,
+        destacado_home: destacadoHome,
         imagenes_urls: listaFinalUrls,
         imagenes_locales: localesMut.length > 0 ? localesMut : null,
       }).eq('id', cleanId);
@@ -523,6 +526,33 @@ export default function EditarProductoPage() {
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" size={18} />
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">
+                ¿Producto destacado?
+              </label>
+              <button
+                type="button"
+                onClick={() => setDestacadoHome((prev) => !prev)}
+                className="w-full flex items-center justify-between bg-[#fdf8f6] border border-[#4a1d44]/10 rounded-2xl px-4 py-3.5"
+                aria-pressed={destacadoHome}
+              >
+                <span className="text-sm font-bold text-[#4a1d44]">
+                  {destacadoHome ? "Sí, mostrar como destacado" : "No destacado"}
+                </span>
+                <span
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    destacadoHome ? "bg-[#4a1d44]" : "bg-[#4a1d44]/20"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      destacadoHome ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
+                </span>
+              </button>
             </div>
 
             {/* TALLAS Y STOCKS ESPECÍFICOS */}

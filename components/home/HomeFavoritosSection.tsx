@@ -1,17 +1,17 @@
 "use client";
 
-import { RefObject } from "react";
-import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star } from "lucide-react";
 import type { HomeProducto } from "@/app/lib/home-types";
 import { HomeProductCard } from "./HomeProductCard";
 
 type HomeFavoritosSectionProps = {
-  masVendidos: HomeProducto[];
-  scrollRef: RefObject<HTMLDivElement | null>;
-  onScroll: (direction: "left" | "right") => void;
+  favoritos: Array<{
+    prod: HomeProducto;
+    etiqueta: string;
+  }>;
 };
 
-export function HomeFavoritosSection({ masVendidos, scrollRef, onScroll }: HomeFavoritosSectionProps) {
+export function HomeFavoritosSection({ favoritos }: HomeFavoritosSectionProps) {
   return (
     <section className="bg-white py-24 px-4 border-y border-[#4a1d44]/5">
       <div className="max-w-7xl mx-auto">
@@ -31,44 +31,17 @@ export function HomeFavoritosSection({ masVendidos, scrollRef, onScroll }: HomeF
           </p>
         </div>
 
-        <div className="relative">
-          <div
-            ref={scrollRef}
-            className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-5"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {masVendidos.length > 0 ? (
-              masVendidos.map((prod) => (
-                <HomeProductCard key={prod.id} prod={prod} etiqueta="TENDENCIA" />
-              ))
-            ) : (
-              <div className="w-full text-center py-20 opacity-30 italic font-medium">
-                Descubre nuestra colección...
-              </div>
-            )}
+        {favoritos.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+            {favoritos.map(({ prod, etiqueta }) => (
+              <HomeProductCard key={prod.id} prod={prod} etiqueta={etiqueta} layout="grid" />
+            ))}
           </div>
-
-          {masVendidos.length > 0 && (
-            <div className="hidden md:flex justify-center gap-4 mt-10">
-              <button
-                type="button"
-                onClick={() => onScroll("left")}
-                className="p-4 bg-[#fdf8f6] rounded-full text-[#4a1d44] border border-[#4a1d44]/10 hover:bg-[#4a1d44] hover:text-white transition-all"
-                aria-label="Desplazar favoritos a la izquierda"
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                type="button"
-                onClick={() => onScroll("right")}
-                className="p-4 bg-[#fdf8f6] rounded-full text-[#4a1d44] border border-[#4a1d44]/10 hover:bg-[#4a1d44] hover:text-white transition-all"
-                aria-label="Desplazar favoritos a la derecha"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="w-full text-center py-20 opacity-30 italic font-medium">
+            Descubre nuestra colección...
+          </div>
+        )}
       </div>
     </section>
   );

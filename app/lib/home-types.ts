@@ -11,6 +11,7 @@ export type HomeProducto = ProductoImagenes & {
   categoria?: CategoriaField;
   created_at: string;
   grupo_id?: string | null;
+  destacado_home?: boolean | null;
 };
 
 /** Línea típica dentro de `ventas_realizadas.detalle_compra` (JSON). */

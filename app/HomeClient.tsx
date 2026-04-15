@@ -17,7 +17,6 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
   const [ventas] = useState<VentaDetalleHome[]>(ventasIniciales);
 
   const scrollNovedades = useRef<HTMLDivElement>(null);
-  const scrollFavoritos = useRef<HTMLDivElement>(null);
 
   const getSafeTimestamp = (value: string) => {
     const ts = new Date(value).getTime();
@@ -51,21 +50,25 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
 
     const representativeByGroup = new Map<string, HomeProducto>();
     const variantIdsByGroup = new Map<string, Set<string>>();
+    const isDestacadoByGroup = new Map<string, boolean>();
 
     grouped.forEach((items, groupKey) => {
       const orderedItems = [...items].sort(sortByRecientes);
       representativeByGroup.set(groupKey, orderedItems[0]);
       variantIdsByGroup.set(groupKey, new Set(items.map((item) => String(item.id))));
+      isDestacadoByGroup.set(groupKey, items.some((item) => item.destacado_home === true));
     });
 
-    return { representativeByGroup, variantIdsByGroup };
+    return { representativeByGroup, variantIdsByGroup, isDestacadoByGroup };
   }, [productos]);
 
   const novedades = useMemo(() => {
     return [...productosAgrupados.representativeByGroup.values()].sort(sortByRecientes).slice(0, 8);
   }, [productosAgrupados]);
 
-  const masVendidos = useMemo(() => {
+  const favoritos = useMemo(() => {
+    const MIN_TOP_VENTAS = 4;
+    const MAX_FAVORITOS = 8;
     const conteoVariante: { [key: string]: number } = {};
 
     ventas.forEach((v) => {
@@ -90,14 +93,40 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
 
     const conVentas = [...conteoPorGrupo.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([groupKey]) => productosAgrupados.representativeByGroup.get(groupKey))
-      .filter((p): p is HomeProducto => Boolean(p));
+      .map(([groupKey]) => {
+        const prod = productosAgrupados.representativeByGroup.get(groupKey);
+        if (!prod) return null;
+        return { prod, etiqueta: "MÁS VENDIDO" as const };
+      })
+      .filter((item): item is { prod: HomeProducto; etiqueta: "MÁS VENDIDO" } => Boolean(item));
 
-    if (conVentas.length === 0) {
-      return [...productosAgrupados.representativeByGroup.values()].sort(sortByRecientes).slice(0, 8);
-    }
+    const topVentas = conVentas.slice(0, MAX_FAVORITOS);
+    if (topVentas.length >= MIN_TOP_VENTAS) return topVentas;
 
-    return conVentas.slice(0, 8);
+    const usados = new Set(topVentas.map((item) => normalizedGroupId(item.prod)));
+    const faltantes = Math.min(MAX_FAVORITOS - topVentas.length, MIN_TOP_VENTAS - topVentas.length);
+    if (faltantes <= 0) return topVentas;
+
+    const destacadosDisponibles = [...productosAgrupados.representativeByGroup.entries()]
+      .filter(([groupKey]) => !usados.has(groupKey) && productosAgrupados.isDestacadoByGroup.get(groupKey))
+      .map(([, prod]) => prod)
+      .sort(sortByRecientes)
+      .slice(0, faltantes)
+      .map((prod) => ({ prod, etiqueta: "DESTACADO" as const }));
+
+    const combinados = [...topVentas, ...destacadosDisponibles];
+    if (combinados.length >= MIN_TOP_VENTAS) return combinados;
+
+    const usadosFinales = new Set(combinados.map((item) => normalizedGroupId(item.prod)));
+    const restantes = MIN_TOP_VENTAS - combinados.length;
+    const recientesRelleno = [...productosAgrupados.representativeByGroup.entries()]
+      .filter(([groupKey]) => !usadosFinales.has(groupKey))
+      .map(([, prod]) => prod)
+      .sort(sortByRecientes)
+      .slice(0, restantes)
+      .map((prod) => ({ prod, etiqueta: "NUEVO" as const }));
+
+    return [...combinados, ...recientesRelleno];
   }, [productosAgrupados, ventas]);
 
   const scrollHorizontal = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
@@ -117,9 +146,7 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
         onScroll={(dir) => scrollHorizontal(scrollNovedades, dir)}
       />
       <HomeFavoritosSection
-        masVendidos={masVendidos}
-        scrollRef={scrollFavoritos}
-        onScroll={(dir) => scrollHorizontal(scrollFavoritos, dir)}
+        favoritos={favoritos}
       />
       <HomePageClosing />
     </div>

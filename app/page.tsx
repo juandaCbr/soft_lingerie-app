@@ -18,6 +18,7 @@ const HOME_PRODUCTOS_SELECT = `
   categoria,
   created_at,
   grupo_id,
+  destacado_home,
   imagenes_urls,
   imagenes_locales
 `;

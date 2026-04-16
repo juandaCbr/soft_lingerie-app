@@ -370,6 +370,20 @@ function AdminPedidosContent() {
                               <span className="text-[#4a1d44]/60">${Number(item.precio * item.quantity).toLocaleString('es-CO')}</span>
                             </div>
                             {item.talla && <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-pink-600 ml-8"><Ruler size={10} /> Talla: {item.talla.nombre}</div>}
+                            {(() => {
+                              const colorNombre =
+                                item?.color?.nombre ||
+                                item?.color_nombre ||
+                                item?.producto_colores?.[0]?.colores?.nombre ||
+                                item?.producto_colores?.[0]?.nombre ||
+                                null;
+                              if (!colorNombre) return null;
+                              return (
+                                <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-[#4a1d44]/70 ml-8">
+                                  <Palette size={10} /> Color: {colorNombre}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>

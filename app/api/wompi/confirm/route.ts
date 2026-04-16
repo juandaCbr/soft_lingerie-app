@@ -9,8 +9,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const transactionId = body.transactionId as string | undefined;
-    if (!transactionId?.trim()) {
-      return NextResponse.json({ error: 'transactionId requerido' }, { status: 400 });
+    const reference = body.reference as string | undefined;
+    if (!transactionId?.trim() && !reference?.trim()) {
+      return NextResponse.json({ error: 'transactionId o reference requerido' }, { status: 400 });
     }
 
     const base = process.env.NEXT_PUBLIC_WOMPI_API_URL;
@@ -19,14 +20,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Configuración Wompi incompleta' }, { status: 500 });
     }
 
-    const wompiRes = await fetch(`${base}/transactions/${encodeURIComponent(transactionId.trim())}`, {
-      headers: { Authorization: `Bearer ${priv}` },
-      cache: 'no-store',
-    });
-    const json = await wompiRes.json();
-    const tx = json.data;
+    let tx: any = null;
 
-    if (!wompiRes.ok || !tx) {
+    if (transactionId?.trim()) {
+      const wompiRes = await fetch(`${base}/transactions/${encodeURIComponent(transactionId.trim())}`, {
+        headers: { Authorization: `Bearer ${priv}` },
+        cache: 'no-store',
+      });
+      const json = await wompiRes.json();
+      if (wompiRes.ok && json?.data) {
+        tx = json.data;
+      }
+    }
+
+    if (!tx && reference?.trim()) {
+      const byRefRes = await fetch(`${base}/transactions?reference=${encodeURIComponent(reference.trim())}`, {
+        headers: { Authorization: `Bearer ${priv}` },
+        cache: 'no-store',
+      });
+      const byRefJson = await byRefRes.json().catch(() => ({}));
+      const rows = Array.isArray(byRefJson?.data) ? byRefJson.data : [];
+      tx = rows.find((row: any) => row?.status === 'APPROVED' && row?.reference === reference.trim()) ?? null;
+    }
+
+    if (!tx) {
       return NextResponse.json({ error: 'No se pudo consultar la transacción' }, { status: 400 });
     }
 

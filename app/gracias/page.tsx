@@ -41,12 +41,13 @@ function GraciasContent() {
             searchParams.get("id") ||
             searchParams.get("transactionId") ||
             searchParams.get("transaction_id");
-        if (!txId || confirmEnviado.current) return;
+        const ref = searchParams.get("ref");
+        if ((!txId && !ref) || confirmEnviado.current) return;
         confirmEnviado.current = true;
         void fetch("/api/wompi/confirm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ transactionId: txId }),
+            body: JSON.stringify({ transactionId: txId, reference: ref }),
         });
     }, [searchParams]);
 

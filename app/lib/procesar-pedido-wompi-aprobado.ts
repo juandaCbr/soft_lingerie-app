@@ -121,7 +121,7 @@ export async function procesarPedidoWompiAprobado(
       referencia_wompi: nuevaRef,
     })
     .eq("id", pedido.id as string)
-    .eq("estado_pago", "PENDIENTE")
+    .in("estado_pago", ["PENDIENTE", "Pendiente", "pendiente"])
     .select("id");
 
   if (updErr) {
@@ -130,7 +130,24 @@ export async function procesarPedidoWompiAprobado(
   }
 
   if (!actualizados?.length) {
-    return { ok: true, duplicado: true };
+    const { data: estadoActual, error: estadoErr } = await supabaseAdmin
+      .from("ventas_realizadas")
+      .select("estado_pago")
+      .eq("id", pedido.id as string)
+      .maybeSingle();
+
+    if (estadoErr) {
+      return { ok: false, reason: estadoErr.message };
+    }
+
+    if (estadoActual?.estado_pago === "APROBADO") {
+      return { ok: true, duplicado: true };
+    }
+
+    return {
+      ok: false,
+      reason: `No se pudo aprobar el pedido. Estado actual: ${String(estadoActual?.estado_pago ?? "desconocido")}`,
+    };
   }
 
   const detalle = normalizarDetalleCompra(pedido.detalle_compra);

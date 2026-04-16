@@ -76,6 +76,51 @@ async function enviarNotificacionPushover(mensaje: string) {
   }
 }
 
+async function enviarNotificacionNtfy(mensaje: string) {
+  const topic = process.env.NTFY_TOPIC;
+  if (!topic) return false;
+  const server = (process.env.NTFY_SERVER || "https://ntfy.sh").replace(/\/+$/, "");
+  const basicAuthUser = process.env.NTFY_USERNAME;
+  const basicAuthPass = process.env.NTFY_PASSWORD;
+  const token = process.env.NTFY_TOKEN;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Title": "Nueva venta Soft Lingerie",
+    "Priority": "urgent",
+    "Tags": "moneybag,shopping_cart",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else if (basicAuthUser && basicAuthPass) {
+    headers.Authorization = `Basic ${Buffer.from(`${basicAuthUser}:${basicAuthPass}`).toString("base64")}`;
+  }
+
+  try {
+    const res = await fetch(`${server}/${encodeURIComponent(topic)}`, {
+      method: "POST",
+      headers,
+      body: mensaje,
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      console.error("ntfy rejected notification:", { statusCode: res.status, body: txt });
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Error enviando ntfy:", err);
+    return false;
+  }
+}
+
+async function enviarNotificacionAdmin(mensaje: string) {
+  // Preferimos canal gratuito (ntfy) y dejamos Pushover como fallback legado.
+  if (await enviarNotificacionNtfy(mensaje)) return true;
+  return enviarNotificacionPushover(mensaje);
+}
+
 /**
  * Busca la fila por referencia Wompi exacta o por el sufijo que añadimos tras aprobar: "REF (ID: tx)".
  */
@@ -171,7 +216,7 @@ export async function procesarPedidoWompiAprobado(
   await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
 
   const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
-  const notificado = await enviarNotificacionPushover(mensajePush);
+  const notificado = await enviarNotificacionAdmin(mensajePush);
   if (!notificado) {
     console.warn("Venta aprobada pero la notificación push no pudo enviarse.", {
       referencia: reference,

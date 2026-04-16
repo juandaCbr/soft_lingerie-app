@@ -13,6 +13,14 @@ export function normalizarDetalleCompra(raw: unknown): Record<string, unknown>[]
   return detalle.filter((x): x is Record<string, unknown> => x != null && typeof x === "object");
 }
 
+function getTallaIdFromLine(line: Record<string, unknown>): string | number | null {
+  const tallaIdDirect = line.talla_id as string | number | undefined;
+  if (tallaIdDirect != null && tallaIdDirect !== "") return tallaIdDirect;
+  const tallaObj = line.talla as { id?: string | number | null } | null | undefined;
+  if (tallaObj?.id != null && tallaObj.id !== "") return tallaObj.id;
+  return null;
+}
+
 /** Igual que al aprobar pago vía Wompi: descuenta `productos.stock` y `producto_tallas.stock_talla`. */
 export async function aplicarDescuentoStockDesdeDetalle(
   supabaseAdmin: SupabaseClient,
@@ -40,12 +48,13 @@ export async function aplicarDescuentoStockDesdeDetalle(
       if (upProd) throw new Error(upProd.message);
     }
 
-    if (line.talla_id) {
+    const tallaId = getTallaIdFromLine(line);
+    if (tallaId != null) {
       const { data: relTalla, error: errTalla } = await supabaseAdmin
         .from("producto_tallas")
         .select("stock_talla")
         .eq("producto_id", productId)
-        .eq("talla_id", line.talla_id)
+        .eq("talla_id", tallaId)
         .maybeSingle();
       if (errTalla) throw new Error(errTalla.message);
       if (relTalla) {
@@ -53,7 +62,7 @@ export async function aplicarDescuentoStockDesdeDetalle(
           .from("producto_tallas")
           .update({ stock_talla: Math.max(0, Number(relTalla.stock_talla) - qty) })
           .eq("producto_id", productId)
-          .eq("talla_id", line.talla_id);
+          .eq("talla_id", tallaId);
         if (upTalla) throw new Error(upTalla.message);
       }
     }
@@ -87,12 +96,13 @@ export async function aplicarDevolucionStockDesdeDetalle(
       if (upProd) throw new Error(upProd.message);
     }
 
-    if (line.talla_id) {
+    const tallaId = getTallaIdFromLine(line);
+    if (tallaId != null) {
       const { data: relTalla, error: errTalla } = await supabaseAdmin
         .from("producto_tallas")
         .select("stock_talla")
         .eq("producto_id", productId)
-        .eq("talla_id", line.talla_id)
+        .eq("talla_id", tallaId)
         .maybeSingle();
       if (errTalla) throw new Error(errTalla.message);
       if (relTalla) {
@@ -100,7 +110,7 @@ export async function aplicarDevolucionStockDesdeDetalle(
           .from("producto_tallas")
           .update({ stock_talla: Number(relTalla.stock_talla) + qty })
           .eq("producto_id", productId)
-          .eq("talla_id", line.talla_id);
+          .eq("talla_id", tallaId);
         if (upTalla) throw new Error(upTalla.message);
       }
     }

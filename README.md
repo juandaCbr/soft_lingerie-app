@@ -47,7 +47,7 @@ cp .env_example .env
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anónima (cliente) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave de servicio (solo servidor: APIs checkout, admin) |
 | `NEXT_PUBLIC_WOMPI_*`, `WOMPI_*` | Integración de pagos Wompi |
-| `PUSHOVER_*` | Notificaciones (opcional) |
+| `PUSHOVER_*` | Notificaciones push al admin (opcional) |
 | `NEXT_PUBLIC_SITE_URL` | URL pública del sitio |
 | `UPLOAD_DIR` | Ruta local para subidas de imágenes |
 

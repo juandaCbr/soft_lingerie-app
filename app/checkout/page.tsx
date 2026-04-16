@@ -60,6 +60,7 @@ const buildDetalleCompraFromCart = (cartItems: any[]) =>
     nombre: item.nombre,
     precio: Number(item.precio) || 0,
     quantity: Number(item.quantity) || 1,
+    talla_id: item?.talla?.id ?? item?.talla_id ?? null,
     talla: item?.talla?.nombre ? { nombre: item.talla.nombre, id: item?.talla?.id ?? null } : null,
     color: getColorNombreFromCartItem(item) ? { nombre: getColorNombreFromCartItem(item) } : null,
     imagenes_locales: getImagenesLocalesFromCartItem(item),

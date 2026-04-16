@@ -29,6 +29,38 @@ import type {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const getColorNombreFromCartItem = (item: any): string | null =>
+  item?.color?.nombre ||
+  item?.color_nombre ||
+  item?.producto_colores?.[0]?.colores?.nombre ||
+  item?.producto_colores?.[0]?.nombre ||
+  null;
+
+const getImagenesLocalesFromCartItem = (item: any): Array<{ thumb: string; detail: string }> => {
+  const raw = Array.isArray(item?.imagenes_locales) ? item.imagenes_locales : [];
+  return raw
+    .map((img: any) => {
+      if (!img || typeof img !== "object") return null;
+      const thumb = typeof img.thumb === "string" ? img.thumb : "";
+      const detail = typeof img.detail === "string" ? img.detail : "";
+      if (!thumb && !detail) return null;
+      return { thumb, detail };
+    })
+    .filter((img): img is { thumb: string; detail: string } => Boolean(img));
+};
+
+const buildDetalleCompraFromCart = (cartItems: any[]) =>
+  cartItems.map((item) => ({
+    id: item.id,
+    nombre: item.nombre,
+    precio: Number(item.precio) || 0,
+    quantity: Number(item.quantity) || 1,
+    talla: item?.talla?.nombre ? { nombre: item.talla.nombre, id: item?.talla?.id ?? null } : null,
+    color: getColorNombreFromCartItem(item) ? { nombre: getColorNombreFromCartItem(item) } : null,
+    imagenes_locales: getImagenesLocalesFromCartItem(item),
+    es_envio: false,
+  }));
+
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const router = useRouter();
@@ -182,6 +214,7 @@ export default function CheckoutPage() {
         es_envio: true,
         metodo: metodoPagoEnvio,
       };
+      const detalleCompra = [...buildDetalleCompraFromCart(cart), infoEnvio];
 
       const datosPedido = {
         nombre_cliente: formData.nombre,
@@ -192,7 +225,7 @@ export default function CheckoutPage() {
         monto_total: totalConEnvio,
         estado_pago: "PENDIENTE",
         referencia_wompi: nuevaReferencia,
-        detalle_compra: [...cart, infoEnvio],
+        detalle_compra: detalleCompra,
       };
 
       if (pedidoIdExistente) {

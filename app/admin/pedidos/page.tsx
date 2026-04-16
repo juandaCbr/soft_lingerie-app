@@ -342,7 +342,7 @@ function AdminPedidosContent() {
               const esValledupar = venta.ciudad?.toLowerCase() === 'valledupar';
               return (
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
-                  <div className="p-6 md:p-10 flex flex-col md:flex-row gap-8">
+                  <div className="p-6 md:p-8 lg:p-10 flex flex-col lg:flex-row gap-6 lg:gap-8">
                     
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
@@ -361,37 +361,49 @@ function AdminPedidosContent() {
                       </div>
                     </div>
 
-                    <div className="flex-1 border-y md:border-y-0 md:border-x border-gray-50 px-0 md:px-8 py-6 md:py-0">
+                    <div className="flex-1 border-y lg:border-y-0 lg:border-x border-gray-50 px-0 lg:px-8 py-6 lg:py-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2"><Package size={14} /> Artículos del Pedido</h4>
                       <div className="space-y-3">
                         {venta.detalle_compra?.filter((item: any) => !item.es_envio).map((item: any, idx: number) => (
                           <div key={idx} className="flex flex-col gap-1.5 bg-[#fdf8f6]/50 p-3.5 rounded-2xl border border-[#4a1d44]/5">
-                            <div className="flex justify-between text-xs font-black">
-                              <span className="truncate pr-2 uppercase"><span className="bg-[#4a1d44] text-white px-1.5 py-0.5 rounded text-[9px] mr-2">{item.quantity}x</span> {item.nombre}</span>
-                              <span className="text-[#4a1d44]/60">${Number(item.precio * item.quantity).toLocaleString('es-CO')}</span>
-                            </div>
-                            {item.talla && <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-pink-600 ml-8"><Ruler size={10} /> Talla: {item.talla.nombre}</div>}
-                            {(() => {
-                              const colorNombre =
-                                item?.color?.nombre ||
-                                item?.color_nombre ||
-                                item?.producto_colores?.[0]?.colores?.nombre ||
-                                item?.producto_colores?.[0]?.nombre ||
-                                null;
-                              if (!colorNombre) return null;
-                              return (
-                                <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-[#4a1d44]/70 ml-8">
-                                  <Palette size={10} /> Color: {colorNombre}
+                            <div className="flex flex-col md:flex-row items-start gap-3 md:gap-4">
+                              <img
+                                src={item?.imagenes_locales?.[0]?.thumb || '/images/placeholder.svg'}
+                                alt={item?.nombre || 'Producto'}
+                                className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-2xl object-cover border border-[#4a1d44]/10 bg-white shadow-sm md:w-36 md:h-44 md:max-w-none md:mx-0 md:aspect-auto md:rounded-xl md:shrink-0 lg:w-24 lg:h-28"
+                                onError={(e) => { e.currentTarget.src = '/images/placeholder.svg'; }}
+                              />
+                              <div className="min-w-0 flex-1 w-full text-center md:text-left">
+                                <div className="text-sm md:text-base lg:text-sm font-black">
+                                  <span className="truncate pr-2 uppercase"><span className="bg-[#4a1d44] text-white px-2 py-0.5 rounded text-[11px] lg:text-[9px] mr-2">{item.quantity}x</span> {item.nombre}</span>
                                 </div>
-                              );
-                            })()}
+                                <div className="text-[#4a1d44]/60 text-sm md:text-base lg:text-sm font-black mt-1.5">
+                                  ${Number(item.precio * item.quantity).toLocaleString('es-CO')}
+                                </div>
+                                {item.talla && <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] md:text-[11px] lg:text-[9px] font-black uppercase text-pink-600 mt-2"><Ruler size={12} /> Talla: {item.talla.nombre}</div>}
+                                {(() => {
+                                  const colorNombre =
+                                    item?.color?.nombre ||
+                                    item?.color_nombre ||
+                                    item?.producto_colores?.[0]?.colores?.nombre ||
+                                    item?.producto_colores?.[0]?.nombre ||
+                                    null;
+                                  if (!colorNombre) return null;
+                                  return (
+                                    <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] md:text-[11px] lg:text-[9px] font-black uppercase text-[#4a1d44]/70 mt-1.5">
+                                      <Palette size={12} /> Color: {colorNombre}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="w-full md:w-64 flex flex-col justify-between items-start md:items-end gap-6">
-                      <div className="text-left md:text-right w-full">
+                    <div className="w-full lg:w-64 flex flex-col justify-between items-start lg:items-end gap-6">
+                      <div className="text-left lg:text-right w-full">
                         <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
                         <p className="text-4xl font-black text-[#4a1d44]">${Number(venta.monto_total).toLocaleString('es-CO')}</p>
                         
@@ -402,12 +414,12 @@ function AdminPedidosContent() {
                             const costo = infoEnvio?.precio || venta.costo_envio || 0;
 
                             return metodo === 'CONTRAENTREGA' ? (
-                              <div className="flex flex-col items-start md:items-end">
+                              <div className="flex flex-col items-start lg:items-end">
                                 <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">⚠️ Cobrar Envío al entregar</span>
                                 {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Costo estimado: ${Number(costo).toLocaleString('es-CO')}</p>}
                               </div>
                             ) : (
-                              <div className="flex flex-col items-start md:items-end">
+                              <div className="flex flex-col items-start lg:items-end">
                                 {venta.estado_pago === 'APROBADO' ? (
                                   <>
                                     <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">✓ Envío Pagado</span>

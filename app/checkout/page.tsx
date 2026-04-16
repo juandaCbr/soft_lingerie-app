@@ -36,17 +36,22 @@ const getColorNombreFromCartItem = (item: any): string | null =>
   item?.producto_colores?.[0]?.nombre ||
   null;
 
-const getImagenesLocalesFromCartItem = (item: any): Array<{ thumb: string; detail: string }> => {
+type LocalImage = { thumb: string; detail: string };
+
+const isLocalImage = (img: unknown): img is LocalImage => Boolean(img);
+
+const getImagenesLocalesFromCartItem = (item: any): LocalImage[] => {
   const raw = Array.isArray(item?.imagenes_locales) ? item.imagenes_locales : [];
   return raw
-    .map((img: any) => {
+    .map((img: unknown): LocalImage | null => {
       if (!img || typeof img !== "object") return null;
-      const thumb = typeof img.thumb === "string" ? img.thumb : "";
-      const detail = typeof img.detail === "string" ? img.detail : "";
+      const imageObj = img as { thumb?: unknown; detail?: unknown };
+      const thumb = typeof imageObj.thumb === "string" ? imageObj.thumb : "";
+      const detail = typeof imageObj.detail === "string" ? imageObj.detail : "";
       if (!thumb && !detail) return null;
       return { thumb, detail };
     })
-    .filter((img): img is { thumb: string; detail: string } => Boolean(img));
+    .filter(isLocalImage);
 };
 
 const buildDetalleCompraFromCart = (cartItems: any[]) =>

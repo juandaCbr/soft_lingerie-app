@@ -23,6 +23,7 @@ export type ProductoCatalogoVariante = ProductoImagenes & {
   descripcion?: string | null;
   precio: number | string;
   stock?: number | null;
+  stock_disponible?: number | null;
   created_at: string;
   grupo_id?: string | number | null;
   categoria?: CategoriaField;

@@ -44,12 +44,12 @@ async function enviarNotificacionPushover(mensaje: string) {
   const apiToken = process.env.PUSHOVER_API_TOKEN;
 
   if (!userKey || !apiToken) {
-    console.log("Pushover keys missing, skipping notification");
-    return;
+    console.warn("Pushover keys missing, skipping notification");
+    return false;
   }
 
   try {
-    await fetch("https://api.pushover.net/1/messages.json", {
+    const res = await fetch("https://api.pushover.net/1/messages.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -61,8 +61,18 @@ async function enviarNotificacionPushover(mensaje: string) {
         priority: 1,
       }),
     });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok || payload?.status !== 1) {
+      console.error("Pushover rejected notification:", {
+        statusCode: res.status,
+        payload,
+      });
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error("Error enviando push:", err);
+    return false;
   }
 }
 
@@ -161,7 +171,13 @@ export async function procesarPedidoWompiAprobado(
   await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
 
   const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
-  await enviarNotificacionPushover(mensajePush);
+  const notificado = await enviarNotificacionPushover(mensajePush);
+  if (!notificado) {
+    console.warn("Venta aprobada pero la notificación push no pudo enviarse.", {
+      referencia: reference,
+      pedidoId: pedido.id,
+    });
+  }
 
   return { ok: true };
 }

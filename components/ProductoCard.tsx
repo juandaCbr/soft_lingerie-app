@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package } from 'lucide-react';
+import { ShoppingCart, ChevronLeft, ChevronRight, ImageIcon, Package, X, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import { slugify } from '@/app/lib/utils';
@@ -16,6 +16,7 @@ import {
 import type {
   ProductoCardProducto,
   ProductoCatalogoVariante,
+  ProductoTallaJoin,
 } from '@/app/lib/catalog-types';
 import { firstColorFromVariante, getColorInfo } from '@/app/lib/catalog-helpers';
 
@@ -28,6 +29,15 @@ function varianteTieneStock(v: ProductoCatalogoVariante): boolean {
 /** Devuelve la primera variante con stock > 0, o la primera si todas están agotadas. */
 function primeraVarianteConStock(variantes: ProductoCatalogoVariante[]): ProductoCatalogoVariante {
   return variantes.find(varianteTieneStock) ?? variantes[0];
+}
+
+function ordenarTallas(tallas: ProductoTallaJoin[]): ProductoTallaJoin[] {
+  return [...tallas].sort((a, b) => {
+    const ordenA = Number(a.tallas?.orden ?? 999);
+    const ordenB = Number(b.tallas?.orden ?? 999);
+    if (ordenA !== ordenB) return ordenA - ordenB;
+    return String(a.tallas?.nombre ?? '').localeCompare(String(b.tallas?.nombre ?? ''));
+  });
 }
 
 export default function ProductoCard({
@@ -50,7 +60,10 @@ export default function ProductoCard({
   const [currentImg, setCurrentImg] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-  const { addToCart } = useCart();
+  const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
+  const [tallaSeleccionadaId, setTallaSeleccionadaId] = useState<number | null>(null);
+  const [cantidadModal, setCantidadModal] = useState(1);
+  const { addToCart, cart } = useCart();
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +72,17 @@ export default function ProductoCard({
   useEffect(() => {
     setImgErrors({});
   }, [varianteActiva.id]);
+
+  useEffect(() => {
+    if (isSizeModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSizeModalOpen]);
 
   useEffect(() => {
     if (producto.variantes) {
@@ -82,6 +106,8 @@ export default function ProductoCard({
       setVarianteActiva(producto);
     }
     setCurrentImg(0);
+    setTallaSeleccionadaId(null);
+    setCantidadModal(1);
   }, [producto, colorFiltro]);
 
   const obtenerListaDeFotos = () => {
@@ -93,13 +119,72 @@ export default function ProductoCard({
   };
 
   const imagenes = obtenerListaDeFotos();
+  const requiereTalla = (varianteActiva.producto_tallas ?? []).length > 0;
+  const tallasVariante = ordenarTallas(varianteActiva.producto_tallas ?? []);
+  const stockTotalTallas = tallasVariante.reduce((acc, t) => acc + Number(t.stock_talla ?? 0), 0);
+  const reservadoTotalVariante = (cart as any[]).reduce((acc, item) => {
+    if (item.id !== varianteActiva.id) return acc;
+    return acc + Number(item.quantity || 0);
+  }, 0);
+  const stockRestanteGlobalTallas = Math.max(0, stockTotalTallas - reservadoTotalVariante);
+  const sinDisponibilidadPorTalla = requiereTalla && stockRestanteGlobalTallas <= 0;
+  const stockMaxVariante = Number(varianteActiva.stock_disponible ?? varianteActiva.stock ?? 0);
+  const cantidadEnCarrito = (cart as any[])?.find(
+    (item) => item.id === varianteActiva.id && !item.talla_id,
+  )?.quantity || 0;
   const isAgotado = !varianteTieneStock(varianteActiva);
+  const sinDisponibilidadParaAgregar =
+    isAgotado ||
+    sinDisponibilidadPorTalla ||
+    (!requiereTalla && stockMaxVariante > 0 && cantidadEnCarrito >= stockMaxVariante);
+  const tallaSeleccionada = tallasVariante.find((t) => Number(t.tallas?.id ?? 0) === tallaSeleccionadaId) ?? null;
+  const stockTallaSeleccionada = Number(tallaSeleccionada?.stock_talla ?? 0);
+  const reservadoParaTalla = (cart as any[]).reduce((acc, item) => {
+    if (item.id !== varianteActiva.id) return acc;
+    if (!tallaSeleccionadaId) return acc;
+    if (item.talla_id === tallaSeleccionadaId || !item.talla_id) {
+      return acc + Number(item.quantity || 0);
+    }
+    return acc;
+  }, 0);
+  const restanteTalla = Math.max(0, stockTallaSeleccionada - reservadoParaTalla);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isAgotado) return;
-    addToCart(varianteActiva);
-    toast.success(`¡${varianteActiva.nombre} añadido!`);
+    if (requiereTalla) {
+      setIsSizeModalOpen(true);
+      return;
+    }
+    if (sinDisponibilidadParaAgregar) return;
+    const agregado = await addToCart(varianteActiva);
+    if (agregado) {
+      toast.success(`¡${varianteActiva.nombre} añadido!`);
+    } else {
+      toast.error("No hay más stock disponible para agregar.");
+    }
+  };
+
+  const handleConfirmAddWithSize = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!tallaSeleccionada || restanteTalla <= 0) {
+      toast.error("Selecciona una talla disponible.");
+      return;
+    }
+    const qty = Math.min(Math.max(1, cantidadModal), restanteTalla);
+    const agregado = await addToCart(
+      varianteActiva,
+      { id: Number(tallaSeleccionadaId), nombre: tallaSeleccionada.tallas?.nombre, stock: stockTallaSeleccionada },
+      qty,
+    );
+    if (agregado) {
+      toast.success(`¡${varianteActiva.nombre} añadido!`);
+      setIsSizeModalOpen(false);
+      setCantidadModal(1);
+      setTallaSeleccionadaId(null);
+    } else {
+      toast.error("No hay más stock disponible para agregar.");
+    }
   };
 
   const cambiarVariante = (e: React.MouseEvent, nuevaVariante: ProductoCatalogoVariante) => {
@@ -271,20 +356,102 @@ export default function ProductoCard({
           {/* BOTÓN ALINEADO SIEMPRE ABAJO */}
           <button
             onClick={handleAddToCart}
-            disabled={isAgotado}
+            disabled={sinDisponibilidadParaAgregar}
             className={`w-full py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 transition-all duration-300 shadow-md z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden ${
-              isAgotado
+              sinDisponibilidadParaAgregar
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                 : 'bg-[#4a1d44] text-white hover:bg-[#5d2555] active:scale-95'
             }`}
           >
             <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
             <span className="whitespace-nowrap">
-              {isAgotado ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
+              {sinDisponibilidadParaAgregar ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
             </span>
           </button>
         </div>
       </div>
+      {isSizeModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div
+            className="absolute inset-0 bg-[#4a1d44]/60 backdrop-blur-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsSizeModalOpen(false);
+              setCantidadModal(1);
+              setTallaSeleccionadaId(null);
+            }}
+          />
+          <div className="relative z-[101] bg-[#fdf8f6] w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl border border-[#4a1d44]/10" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsSizeModalOpen(false);
+                setCantidadModal(1);
+                setTallaSeleccionadaId(null);
+              }}
+              className="absolute top-4 right-4 p-2 bg-white/80 rounded-full text-[#4a1d44]/50 hover:text-[#4a1d44]"
+            >
+              <X size={18} />
+            </button>
+            <h4 className="text-lg font-playfair font-black text-[#4a1d44] mb-4">Selecciona tu talla</h4>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {tallasVariante.map((t) => {
+                const tallaId = Number(t.tallas?.id ?? 0);
+                const stock = Number(t.stock_talla ?? 0);
+                const reservado = (cart as any[]).reduce((acc, item) => {
+                  if (item.id !== varianteActiva.id) return acc;
+                  if (item.talla_id === tallaId || !item.talla_id) return acc + Number(item.quantity || 0);
+                  return acc;
+                }, 0);
+                const restante = Math.max(0, stock - reservado);
+                const isSelected = tallaSeleccionadaId === tallaId;
+                return (
+                  <button
+                    key={`${varianteActiva.id}-${tallaId}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (restante <= 0) return;
+                      setTallaSeleccionadaId(tallaId);
+                      setCantidadModal(1);
+                    }}
+                    className={`min-w-[52px] px-3 py-2 rounded-lg text-xs font-black border ${
+                      isSelected
+                        ? 'bg-[#4a1d44] text-white border-[#4a1d44]'
+                        : restante <= 0
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-[#4a1d44] border-[#4a1d44]/20'
+                    }`}
+                  >
+                    {t.tallas?.nombre ?? 'Talla'}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mb-4 text-[11px] font-bold uppercase tracking-wider text-[#4a1d44]/70">
+              {tallaSeleccionada ? (restanteTalla > 0 ? `Disponible (${restanteTalla})` : 'Agotado') : 'Elige una talla'}
+            </div>
+            <div className={`flex items-center w-fit border border-[#4a1d44]/15 rounded-xl overflow-hidden mb-5 ${!tallaSeleccionada || restanteTalla <= 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.max(1, prev - 1)); }} className="p-2 text-[#4a1d44]">
+                <Minus size={14} />
+              </button>
+              <span className="w-10 text-center font-black text-sm text-[#4a1d44]">{cantidadModal}</span>
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.min(restanteTalla || 1, prev + 1)); }} className="p-2 text-[#4a1d44]">
+                <Plus size={14} />
+              </button>
+            </div>
+            <button
+              onClick={handleConfirmAddWithSize}
+              disabled={!tallaSeleccionada || restanteTalla <= 0}
+              className="w-full py-3 rounded-xl bg-[#4a1d44] text-white text-[11px] font-black tracking-[0.18em] disabled:bg-gray-200 disabled:text-gray-400"
+            >
+              AÑADIR AL CARRITO
+            </button>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

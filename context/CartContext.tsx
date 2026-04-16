@@ -94,39 +94,83 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback(async (product: any, talla?: any, qty: number = 1) => {
     const tallaId = talla?.id || null;
-    const stockMax = talla?.stock ?? product.stock;
+    const stockMax = Number(talla?.stock ?? product.stock_disponible ?? product.stock ?? 0);
+    const requiereTalla = Array.isArray(product?.producto_tallas) && product.producto_tallas.length > 0;
+
+    if (stockMax <= 0 || (requiereTalla && !tallaId)) {
+      return false;
+    }
+
+    let agregado = false;
+    let cantidadFinal = 0;
+    let cantidadInsertar = 0;
+    let cantidadPrev = 0;
 
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)));
+      const existing = prev.find(
+        item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)),
+      );
+
+      // Si se agrega por talla, cualquier línea legacy sin talla consume cupo de esa talla.
+      const reservadoCompatible = prev
+        .filter((item) => {
+          if (item.id !== product.id) return false;
+          if (tallaId) return item.talla_id === tallaId || !item.talla_id;
+          return !item.talla_id;
+        })
+        .reduce((acc, item) => acc + Number(item.quantity || 0), 0);
+
+      const cupoDisponible = Math.max(0, stockMax - reservadoCompatible);
+      const qtyAAgregar = Math.min(Math.max(0, qty), cupoDisponible);
+
       if (existing) {
-        const newQty = Math.min(stockMax, existing.quantity + qty);
+        cantidadPrev = Number(existing.quantity || 0);
+        const newQty = existing.quantity + qtyAAgregar;
+        cantidadFinal = newQty;
+        cantidadInsertar = qtyAAgregar;
+        agregado = qtyAAgregar > 0;
         return prev.map(item => 
           (item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId))) 
-            ? { ...item, quantity: newQty } 
+            ? { ...item, quantity: newQty }
             : item
         );
       }
-      return [...prev, { ...product, quantity: qty, talla, talla_id: tallaId, stock_disponible: stockMax }];
+
+      cantidadPrev = 0;
+      cantidadFinal = qtyAAgregar;
+      cantidadInsertar = qtyAAgregar;
+      agregado = qtyAAgregar > 0;
+      if (!agregado) return prev;
+      return [...prev, { ...product, quantity: qtyAAgregar, talla, talla_id: tallaId, stock_disponible: stockMax }];
     });
 
     if (user) {
-      const existing = cart.find(item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)));
+      const existing = cart.find(
+        item => item.id === product.id && (item.talla_id === tallaId || (!item.talla_id && !tallaId)),
+      );
       if (existing) {
-        const newQty = Math.min(stockMax, existing.quantity + qty);
+        if (cantidadInsertar <= 0) {
+          return agregado;
+        }
+        const newQty = Number(existing.quantity || 0) + cantidadInsertar;
         await supabase.from('carrito')
           .update({ cantidad: newQty })
           .eq('user_id', user.id)
           .eq('producto_id', product.id)
           .eq(tallaId ? 'talla_id' : 'id', tallaId ? tallaId : existing.cart_item_id); // Ajuste para identificar item
       } else {
+        if (cantidadInsertar <= 0) {
+          return agregado;
+        }
         await supabase.from('carrito').insert([{ 
           user_id: user.id, 
           producto_id: product.id, 
-          cantidad: qty,
+          cantidad: cantidadInsertar,
           talla_id: tallaId
         }]);
       }
     }
+    return agregado;
   }, [user, cart]);
 
   const updateQuantity = useCallback(async (id: number, delta: number, tallaId: any = null) => {

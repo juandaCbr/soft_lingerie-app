@@ -28,7 +28,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   const searchParams = useSearchParams();
   /** Query string del catálogo (p. ej. `q=a&cat=b`) para volver con filtros si no hay historial. */
   const catalogReturnQuery = searchParams.get('cv');
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [variantes] = useState<any[]>(variantesIniciales);
@@ -63,6 +63,34 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [acordeonAbierto, setAcordeonAbierto] = useState<string | null>(null);
 
+  const cantidadReservadaParaSeleccion = (cart as any[]).reduce((acc, item) => {
+    if (item.id !== varianteActiva.id) return acc;
+    if (tallaSeleccionada?.id) {
+      if (item.talla_id === tallaSeleccionada.id || !item.talla_id) {
+        return acc + Number(item.quantity || 0);
+      }
+      return acc;
+    }
+    if (!item.talla_id) return acc + Number(item.quantity || 0);
+    return acc;
+  }, 0);
+
+  const stockSeleccion = Number(tallaSeleccionada?.stock ?? varianteActiva.stock ?? 0);
+  const restanteParaAgregar = Math.max(0, stockSeleccion - cantidadReservadaParaSeleccion);
+
+  useEffect(() => {
+    // Si cambia el carrito (se vacía o se quitan ítems), reacomoda cantidad al nuevo cupo real.
+    if (!tallaSeleccionada) {
+      setCantidad(1);
+      return;
+    }
+    if (restanteParaAgregar <= 0) {
+      setCantidad(1);
+      return;
+    }
+    setCantidad((prev) => Math.min(Math.max(1, prev), restanteParaAgregar));
+  }, [tallaSeleccionada?.id, restanteParaAgregar]);
+
   const toggleAcordeon = (seccion: string) => {
     setAcordeonAbierto(prev => prev === seccion ? null : seccion);
   };
@@ -87,17 +115,21 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     setCantidad(1);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (tallasDisponibles.length > 0 && !tallaSeleccionada) {
       toast.error("Por favor selecciona una talla disponible");
       return;
     }
-    if (tallaSeleccionada && (tallaSeleccionada.stock <= 0 || cantidad > tallaSeleccionada.stock)) {
+    if (tallaSeleccionada && (tallaSeleccionada.stock <= 0 || cantidad > restanteParaAgregar)) {
       toast.error("No hay suficiente stock para la cantidad seleccionada");
       return;
     }
-    addToCart(varianteActiva, tallaSeleccionada, cantidad);
-    toast.success('¡Añadido al carrito!');
+    const agregado = await addToCart(varianteActiva, tallaSeleccionada, cantidad);
+    if (agregado) {
+      toast.success('¡Añadido al carrito!');
+    } else {
+      toast.error('No hay más stock disponible para agregar.');
+    }
   };
 
   const scroll = (direction: 'left' | 'right') => {
@@ -377,7 +409,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             <div className="h-6 mt-3">
               {tallaSeleccionada && (
                 <p className="text-[10px] font-bold text-[#4a1d44]/60 uppercase tracking-widest">
-                  {tallaSeleccionada.stock > 0 ? 'Disponible en stock' : 'Agotado'}
+                  {restanteParaAgregar > 0 ? `Disponible (${restanteParaAgregar})` : 'Agotado'}
                 </p>
               )}
             </div>
@@ -385,10 +417,10 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
 
           <div className="py-2 flex flex-col items-start min-h-[80px]">
             <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-60">Cantidad</h3>
-            <div className={`flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm transition-opacity duration-300 ${!tallaSeleccionada || tallaSeleccionada.stock <= 0 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm transition-opacity duration-300 ${!tallaSeleccionada || restanteParaAgregar <= 0 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
               <button onClick={() => setCantidad(prev => Math.max(1, prev - 1))} className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"><Minus size={16} /></button>
               <span className="w-12 text-center font-black text-sm">{cantidad}</span>
-              <button onClick={() => setCantidad(prev => Math.min(tallaSeleccionada?.stock || 1, prev + 1))} className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"><Plus size={16} /></button>
+              <button onClick={() => setCantidad(prev => Math.min(restanteParaAgregar || 1, prev + 1))} className="p-3 hover:bg-[#4a1d44]/5 transition-colors text-[#4a1d44]"><Plus size={16} /></button>
             </div>
           </div>
 
@@ -400,15 +432,15 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
           <div className="pt-2 min-h-[64px]">
             <button
               onClick={handleAddToCart}
-              disabled={!tallaSeleccionada || tallaSeleccionada.stock <= 0}
+              disabled={!tallaSeleccionada || restanteParaAgregar <= 0}
               className={`w-full py-4 rounded-xl text-[11px] font-black tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all disabled:pointer-events-none ${
-                isVarianteAgotada
+                isVarianteAgotada || restanteParaAgregar <= 0
                   ? 'bg-gray-100 text-gray-400 shadow-none'
                   : 'bg-[#4a1d44] text-white hover:bg-[#5c2454] disabled:opacity-30'
               }`}
             >
               <ShoppingCart size={18} />
-              {isVarianteAgotada ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
+              {isVarianteAgotada || restanteParaAgregar <= 0 ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
             </button>
           </div>
 

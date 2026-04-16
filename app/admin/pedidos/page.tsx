@@ -24,6 +24,7 @@ import {
   Inbox,
   Loader2,
   Bike,
+  Palette,
   AlertTriangle,
   Trash2,
   Calendar,

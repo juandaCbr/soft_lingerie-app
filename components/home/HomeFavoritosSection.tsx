@@ -32,7 +32,7 @@ export function HomeFavoritosSection({ favoritos }: HomeFavoritosSectionProps) {
         </div>
 
         {favoritos.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:gap-x-6 md:gap-y-10 lg:gap-x-6 lg:gap-y-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10 lg:gap-x-6 lg:gap-y-12">
             {favoritos.map(({ prod, etiqueta }) => (
               <HomeProductCard key={prod.id} prod={prod} etiqueta={etiqueta} layout="grid" />
             ))}

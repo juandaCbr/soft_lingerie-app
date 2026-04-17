@@ -44,15 +44,12 @@ export default function ProductoCard({
   producto,
   colorFiltro,
   priority = false,
-  /** Tarjetas más pequeñas (tipografía y paddings) para grids de 2+ columnas en pantallas estrechas. */
-  compact = false,
   /** Query del catálogo (sin `?`) para volver con los mismos filtros; se pasa como `cv` en la URL del producto. */
   returnCatalogQuery,
 }: {
   producto: ProductoCardProducto;
   colorFiltro?: string;
   priority?: boolean;
-  compact?: boolean;
   returnCatalogQuery?: string;
 }) {
   const varianteInicial = producto.variantes
@@ -213,9 +210,7 @@ export default function ProductoCard({
   return (
     <Link href={productHref} className="block h-full min-w-0">
       <div
-        className={`group bg-white overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 ${
-          compact ? "rounded-xl sm:rounded-[1.5rem] md:rounded-[2.5rem]" : "rounded-[1.5rem] md:rounded-[2.5rem]"
-        } ${isAgotado ? "opacity-70" : ""}`}
+        className={`group bg-white overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 rounded-[1.5rem] md:rounded-[2.5rem] ${isAgotado ? "opacity-70" : ""}`}
       >
 
         {/* Contenedor de Imagen */}
@@ -232,16 +227,10 @@ export default function ProductoCard({
 
           {/* Tag de Categoría Flotante */}
           <div
-            className={`absolute z-40 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-black/5 ${
-              compact ? "top-2 left-2 px-2 py-1" : "top-4 left-4 px-3 py-1.5"
-            }`}
+            className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-black/5"
             suppressHydrationWarning
           >
-            <span
-              className={`font-black uppercase tracking-[0.2em] text-[#4a1d44] ${
-                compact ? "text-[7px] sm:text-[8px] md:text-[10px]" : "text-[9px] md:text-[10px]"
-              }`}
-            >
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]">
               {mounted
                 ? typeof varianteActiva.categoria === "object" && varianteActiva.categoria !== null
                   ? varianteActiva.categoria.nombre ?? "Lencería"
@@ -267,7 +256,7 @@ export default function ProductoCard({
                     src={imgErrors[imgKey] ? PLACEHOLDER_IMAGE : img}
                     alt={`${varianteActiva.nombre} - ${index}`}
                     fill
-                    sizes={compact ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px" : "(max-width: 768px) 50vw, 33vw"}
+                    sizes="(max-width: 768px) 45vw, 280px"
                     className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.6]' : ''}`}
                     priority={priority && index === 0}
                     loading={priority && index === 0 ? 'eager' : 'lazy'}
@@ -302,30 +291,16 @@ export default function ProductoCard({
         </div>
 
         {/* Información del Producto */}
-        <div
-          className={`text-center grow flex flex-col justify-between bg-white relative z-10 ${
-            compact ? "p-2.5 sm:p-3 md:p-5 pt-3 sm:pt-4" : "p-4 md:p-6 pt-5"
-          }`}
-        >
+        <div className="p-4 md:p-6 text-center grow flex flex-col justify-between bg-white relative z-10 pt-5">
           <div className="flex flex-col items-center min-w-0 w-full">
 
-            <h3
-              className={`font-playfair font-bold text-[#4a1d44] w-full min-w-0 ${
-                compact
-                  ? "text-sm sm:text-base md:text-lg mb-2 sm:mb-3 line-clamp-2 leading-tight"
-                  : "text-lg md:text-2xl mb-4 truncate"
-              }`}
-            >
+            <h3 className="font-bold text-sm md:text-lg text-[#4a1d44] mb-3 md:mb-4 w-full min-w-0 text-balance uppercase tracking-tight leading-snug break-words hyphens-none">
               {varianteActiva.nombre}
             </h3>
 
             {/* SELECTOR DE COLORES */}
             {mostrarSelectorColores && (
-              <div
-                className={`flex w-full max-w-full flex-wrap items-center justify-center p-1 ${
-                  compact ? "mb-2 gap-2" : "mb-4 gap-2.5"
-                }`}
-              >
+              <div className="mb-4 flex w-full max-w-full flex-wrap items-center justify-center gap-2.5 p-1">
                 {(producto.variantes ?? []).map((v) => {
                   const colorInfo = firstColorFromVariante(v);
                   const isSelected = varianteActiva.id === v.id;
@@ -344,9 +319,7 @@ export default function ProductoCard({
                       key={v.id}
                       onClick={(e) => cambiarVariante(e, v)}
                       title={colorInfo?.nombre}
-                      className={`group/color relative rounded-full transition-all duration-300 border shadow-inner ${
-                        compact ? "w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" : "w-4 h-4 md:w-5 md:h-5"
-                      } ${isSelected
+                      className={`group/color relative w-4 h-4 md:w-5 md:h-5 rounded-full transition-all duration-300 border shadow-inner ${isSelected
                         ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20'
                         : 'hover:scale-110 border-black/10'
                         }`}
@@ -364,32 +337,20 @@ export default function ProductoCard({
             )}
 
             {/* PRECIO CON COP INTEGRADO Y BENEFICIO */}
-            <div className={`flex flex-col items-center w-full ${compact ? "mb-2 sm:mb-3" : "mb-4"}`}>
+            <div className="flex flex-col items-center mb-4 w-full">
               <div className="flex items-baseline justify-center gap-1" suppressHydrationWarning>
-                <p
-                  className={`text-[#4a1d44] font-black ${
-                    compact ? "text-sm sm:text-base md:text-lg" : "text-lg md:text-xl"
-                  }`}
-                >
+                <p className="text-[#4a1d44]/50 text-sm md:text-lg font-black">
                   {mounted ? `$${Number(varianteActiva.precio).toLocaleString('es-CO')}` : `$${varianteActiva.precio}`}
                 </p>
-                <span
-                  className={`font-black opacity-40 tracking-widest uppercase ${
-                    compact ? "text-[8px] md:text-[9px]" : "text-[9px] md:text-[10px]"
-                  }`}
-                >
+                <span className="text-[9px] md:text-[10px] font-black opacity-40 tracking-widest uppercase">
                   COP
                 </span>
               </div>
 
               {/* BENEFICIO DE COMPRA */}
-              <div className={`flex items-center justify-center gap-1 opacity-60 w-full ${compact ? "mt-1" : "mt-1.5"}`}>
-                <Package size={compact ? 10 : 11} className="text-[#4a1d44] shrink-0" />
-                <span
-                  className={`text-[#4a1d44] font-bold uppercase whitespace-nowrap ${
-                    compact ? "text-[6.5px] sm:text-[7px] md:text-[8px] tracking-wide" : "text-[7.5px] md:text-[9px] tracking-wider md:tracking-widest"
-                  }`}
-                >
+              <div className="flex items-center justify-center gap-1 mt-1.5 opacity-60 w-full">
+                <Package size={11} className="text-[#4a1d44] shrink-0" />
+                <span className="text-[7.5px] md:text-[9px] text-[#4a1d44] font-bold tracking-wider md:tracking-widest uppercase whitespace-nowrap">
                   Envío 100% Discreto
                 </span>
               </div>
@@ -401,15 +362,13 @@ export default function ProductoCard({
           <button
             onClick={handleAddToCart}
             disabled={sinDisponibilidadParaAgregar}
-            className={`w-full rounded-xl flex items-center justify-center px-1 transition-all duration-300 shadow-md z-40 relative mt-auto overflow-hidden ${
-              compact ? "py-2 sm:py-2.5 md:py-3 gap-0.5 md:gap-1.5 text-[7px] sm:text-[8px] md:text-[10px] font-bold md:font-black tracking-wide md:tracking-widest" : "py-3 md:py-3.5 gap-1 md:gap-2 text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest"
-            } ${
+            className={`w-full py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 transition-all duration-300 shadow-md z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden ${
               sinDisponibilidadParaAgregar
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                 : 'bg-[#4a1d44] text-white hover:bg-[#5d2555] active:scale-95'
             }`}
           >
-            <ShoppingCart className={`shrink-0 ${compact ? "w-3 h-3 sm:w-3.5 sm:h-3.5" : "w-3.5 h-3.5"}`} />
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
             <span className="whitespace-nowrap">
               {sinDisponibilidadParaAgregar ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
             </span>

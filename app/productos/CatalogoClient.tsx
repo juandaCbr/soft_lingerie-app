@@ -469,12 +469,11 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-10 md:gap-x-6 md:gap-y-12 lg:gap-x-7 lg:gap-y-14 xl:gap-x-8 xl:gap-y-16">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:gap-x-6 md:gap-y-12 lg:gap-x-7 lg:gap-y-14 xl:gap-x-8 xl:gap-y-16">
                 {productosFinales.slice(0, productosVisibles).map((prod) => (
                   <ProductoCard
                     key={prod.id}
                     producto={prod}
-                    compact
                     colorFiltro={colorSeleccionado}
                     priority={productosFinales.indexOf(prod) < 4}
                     returnCatalogQuery={searchParams.toString() || undefined}

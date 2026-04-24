@@ -25,11 +25,11 @@ export type CheckoutPaymentData = {
   docNumber: string;
 };
 
-export type MetodoPagoEnvio = "INCLUIDO" | "CONTRAENTREGA";
+export type MetodoPagoEnvio = 'INCLUIDO' | 'CONTRAENTREGA';
 
-export type MetodoPagoWompi = "CARD" | "PSE" | "NEQUI" | "DAVIPLATA" | "BANCOLOMBIA";
+export type MetodoPagoWompi = 'CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA';
 
-import type { ProductoImagenes } from "@/app/lib/image-helper";
+import type { ProductoImagenes } from '@/app/lib/image-helper';
 
 /** Línea del carrito en checkout (producto + cantidad + talla; imágenes para miniatura). */
 export type CheckoutCartLine = ProductoImagenes & {

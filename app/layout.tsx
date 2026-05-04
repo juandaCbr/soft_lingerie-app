@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import SiteFooter from "@/components/SiteFooter";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSiteUrl } from "@/app/lib/site-url";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -59,6 +60,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <CartProvider>
+          <GoogleAnalytics />
           <Toaster position="bottom-right" />
           <Navbar />
           {/* <DiscountModal /> */}

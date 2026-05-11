@@ -46,11 +46,14 @@ export default function ProductoCard({
   priority = false,
   /** Query del catálogo (sin `?`) para volver con los mismos filtros; se pasa como `cv` en la URL del producto. */
   returnCatalogQuery,
+  /** En ficha de producto: no mostrar cantidad disponible en el modal de talla. */
+  hideAvailabilityQuantity = false,
 }: {
   producto: ProductoCardProducto;
   colorFiltro?: string;
   priority?: boolean;
   returnCatalogQuery?: string;
+  hideAvailabilityQuantity?: boolean;
 }) {
   const varianteInicial = producto.variantes
     ? primeraVarianteConStock(producto.variantes)
@@ -148,6 +151,18 @@ export default function ProductoCard({
     return acc;
   }, 0);
   const restanteTalla = Math.max(0, stockTallaSeleccionada - reservadoParaTalla);
+
+  const modalAvailabilityLabel = hideAvailabilityQuantity
+    ? tallaSeleccionada
+      ? restanteTalla <= 0
+        ? "Agotado"
+        : null
+      : "Elige una talla"
+    : tallaSeleccionada
+      ? restanteTalla > 0
+        ? `Disponible (${restanteTalla})`
+        : "Agotado"
+      : "Elige una talla";
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -435,9 +450,11 @@ export default function ProductoCard({
                 );
               })}
             </div>
-            <div className="mb-4 text-[11px] font-bold uppercase tracking-wider text-[#4a1d44]/70">
-              {tallaSeleccionada ? (restanteTalla > 0 ? `Disponible (${restanteTalla})` : 'Agotado') : 'Elige una talla'}
-            </div>
+            {modalAvailabilityLabel != null && (
+              <div className="mb-4 text-[11px] font-bold uppercase tracking-wider text-[#4a1d44]/70">
+                {modalAvailabilityLabel}
+              </div>
+            )}
             <div className={`flex items-center w-fit border border-[#4a1d44]/15 rounded-xl overflow-hidden mb-5 ${!tallaSeleccionada || restanteTalla <= 0 ? 'opacity-40 pointer-events-none' : ''}`}>
               <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.max(1, prev - 1)); }} className="p-2 text-[#4a1d44]">
                 <Minus size={14} />

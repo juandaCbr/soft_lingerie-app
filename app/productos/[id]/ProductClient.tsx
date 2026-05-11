@@ -403,16 +403,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                 })}
               </div>
             ) : (
-              <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Sin stock disponible</p>
+              <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">No disponible</p>
             )}
-
-            <div className="h-6 mt-3">
-              {tallaSeleccionada && (
-                <p className="text-[10px] font-bold text-[#4a1d44]/60 uppercase tracking-widest">
-                  {restanteParaAgregar > 0 ? `Disponible (${restanteParaAgregar})` : 'Agotado'}
-                </p>
-              )}
-            </div>
           </div>
 
           <div className="py-2 flex flex-col items-start min-h-[80px]">
@@ -478,6 +470,7 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                   <ProductoCard
                     producto={prod}
                     returnCatalogQuery={catalogReturnQuery ?? undefined}
+                    hideAvailabilityQuantity
                   />
                 </div>
               </div>

@@ -1503,7 +1503,7 @@ export default function CheckoutPage() {
 
 <file path="app/contacto/page.tsx">
 export default function ContactoPage() {
-  const numeroWhatsApp = "573118897646"; // Reemplaza con el número de tu hermana
+  const numeroWhatsApp = "573208716919"; // Reemplaza con el número de tu hermana
   const mensaje = encodeURIComponent("¡Hola! Me gustaría recibir información sobre la lencería.");
 
   return (

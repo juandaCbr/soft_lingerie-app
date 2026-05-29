@@ -140,7 +140,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [productosVisibles, setProductosVisibles] = useState(12);
 
-  const numeroWhatsApp = "573118897646";
+  const numeroWhatsApp = "573208716919";
 
   const getSafeTimestamp = (value?: string) => {
     const ts = new Date(value || "").getTime();

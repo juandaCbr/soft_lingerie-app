@@ -318,8 +318,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             {/* Selector de colores (también si solo hay una variante con color asignado) */}
             {(variantes.length > 1 ||
               Boolean(varianteActiva?.producto_colores?.[0]?.colores)) && (
-              <div className="py-2 flex flex-col items-start">
-                <h3 className="text-[9px] font-bold uppercase tracking-widest mb-3 opacity-50">
+              <div className="py-1 flex flex-col items-start">
+                <h3 className="text-xs font-bold uppercase tracking-widest mb-3 opacity-50">
                   {variantes.length > 1 ? 'Colores Disponibles' : 'Color'}
                 </h3>
                 <div className="flex w-full max-w-full flex-wrap gap-3 p-1">
@@ -362,16 +362,11 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             )}
           </div>
 
-          <div className="text-left space-y-3">
-            <h3 className="text-[#4a1d44] text-[14px] font-bold uppercase tracking-widest ">Descripción</h3>
-            <p className="text-base leading-relaxed text-[#4a1d44]/80">
-              {varianteActiva.descripcion || "Diseño exclusivo de Soft Lingerie. Confeccionado con materiales premium para garantizar suavidad, comodidad y elegancia en todo momento."}
-            </p>
-          </div>
-
-          <div className="py-2 flex flex-col items-start w-full min-h-[110px]">
+          
+          {/* Tallas */}
+          <div className="flex flex-col items-start w-full min-h-[80px]">
             <div className="flex justify-between items-center w-full mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
+              <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
                 <Ruler size={12} /> Selecciona tu Talla
               </h3>
               <button onClick={() => setIsSizeGuideOpen(true)} className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44] border-b border-[#4a1d44]/20 pb-0.5 hover:border-[#4a1d44] transition-all">
@@ -407,6 +402,15 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
             )}
           </div>
 
+          {/* Descripción del producto */}
+          <div className="text-left space-y-3">
+            <h3 className="text-[#4a1d44] text-[14px] font-bold uppercase tracking-widest ">Descripción</h3>
+            <p className="text-base leading-relaxed text-[#4a1d44]/80">
+              {varianteActiva.descripcion || "Diseño exclusivo de Soft Lingerie. Confeccionado con materiales premium para garantizar suavidad, comodidad y elegancia en todo momento."}
+            </p>
+          </div>
+
+          {/* Seccion de cantidad */}  
           <div className="py-2 flex flex-col items-start min-h-[80px]">
             <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-60">Cantidad</h3>
             <div className={`flex items-center bg-white border border-[#4a1d44]/10 rounded-xl overflow-hidden shadow-sm transition-opacity duration-300 ${!tallaSeleccionada || restanteParaAgregar <= 0 ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>

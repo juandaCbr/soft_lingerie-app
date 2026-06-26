@@ -346,23 +346,29 @@ function AdminPedidosContent() {
                     
                     <div className="flex-1 space-y-5">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest border ${venta.estado_pago === 'APROBADO' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                           {venta.estado_pago === 'APROBADO' ? '● PAGADO' : '○ PENDIENTE'}
                         </span>
-                        {esValledupar && <span className="bg-[#4a1d44] text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2"><Bike size={12} /> Prioridad Valledupar</span>}
-                        <span className="text-[10px] opacity-40 font-bold uppercase">{new Date(venta.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                        {esValledupar && <span className="bg-[#4a1d44] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Bike size={12} /> Prioridad Valledupar</span>}
+                        <span className="text-[12px] opacity-40 font-bold uppercase">{new Date(venta.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                       <div>
                         <h3 className="text-2xl font-black text-[#4a1d44] tracking-tight">{venta.nombre_cliente}</h3>
-                        <p className="text-xs opacity-50 font-medium">{venta.email_cliente} • {venta.telefono_cliente}</p>
+                        <p className="text-sm lg:text-base opacity-50 font-medium">{venta.email_cliente} • {venta.telefono_cliente}</p>
                       </div>
                       <div className="flex items-start gap-3 text-sm p-4 bg-[#fdf8f6] rounded-2xl border border-[#4a1d44]/5">
-                        <MapPin size={18} className="shrink-0 text-[#4a1d44]/20" /><p className="leading-relaxed"><strong className="text-[#4a1d44]">{venta.ciudad}</strong> <br /><span className="opacity-60 text-xs font-medium">{venta.direccion_envio}</span></p>
+                        <MapPin size={18} className="shrink-0 text-[#4a1d44]/80" />
+                        <p className="leading-relaxed">
+                          <strong className="text-[#4a1d44] text-sm md:text-base">{venta.ciudad}</strong> <br />
+                          <span className="opacity-80 text-sm font-medium">{venta.direccion_envio}</span>
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex-1 border-y lg:border-y-0 lg:border-x border-gray-50 px-0 lg:px-8 py-6 lg:py-0">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2"><Package size={14} /> Artículos del Pedido</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-5 flex items-center gap-2"><Package size={14} />
+                        Artículos del Pedido
+                      </h4>
                       <div className="space-y-3">
                         {venta.detalle_compra?.filter((item: any) => !item.es_envio).map((item: any, idx: number) => (
                           <div key={idx} className="flex flex-col gap-1.5 bg-[#fdf8f6]/50 p-3.5 rounded-2xl border border-[#4a1d44]/5">
@@ -380,7 +386,7 @@ function AdminPedidosContent() {
                                 <div className="text-[#4a1d44]/60 text-sm md:text-base lg:text-sm font-black mt-1.5">
                                   ${Number(item.precio * item.quantity).toLocaleString('es-CO')}
                                 </div>
-                                {item.talla && <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] md:text-[11px] lg:text-[9px] font-black uppercase text-pink-600 mt-2"><Ruler size={12} /> Talla: {item.talla.nombre}</div>}
+                                {item.talla && <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] font-black uppercase text-pink-600 mt-2"><Ruler size={12} /> Talla: {item.talla.nombre}</div>}
                                 {(() => {
                                   const colorNombre =
                                     item?.color?.nombre ||
@@ -390,7 +396,7 @@ function AdminPedidosContent() {
                                     null;
                                   if (!colorNombre) return null;
                                   return (
-                                    <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] md:text-[11px] lg:text-[9px] font-black uppercase text-[#4a1d44]/70 mt-1.5">
+                                    <div className="flex items-center justify-center md:justify-start gap-1.5 text-[11px] font-black uppercase text-[#4a1d44]/70 mt-1.5">
                                       <Palette size={12} /> Color: {colorNombre}
                                     </div>
                                   );

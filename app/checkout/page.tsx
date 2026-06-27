@@ -12,6 +12,7 @@ import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import toast from "react-hot-toast";
+import { normalizeDocumentoCliente } from "@/app/lib/utils";
 import { CheckoutPageHeader } from "@/components/checkout/CheckoutPageHeader";
 import { CheckoutShippingForm } from "@/components/checkout/CheckoutShippingForm";
 import { CheckoutPaymentStep, buildMetodosCheckout } from "@/components/checkout/CheckoutPaymentStep";
@@ -28,6 +29,8 @@ import type {
 } from "@/components/checkout/checkout-types";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DOCUMENTO_MIN_DIGITS = 6;
+const DOCUMENTO_MAX_DIGITS = 15;
 
 const getColorNombreFromCartItem = (item: any): string | null =>
   item?.color?.nombre ||
@@ -130,6 +133,7 @@ export default function CheckoutPage() {
     nombre: "",
     email: "",
     telefono: "",
+    documento_cliente: "",
     departamento: "Cesar",
     ciudad: "",
     direccion: "",
@@ -187,6 +191,13 @@ export default function CheckoutPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === "documento_cliente") {
+      setFormData((prev) => ({
+        ...prev,
+        documento_cliente: normalizeDocumentoCliente(value).slice(0, DOCUMENTO_MAX_DIGITS),
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -202,6 +213,12 @@ export default function CheckoutPage() {
     const email = formData.email.trim();
     if (!EMAIL_REGEX.test(email)) {
       toast.error("Introduce un correo válido.");
+      return;
+    }
+
+    const documentoCliente = normalizeDocumentoCliente(formData.documento_cliente);
+    if (documentoCliente.length < DOCUMENTO_MIN_DIGITS) {
+      toast.error(`Introduce una número válido de (${DOCUMENTO_MIN_DIGITS} a ${DOCUMENTO_MAX_DIGITS} dígitos).`);
       return;
     }
 
@@ -226,6 +243,7 @@ export default function CheckoutPage() {
         nombre_cliente: formData.nombre,
         email_cliente: formData.email,
         telefono_cliente: formData.telefono,
+        documento_cliente: documentoCliente,
         direccion_envio: `${direccionCompleta} | ENVIO: ${metodoPagoEnvio}`,
         ciudad: formData.ciudad,
         monto_total: totalConEnvio,

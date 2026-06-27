@@ -3,6 +3,7 @@ export type CheckoutFormData = {
   nombre: string;
   email: string;
   telefono: string;
+  documento_cliente: string;
   departamento: string;
   ciudad: string;
   direccion: string;

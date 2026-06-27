@@ -63,6 +63,23 @@ export function CheckoutShippingForm({
           className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
           placeholder="WhatsApp / Celular"
         />
+        <div className="space-y-1.5">
+          <label className="text-[12px] font-black uppercase tracking-widest opacity-60 ml-1">
+            Número de cédula/documento
+          </label>
+          <input
+            required
+            type="text"
+            name="documento_cliente"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={15}
+            value={formData.documento_cliente}
+            onChange={onFieldChange}
+            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
+            placeholder="Ej: 1234567890"
+          />
+        </div>
       </div>
 
       <div className="space-y-4 pt-6 border-t border-gray-50">

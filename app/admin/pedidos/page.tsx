@@ -355,6 +355,9 @@ function AdminPedidosContent() {
                       <div>
                         <h3 className="text-2xl font-black text-[#4a1d44] tracking-tight">{venta.nombre_cliente}</h3>
                         <p className="text-sm lg:text-base opacity-50 font-medium">{venta.email_cliente} • {venta.telefono_cliente}</p>
+                        {venta.documento_cliente && (
+                          <p className="text-sm font-bold text-[#4a1d44]/70 mt-1">Documento: {venta.documento_cliente}</p>
+                        )}
                       </div>
                       <div className="flex items-start gap-3 text-sm p-4 bg-[#fdf8f6] rounded-2xl border border-[#4a1d44]/5">
                         <MapPin size={18} className="shrink-0 text-[#4a1d44]/80" />
@@ -515,7 +518,7 @@ function AdminPedidosContent() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-[#4a1d44]/5">
             <button onClick={() => setPedidoADespachar(null)} className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-full transition"><XCircle size={28} className="opacity-20" /></button>
-            <div className="text-center mb-10"><div className="w-20 h-20 bg-[#fdf8f6] rounded-full flex items-center justify-center mx-auto mb-4 text-[#4a1d44]"><Send size={40} /></div><h2 className="text-3xl font-black font-playfair">Despacho Nacional</h2><p className="text-[10px] opacity-40 mt-2 uppercase font-black tracking-widest">Pedido para: {pedidoADespachar.nombre_cliente}</p></div>
+            <div className="text-center mb-10"><div className="w-20 h-20 bg-[#fdf8f6] rounded-full flex items-center justify-center mx-auto mb-4 text-[#4a1d44]"><Send size={40} /></div><h2 className="text-3xl font-black font-playfair">Despacho Nacional</h2><p className="text-[10px] opacity-40 mt-2 uppercase font-black tracking-widest">Pedido para: {pedidoADespachar.nombre_cliente}</p>{pedidoADespachar.documento_cliente && <p className="text-[10px] font-bold text-[#4a1d44]/60 mt-1">Cédula: {pedidoADespachar.documento_cliente}</p>}</div>
             <div className="space-y-8"><div className="space-y-3"><label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-2">Empresa Transportadora</label><select value={guiaForm.empresa} onChange={(e) => setGuiaForm({...guiaForm, empresa: e.target.value})} className="w-full p-5 rounded-3xl bg-[#fdf8f6] outline-none font-bold text-sm border-2 border-transparent focus:border-[#4a1d44]/10 transition-all cursor-pointer appearance-none">{EMPRESAS_ENVIO.map(e => <option key={e} value={e}>{e}</option>)}</select></div><div className="space-y-3"><label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-2">Número de Guía Oficial</label><div className="relative"><Search className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20" size={20} /><input autoFocus placeholder="Ej: 1098234567" value={guiaForm.numero} onChange={(e) => setGuiaForm({...guiaForm, numero: e.target.value})} className="w-full p-5 pl-14 rounded-3xl bg-[#fdf8f6] outline-none font-bold text-sm border-2 border-transparent focus:border-[#4a1d44]/10 transition-all" /></div></div><button disabled={procesandoAccion} onClick={handleDespacharConGuia} className="w-full bg-[#4a1d44] text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:bg-[#6b2b62] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3">{procesandoAccion ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={20} />}Confirmar Despacho</button></div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 export const CHECKOUT_ENVIO = {
   ciudadLocal: 'Valledupar',
   costoCiudadLocal: 6_000,
-  costoNacional: 20_000,
+  costoNacional: 19_900,
 } as const;
 
 export function esCiudadEnvioLocal(ciudad: string): boolean {

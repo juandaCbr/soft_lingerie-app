@@ -12,7 +12,7 @@ import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import toast from "react-hot-toast";
-import { normalizeDocumentoCliente } from "@/app/lib/utils";
+import { normalizeDocumentoCliente, normalizeNombreCliente } from "@/app/lib/utils";
 import { getCostoEnvioCheckout } from "@/app/lib/checkout-config";
 import { CheckoutPageHeader } from "@/components/checkout/CheckoutPageHeader";
 import { CheckoutShippingForm } from "@/components/checkout/CheckoutShippingForm";
@@ -189,6 +189,13 @@ export default function CheckoutPage() {
       }));
       return;
     }
+    if (name === "nombre") {
+      setFormData((prev) => ({
+        ...prev,
+        nombre: value.toLocaleUpperCase("es-CO"),
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -213,6 +220,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    const nombreCliente = normalizeNombreCliente(formData.nombre);
+    if (!nombreCliente) {
+      toast.error("Introduce tu nombre completo.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -231,7 +244,7 @@ export default function CheckoutPage() {
       const detalleCompra = [...buildDetalleCompraFromCart(cart), infoEnvio];
 
       const datosPedido = {
-        nombre_cliente: formData.nombre,
+        nombre_cliente: nombreCliente,
         email_cliente: formData.email,
         telefono_cliente: formData.telefono,
         documento_cliente: documentoCliente,

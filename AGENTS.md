@@ -245,7 +245,7 @@ El widget `https://checkout.wompi.co/widget.js` se carga en `app/layout.tsx` (`b
 - Nombre, email, teléfono, departamento/ciudad (datos Colombia en `app/lib/colombia.ts`).
 - Dirección, barrio, apartamento.
 - Método de envío: `INCLUIDO` (cobra envío) u otro según UI.
-- **Costos de envío:** Valledupar $6.000 COP; resto de ciudades $18.000 COP.
+- **Costos de envío:** definidos en `app/lib/checkout-config.ts` (`CHECKOUT_ENVIO`: ciudad local Valledupar $6.000 COP; resto $18.000 COP). Cálculo con `getCostoEnvioCheckout(ciudad)`; envío local con `esCiudadEnvioLocal(ciudad)`.
 - Al enviar: inserta/actualiza fila en `ventas_realizadas` con `estado_pago: PENDIENTE` y `referencia_wompi` única (`SOFT-{timestamp}-{random}`).
 
 ### Paso 2 — Pago (`CheckoutPaymentStep` + `BotonWompi`)
@@ -379,13 +379,14 @@ npm run migrate:images  # Migración de imágenes (utils/migrate-images.ts - leg
 
 ## Archivos de referencia rápida
 
-| Tema                              | Archivo(s)                                            |
-| --------------------------------- | ----------------------------------------------------- |
-| Checkout completo                 | `app/checkout/page.tsx`                               |
-| Pago Wompi                        | `components/BotonWompi.tsx`, `app/api/pagos/route.ts` |
-| Post-pago                         | `app/lib/procesar-pedido-wompi-aprobado.ts`           |
-| Carrito                           | `context/CartContext.tsx`                             |
-| Auth admin                        | `proxy.ts`                                            |
-| Tipos catálogo                    | `app/lib/catalog-types.ts`                            |
-| Tipos checkout                    | `components/checkout/checkout-types.ts`               |
-| Colombia (departamentos/ciudades) | `app/lib/colombia.ts`                                 |
+| Tema                                | Archivo(s)                                            |
+| ----------------------------------- | ----------------------------------------------------- |
+| Checkout completo                   | `app/checkout/page.tsx`                               |
+| Config envío (costos, ciudad local) | `app/lib/checkout-config.ts`                          |
+| Pago Wompi                          | `components/BotonWompi.tsx`, `app/api/pagos/route.ts` |
+| Post-pago                           | `app/lib/procesar-pedido-wompi-aprobado.ts`           |
+| Carrito                             | `context/CartContext.tsx`                             |
+| Auth admin                          | `proxy.ts`                                            |
+| Tipos catálogo                      | `app/lib/catalog-types.ts`                            |
+| Tipos checkout                      | `components/checkout/checkout-types.ts`               |
+| Colombia (departamentos/ciudades)   | `app/lib/colombia.ts`                                 |

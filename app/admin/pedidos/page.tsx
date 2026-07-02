@@ -33,6 +33,7 @@ import {
 import { adminSlicePage } from '@/app/lib/admin-pagination';
 import { useAdminListPagination } from '@/app/hooks/useAdminListPagination';
 import { AdminPaginationBar } from '@/components/admin/AdminPaginationBar';
+import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from '@/app/lib/checkout-config';
 
 const EMPRESAS_ENVIO = ['Interrapidisimo', 'Servientrega', 'Envía', 'Coordinadora', 'Domicilio Local', 'Otro'];
 
@@ -339,7 +340,7 @@ function AdminPedidosContent() {
             </div>
           ) : (
             ventasPagina.map((venta) => {
-              const esValledupar = venta.ciudad?.toLowerCase() === 'valledupar';
+              const esValledupar = esCiudadEnvioLocal(venta.ciudad ?? '');
               return (
                 <div key={venta.id} className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 overflow-hidden hover:shadow-2xl transition-all duration-500">
                   <div className="p-6 md:p-8 lg:p-10 flex flex-col lg:flex-row gap-6 lg:gap-8">
@@ -526,7 +527,7 @@ function AdminPedidosContent() {
 
       {pedidoADomicilio && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative"><div className="text-center mb-8"><div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600"><Bike size={48} /></div><h2 className="text-2xl font-black font-playfair">Despacho Local</h2><p className="text-sm opacity-60 mt-2 px-4 text-balance">¿Confirmas que enviarás este pedido con un domiciliario en Valledupar?</p></div><div className="flex flex-col gap-3"><button disabled={procesandoAccion} onClick={handleConfirmarDomicilio} className="w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">{procesandoAccion ? <Loader2 className="animate-spin" /> : <Bike size={18} />}SÍ, ENVIAR AHORA</button><button onClick={() => setPedidoADomicilio(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button></div></div>
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative"><div className="text-center mb-8"><div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600"><Bike size={48} /></div><h2 className="text-2xl font-black font-playfair">Despacho Local</h2><p className="text-sm opacity-60 mt-2 px-4 text-balance">¿Confirmas que enviarás este pedido con un domiciliario en {CHECKOUT_ENVIO.ciudadLocal}?</p></div><div className="flex flex-col gap-3"><button disabled={procesandoAccion} onClick={handleConfirmarDomicilio} className="w-full bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">{procesandoAccion ? <Loader2 className="animate-spin" /> : <Bike size={18} />}SÍ, ENVIAR AHORA</button><button onClick={() => setPedidoADomicilio(null)} className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">CANCELAR</button></div></div>
         </div>
       )}
 

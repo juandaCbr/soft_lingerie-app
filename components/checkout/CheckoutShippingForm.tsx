@@ -1,5 +1,6 @@
 import { Truck, MapPin, User, Mail, ShieldCheck, Loader2 } from "lucide-react";
 import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
+import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from "@/app/lib/checkout-config";
 import type { CheckoutFormData, MetodoPagoEnvio } from "./checkout-types";
 
 type CheckoutShippingFormProps = {
@@ -115,14 +116,14 @@ export function CheckoutShippingForm({
           </select>
         </div>
 
-        {formData.ciudad === "Valledupar" && (
+        {esCiudadEnvioLocal(formData.ciudad) && (
           <div className="bg-green-50 border border-green-100 p-5 rounded-3xl flex items-center gap-4 animate-in zoom-in duration-500">
             <div className="bg-green-500 p-2 rounded-full text-white">
               <Truck size={20} />
             </div>
             <div>
               <p className="text-sm font-black text-green-900 leading-none">Envio Local</p>
-              <p className="text-xs text-green-700 mt-1">Recibe hoy mismo en Valledupar.</p>
+              <p className="text-xs text-green-700 mt-1">Recibe hoy mismo en {CHECKOUT_ENVIO.ciudadLocal}.</p>
             </div>
           </div>
         )}

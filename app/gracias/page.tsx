@@ -6,6 +6,7 @@ import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCart } from "@/context/CartContext";
+import { esCiudadEnvioLocal } from "@/app/lib/checkout-config";
 
 function GraciasContent() {
     const [isMounted, setIsMounted] = useState(false);
@@ -27,7 +28,7 @@ function GraciasContent() {
         
         setReferencia(ref);
         setCiudad(city);
-        setEsValledupar(city.toLowerCase() === 'valledupar');
+        setEsValledupar(esCiudadEnvioLocal(city));
 
         // Vaciar el carrito automáticamente al llegar a la página de éxito
         if (clearCart) {

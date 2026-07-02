@@ -6,6 +6,7 @@ import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from '@/app/lib/checkout-config';
 
 function RastreoContent() {
   const [busqueda, setBusqueda] = useState('');
@@ -172,13 +173,13 @@ function RastreoContent() {
 
             {pedido.estado_logistico === 'ENVIADO' && (
               <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border border-[#4a1d44]/5 mb-8">
-                {pedido.ciudad?.toLowerCase() === 'valledupar' ? (
+                {esCiudadEnvioLocal(pedido.ciudad ?? '') ? (
                   <div className="flex items-center gap-5">
                     <div className="bg-white p-4 rounded-full shadow-sm text-pink-600 animate-bounce"><Bike size={32} /></div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 mb-1">Envío Local Detectado</p>
                       <p className="font-bold text-[#4a1d44] text-sm leading-relaxed">
-                        ¡Buenas noticias! En breve un domiciliario llevará tu pedido directamente a tu puerta en Valledupar.
+                        ¡Buenas noticias! En breve un domiciliario llevará tu pedido directamente a tu puerta en {CHECKOUT_ENVIO.ciudadLocal}.
                       </p>
                     </div>
                   </div>

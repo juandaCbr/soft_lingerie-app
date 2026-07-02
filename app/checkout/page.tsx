@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import toast from "react-hot-toast";
 import { normalizeDocumentoCliente } from "@/app/lib/utils";
+import { getCostoEnvioCheckout } from "@/app/lib/checkout-config";
 import { CheckoutPageHeader } from "@/components/checkout/CheckoutPageHeader";
 import { CheckoutShippingForm } from "@/components/checkout/CheckoutShippingForm";
 import { CheckoutPaymentStep, buildMetodosCheckout } from "@/components/checkout/CheckoutPaymentStep";
@@ -142,7 +143,6 @@ export default function CheckoutPage() {
   });
 
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
-  const [costoEnvio, setCostoEnvio] = useState(0);
   const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<MetodoPagoEnvio>("INCLUIDO");
   const [_bancosPSE, setBancosPSE] = useState<{ value: string; label: string }[]>([]);
 
@@ -177,16 +177,7 @@ export default function CheckoutPage() {
     }
   }, [formData.departamento, formData.ciudad]);
 
-  useEffect(() => {
-    if (formData.ciudad === "Valledupar") {
-      setCostoEnvio(6000);
-    } else if (formData.ciudad) {
-      setCostoEnvio(18000);
-    } else {
-      setCostoEnvio(0);
-    }
-  }, [formData.ciudad]);
-
+  const costoEnvio = getCostoEnvioCheckout(formData.ciudad);
   const totalConEnvio = totalPrice + (metodoPagoEnvio === "INCLUIDO" ? costoEnvio : 0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

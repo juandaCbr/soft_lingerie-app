@@ -421,8 +421,8 @@ function AdminPedidosContent() {
                         <div className="mt-2 space-y-1">
                           {(() => {
                             const infoEnvio = venta.detalle_compra?.find((i: any) => i.es_envio);
-                            const metodo = infoEnvio?.metodo || venta.metodo_pago_envio || (venta.direccion_envio?.includes('CONTRAENTREGA') ? 'CONTRAENTREGA' : 'INCLUIDO');
-                            const costo = infoEnvio?.precio || venta.costo_envio || 0;
+                            const metodo = infoEnvio?.metodo || 'INCLUIDO';
+                            const costo = infoEnvio?.precio || 0;
 
                             return metodo === 'CONTRAENTREGA' ? (
                               <div className="flex flex-col items-start lg:items-end">

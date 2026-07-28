@@ -1,14 +1,12 @@
 import { Truck, MapPin, User, Mail, ShieldCheck, Loader2 } from "lucide-react";
 import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from "@/app/lib/checkout-config";
-import type { CheckoutFormData, MetodoPagoEnvio } from "./checkout-types";
+import type { CheckoutFormData } from "./checkout-types";
 
 type CheckoutShippingFormProps = {
   formData: CheckoutFormData;
   ciudadesDisponibles: string[];
-  metodoPagoEnvio: MetodoPagoEnvio;
   onFieldChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onMetodoEnvioChange: (m: MetodoPagoEnvio) => void;
   onSubmit: (e: React.FormEvent) => void;
   loading: boolean;
   cartEmpty: boolean;
@@ -17,9 +15,7 @@ type CheckoutShippingFormProps = {
 export function CheckoutShippingForm({
   formData,
   ciudadesDisponibles,
-  metodoPagoEnvio,
   onFieldChange,
-  onMetodoEnvioChange,
   onSubmit,
   loading,
   cartEmpty,
@@ -153,38 +149,6 @@ export function CheckoutShippingForm({
           className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none"
           placeholder="Apto, Torre o Casa (Opcional)"
         />
-      </div>
-
-      <div className="space-y-4 pt-6 border-t border-gray-50">
-        <h2 className="text-[12px] font-black uppercase tracking-widest opacity-70 flex items-center gap-2 mb-4">
-          <Truck size={14} /> Método de pago del envío
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => onMetodoEnvioChange("INCLUIDO")}
-            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
-              metodoPagoEnvio === "INCLUIDO"
-                ? "border-[#4a1d44] bg-[#4a1d44]/5"
-                : "border-transparent bg-[#fdf8f6]"
-            }`}
-          >
-            <span className="text-sm font-bold text-[#4a1d44]">Pagar envio ahora</span>
-            <span className="text-[10px] opacity-60">Se suma al total de tu compra</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onMetodoEnvioChange("CONTRAENTREGA")}
-            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
-              metodoPagoEnvio === "CONTRAENTREGA"
-                ? "border-[#4a1d44] bg-[#4a1d44]/5"
-                : "border-transparent bg-[#fdf8f6]"
-            }`}
-          >
-            <span className="text-sm font-bold text-[#4a1d44]">Pagar envío al recibir</span>
-            <span className="text-[10px] opacity-60">Pagas el domicilio cuando te llegue</span>
-          </button>
-        </div>
       </div>
 
       <button

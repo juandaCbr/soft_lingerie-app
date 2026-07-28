@@ -26,8 +26,6 @@ export type CheckoutPaymentData = {
   docNumber: string;
 };
 
-export type MetodoPagoEnvio = 'INCLUIDO' | 'CONTRAENTREGA';
-
 export type MetodoPagoWompi = 'CARD' | 'PSE' | 'NEQUI' | 'DAVIPLATA' | 'BANCOLOMBIA';
 
 import type { ProductoImagenes } from '@/app/lib/image-helper';

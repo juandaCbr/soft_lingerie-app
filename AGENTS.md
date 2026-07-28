@@ -244,8 +244,8 @@ El widget `https://checkout.wompi.co/widget.js` se carga en `app/layout.tsx` (`b
 
 - Nombre, email, teléfono, departamento/ciudad (datos Colombia en `app/lib/colombia.ts`).
 - Dirección, barrio, apartamento.
-- Método de envío: `INCLUIDO` (cobra envío) u otro según UI.
-- **Costos de envío:** definidos en `app/lib/checkout-config.ts` (`CHECKOUT_ENVIO`: ciudad local Valledupar $6.000 COP; resto $18.000 COP). Cálculo con `getCostoEnvioCheckout(ciudad)`; envío local con `esCiudadEnvioLocal(ciudad)`.
+- **Envío:** el costo siempre se cobra online (se suma al total a pagar por Wompi). Ya no existe la modalidad contraentrega.
+- **Costos de envío:** definidos en `app/lib/checkout-config.ts` (`CHECKOUT_ENVIO`: ciudad local Valledupar $6.000 COP; resto $19.900 COP). Cálculo con `getCostoEnvioCheckout(ciudad)`; envío local con `esCiudadEnvioLocal(ciudad)`.
 - Al enviar: inserta/actualiza fila en `ventas_realizadas` con `estado_pago: PENDIENTE` y `referencia_wompi` única (`SOFT-{timestamp}-{random}`).
 
 ### Paso 2 — Pago (`CheckoutPaymentStep` + `BotonWompi`)
@@ -256,7 +256,7 @@ El widget `https://checkout.wompi.co/widget.js` se carga en `app/layout.tsx` (`b
 
 ### Detalle del pedido
 
-Guardado como JSON en `ventas_realizadas.detalle_compra`: líneas de producto (id, nombre, precio, quantity, talla, color, imágenes) + línea de envío (`es_envio: true`).
+Guardado como JSON en `ventas_realizadas.detalle_compra`: líneas de producto (id, nombre, precio, quantity, talla, color, imágenes) + línea de envío (`es_envio: true`, con `metodo: "INCLUIDO"` y `precio` = costo del envío). El método de envío histórico `CONTRAENTREGA` puede seguir apareciendo en pedidos viejos; el admin lo distingue por `infoEnvio.metodo`.
 
 ### Carrito
 

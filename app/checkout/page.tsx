@@ -23,7 +23,6 @@ import { getCardBrand, formatExpiry } from "@/components/checkout/checkout-payme
 import type {
   CheckoutFormData,
   CheckoutPaymentData,
-  MetodoPagoEnvio,
   MetodoPagoWompi,
   WompiExitoPayload,
   CheckoutCartLine,
@@ -143,7 +142,6 @@ export default function CheckoutPage() {
   });
 
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState<string[]>([]);
-  const [metodoPagoEnvio, setMetodoPagoEnvio] = useState<MetodoPagoEnvio>("INCLUIDO");
   const [_bancosPSE, setBancosPSE] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
@@ -178,7 +176,7 @@ export default function CheckoutPage() {
   }, [formData.departamento, formData.ciudad]);
 
   const costoEnvio = getCostoEnvioCheckout(formData.ciudad);
-  const totalConEnvio = totalPrice + (metodoPagoEnvio === "INCLUIDO" ? costoEnvio : 0);
+  const totalConEnvio = totalPrice + costoEnvio;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -235,11 +233,11 @@ export default function CheckoutPage() {
       const direccionCompleta = `${formData.direccion}, Barrio: ${formData.barrio}${formData.apartamento ? ", Apto: " + formData.apartamento : ""} (${formData.departamento})`;
 
       const infoEnvio = {
-        nombre: `ENVIO (${metodoPagoEnvio})`,
-        precio: metodoPagoEnvio === "INCLUIDO" ? costoEnvio : 0,
+        nombre: "ENVIO (INCLUIDO)",
+        precio: costoEnvio,
         quantity: 1,
         es_envio: true,
-        metodo: metodoPagoEnvio,
+        metodo: "INCLUIDO",
       };
       const detalleCompra = [...buildDetalleCompraFromCart(cart), infoEnvio];
 
@@ -248,7 +246,7 @@ export default function CheckoutPage() {
         email_cliente: formData.email,
         telefono_cliente: formData.telefono,
         documento_cliente: documentoCliente,
-        direccion_envio: `${direccionCompleta} | ENVIO: ${metodoPagoEnvio}`,
+        direccion_envio: direccionCompleta,
         ciudad: formData.ciudad,
         monto_total: totalConEnvio,
         estado_pago: "PENDIENTE",
@@ -320,9 +318,7 @@ export default function CheckoutPage() {
             <CheckoutShippingForm
               formData={formData}
               ciudadesDisponibles={ciudadesDisponibles}
-              metodoPagoEnvio={metodoPagoEnvio}
               onFieldChange={handleChange}
-              onMetodoEnvioChange={setMetodoPagoEnvio}
               onSubmit={registrarPedidoPendiente}
               loading={loading}
               cartEmpty={cart.length === 0}
@@ -354,7 +350,6 @@ export default function CheckoutPage() {
         <CheckoutOrderSummary
           cart={cartLines}
           totalPrice={totalPrice}
-          metodoPagoEnvio={metodoPagoEnvio}
           costoEnvio={costoEnvio}
           totalConEnvio={totalConEnvio}
         />

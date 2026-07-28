@@ -1,10 +1,9 @@
 import { getProductoImage, withSupabaseListThumbnailParams } from "@/app/lib/image-helper";
-import type { CheckoutCartLine, MetodoPagoEnvio } from "./checkout-types";
+import type { CheckoutCartLine } from "./checkout-types";
 
 type CheckoutOrderSummaryProps = {
   cart: CheckoutCartLine[];
   totalPrice: number;
-  metodoPagoEnvio: MetodoPagoEnvio;
   costoEnvio: number;
   totalConEnvio: number;
 };
@@ -12,7 +11,6 @@ type CheckoutOrderSummaryProps = {
 export function CheckoutOrderSummary({
   cart,
   totalPrice,
-  metodoPagoEnvio,
   costoEnvio,
   totalConEnvio,
 }: CheckoutOrderSummaryProps) {
@@ -63,15 +61,8 @@ export function CheckoutOrderSummary({
             <span className="font-bold">${totalPrice.toLocaleString("es-CO")}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="opacity-70 flex items-center gap-2">
-              Envío{" "}
-              {metodoPagoEnvio === "CONTRAENTREGA" && (
-                <span className="text-[10px] font-black bg-[#4a1d44]/10 px-2 py-0.5 rounded-full">Contraentrega</span>
-              )}
-            </span>
-            <span className="font-bold">
-              {metodoPagoEnvio === "INCLUIDO" ? `$${costoEnvio.toLocaleString("es-CO")}` : "Por pagar"}
-            </span>
+            <span className="opacity-70 flex items-center gap-2">Envío</span>
+            <span className="font-bold">${costoEnvio.toLocaleString("es-CO")}</span>
           </div>
           <div className="pt-4 border-t border-[#4a1d44]/5">
             <p className="text-[12px] font-black uppercase tracking-[0.2em] opacity-60 mb-2">Total a pagar ahora</p>

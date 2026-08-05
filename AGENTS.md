@@ -171,7 +171,7 @@ soft_lingerie-app/
 | `tallas`            | Tallas ordenadas (`orden`).                                                                                                                                         |
 | `categorias`        | Categorías de producto.                                                                                                                                             |
 | `carrito`           | Ítems por `user_id` (solo usuarios autenticados).                                                                                                                   |
-| `ventas_realizadas` | Pedidos: cliente, envío, `monto_total`, `estado_pago`, `referencia_wompi`, `detalle_compra` (JSON), logística (`estado_logistico`, `numero_guia`, `empresa_envio`). |
+| `ventas_realizadas` | Pedidos: cliente, envío, `monto_total`, `estado_pago`, `referencia_wompi`, `detalle_compra` (JSON), logística (`estado_logistico`, `numero_guia`, `empresa_envio`), `stock_descontado` (flag de idempotencia del descuento). |
 | `perfiles`          | Perfil de usuario; campo `es_admin` para acceso admin.                                                                                                              |
 
 ### Auth
@@ -230,9 +230,18 @@ El widget `https://checkout.wompi.co/widget.js` se carga en `app/layout.tsx` (`b
 **Procesamiento central:** `app/lib/procesar-pedido-wompi-aprobado.ts`
 
 - Marca `estado_pago: APROBADO` (solo si estaba `PENDIENTE`)
-- Descuenta stock (`app/lib/ventas-detalle-stock.ts`)
+- Descuenta stock vía RPC Postgres `descontar_stock_pedido` (atómico, valida `stock >= qty`)
+- Marca flag `ventas_realizadas.stock_descontado = true` tras descuento exitoso
 - Notifica admin (ntfy / Pushover)
-- Idempotente: re-ejecuciones no duplican descuento de stock
+- Idempotente: si la flag ya era `true` no se descuenta de nuevo; si quedó `false` (crash) un reintento completa el descuento sin duplicar
+
+### Gestión de inventario (reglas)
+
+- **Descuento:** el stock **solo se descuenta al pasar una venta a APROBADO** (webhook, `/api/wompi/confirm` o admin "marcar pagada"). Nunca se descuenta al crear pedido PENDIENTE.
+- **No devolución:** eliminar pedidos (pendientes o entregados) **nunca repone stock**. Las ventas ENTREGADO son histórico no borrable desde el panel. Eliminar pendientes solo es limpieza visual.
+- **Fuente de verdad del stock por talla:** `producto_tallas.stock_talla`. El agregado `productos.stock` se recalcula vía RPC `recalcular_stock_producto` desde `SUM(stock_talla)` tras editar tallas en admin (no se escribe desde el form, para no pisar descuentos de ventas intermedias).
+- **Edición admin de tallas:** upsert diff (UPDATE existentes, INSERT nuevas, DELETE deseleccionadas), nunca DELETE+INSERT masivo.
+- **Validación carrito:** `CartContext.addToCart` consulta `producto_tallas.stock_talla` fresco antes de validar cupo (el catálogo viene cacheado por ISR 60s).
 
 ---
 
@@ -333,7 +342,7 @@ Ver `.env_example` completo. Mínimas para desarrollo:
 2. **Supabase en servidor:** usar service role solo en Route Handlers o RSC; nunca exponer `SUPABASE_SERVICE_ROLE_KEY` al cliente.
 3. **Admin:** toda ruta bajo `/admin` asume auth + `es_admin`; APIs admin validan sesión y perfil.
 4. **Pagos:** cambios en checkout/Wompi deben mantener idempotencia en `procesarPedidoWompiAprobado`.
-5. **Stock:** descontar solo vía `aplicarDescuentoStockDesdeDetalle`, no duplicar lógica.
+5. **Stock:** descontar solo vía RPC `descontar_stock_pedido` (envuelto en `aplicarDescuentoStockDesdeDetalle`); nunca duplicar la lógica de descuento. Eliminar pedidos nunca repone stock. Editar tallas en admin usa upsert diff + `recalcular_stock_producto`, nunca DELETE+INSERT masivo ni `productos.stock` escrito desde el form.
 6. **Imágenes:** nuevas subidas deben seguir el pipeline sharp existente y actualizar `imagenes_locales`.
 7. **ISR:** home y catálogo usan `revalidate = 60`; tras cambios admin usar `/api/admin/revalidate-display`.
 8. **Idioma:** UI y mensajes al usuario en español colombiano.

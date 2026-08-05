@@ -5,6 +5,13 @@ import {
   normalizarDetalleCompra,
 } from "@/app/lib/ventas-detalle-stock";
 
+/**
+ * Stock — regla de negocio central:
+ * El inventario SOLO se descuenta al pasar una venta a APROBADO (webhook Wompi,
+ * confirmación cliente, o admin "marcar pagada"). No se devuelve stock al borrar
+ * pedidos. Idempotencia vía `ventas_realizadas.stock_descontado`.
+ */
+
 function getAdmin(): SupabaseClient {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -163,48 +170,65 @@ export async function procesarPedidoWompiAprobado(
     return { ok: false, reason: "Pedido no encontrado" };
   }
 
-  if (pedido.estado_pago === "APROBADO") {
+  // Si ya está APROBADO pero el stock aún no se descontó (crash previo entre la
+  // transición a APROBADO y el descuento), lo completamos ahora. Esto hace el
+  // flujo idempotente: reintento seguro sin duplicar descuento.
+  const yaAprobado = pedido.estado_pago === "APROBADO";
+  const stockYaDescontado = pedido.stock_descontado === true;
+
+  if (yaAprobado && stockYaDescontado) {
+    // Duplicado real: ya aprobado y ya descontado.
     return { ok: true, duplicado: true };
   }
 
-  const nuevaRef = `${reference} (ID: ${transactionId})`;
-
-  const { data: actualizados, error: updErr } = await supabaseAdmin
-    .from("ventas_realizadas")
-    .update({
-      estado_pago: "APROBADO",
-      referencia_wompi: nuevaRef,
-    })
-    .eq("id", pedido.id as string)
-    .in("estado_pago", ["PENDIENTE", "Pendiente", "pendiente"])
-    .select("id");
-
-  if (updErr) {
-    console.error("procesarPedidoWompiAprobado update:", updErr);
-    return { ok: false, reason: updErr.message };
-  }
-
-  if (!actualizados?.length) {
-    const { data: estadoActual, error: estadoErr } = await supabaseAdmin
+  // Si aún es PENDIENTE, hacemos la transición atómica a APROBADO.
+  // Solo un consumidor (webhook / confirm / admin) gana esta carrera.
+  let recienAprobado = false;
+  if (!yaAprobado) {
+    const nuevaRef = `${reference} (ID: ${transactionId})`;
+    const { data: actualizados, error: updErr } = await supabaseAdmin
       .from("ventas_realizadas")
-      .select("estado_pago")
+      .update({
+        estado_pago: "APROBADO",
+        referencia_wompi: nuevaRef,
+      })
       .eq("id", pedido.id as string)
-      .maybeSingle();
+      .in("estado_pago", ["PENDIENTE", "Pendiente", "pendiente"])
+      .select("id");
 
-    if (estadoErr) {
-      return { ok: false, reason: estadoErr.message };
+    if (updErr) {
+      console.error("procesarPedidoWompiAprobado update:", updErr);
+      return { ok: false, reason: updErr.message };
     }
 
-    if (estadoActual?.estado_pago === "APROBADO") {
-      return { ok: true, duplicado: true };
-    }
+    if (!actualizados?.length) {
+      // Otro consumidor ganó la carrera o el estado cambió. Re-verificamos.
+      const { data: estadoActual, error: estadoErr } = await supabaseAdmin
+        .from("ventas_realizadas")
+        .select("estado_pago, stock_descontado")
+        .eq("id", pedido.id as string)
+        .maybeSingle();
 
-    return {
-      ok: false,
-      reason: `No se pudo aprobar el pedido. Estado actual: ${String(estadoActual?.estado_pago ?? "desconocido")}`,
-    };
+      if (estadoErr) {
+        return { ok: false, reason: estadoErr.message };
+      }
+
+      if (estadoActual?.estado_pago === "APROBADO" && estadoActual?.stock_descontado === true) {
+        return { ok: true, duplicado: true };
+      }
+      if (estadoActual?.estado_pago !== "APROBADO") {
+        return {
+          ok: false,
+          reason: `No se pudo aprobar el pedido. Estado actual: ${String(estadoActual?.estado_pago ?? "desconocido")}`,
+        };
+      }
+      // APROBADO pero stock_descontado=false: cae al flujo de descuento abajo.
+    } else {
+      recienAprobado = true;
+    }
   }
 
+  // --- Descuento de stock (solo si no se había hecho antes) ---
   const detalle = normalizarDetalleCompra(pedido.detalle_compra);
 
   let resumenArticulos = "";
@@ -213,7 +237,36 @@ export async function procesarPedidoWompiAprobado(
     resumenArticulos += `• ${line.nombre} (Talla: ${(line.talla as { nombre?: string } | null)?.nombre || "Única"}) x${line.quantity}\n`;
   }
 
-  await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
+  // El RPC valida stock>=qty por línea. Si alguna línea falla, el pedido queda
+  // APROBADO + stock_descontado=false para reintento manual (no interrumpimos la
+  // transición a APROBADO por una talla agotada — el admin decide).
+  try {
+    await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
+
+    // Marcar stock_descontado=true atómicamente (condicional → idempotente).
+    const { error: flagErr } = await supabaseAdmin
+      .from("ventas_realizadas")
+      .update({ stock_descontado: true })
+      .eq("id", pedido.id as string)
+      .eq("stock_descontado", false);
+
+    if (flagErr) {
+      console.warn("procesarPedidoWompiAprobado: estado APROBADO pero flag stock_descontado no actualizada:", flagErr.message, {
+        referencia: reference,
+        pedidoId: pedido.id,
+      });
+    }
+  } catch (stockErr) {
+    // El descuento falló (stock insuficiente o error RPC). No marcamos flag: reintento seguro.
+    console.error("procesarPedidoWompiAprobado descuento stock:", stockErr, {
+      referencia: reference,
+      pedidoId: pedido.id,
+    });
+    return {
+      ok: false,
+      reason: recienAprobado ? "Pedido aprobado pero el descuento de stock quedó pendiente (reintente)" : "Descuento de stock pendiente (reintente)",
+    };
+  }
 
   const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
   const notificado = await enviarNotificacionAdmin(mensajePush);

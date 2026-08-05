@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { aplicarDevolucionStockDesdeDetalle } from "@/app/lib/ventas-detalle-stock";
 
 export const runtime = "nodejs";
 
@@ -48,7 +47,12 @@ async function assertAdminSession(): Promise<{ ok: true } | { ok: false; status:
 }
 
 /**
- * Elimina un pedido PENDIENTE y suma de vuelta las unidades al inventario según `detalle_compra`.
+ * Elimina un pedido PENDIENTE.
+ *
+ * REGLA DE STOCK: un pedido PENDIENTE NUNCA descontó stock (el descuento solo
+ * ocurre al pasar a APROBADO). Por tanto, eliminar un pendiente solo borra la
+ * fila → NO se toca el inventario. Esta acción es de limpieza visual para que
+ * el panel no se llene de pedidos abandonados.
  */
 export async function POST(request: Request) {
   const session = await assertAdminSession();
@@ -83,13 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Solo se pueden eliminar pedidos pendientes de pago" }, { status: 400 });
   }
 
-  try {
-    await aplicarDevolucionStockDesdeDetalle(admin, venta.detalle_compra);
-  } catch (e) {
-    console.error("venta-eliminar-pendiente stock:", e);
-    return NextResponse.json({ error: "No se pudo actualizar el inventario" }, { status: 500 });
-  }
-
+  // No se repone stock: el pedido PENDIENTE nunca descontó inventario.
   const { error: delErr } = await admin.from("ventas_realizadas").delete().eq("id", ventaId);
 
   if (delErr) {

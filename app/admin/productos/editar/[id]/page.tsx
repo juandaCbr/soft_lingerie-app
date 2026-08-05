@@ -276,14 +276,16 @@ export default function EditarProductoPage() {
       }
 
       const listaFinalUrls = [...imagenesUrls];
-      const stockTotal = Object.values(stocksPorTalla).reduce((a, b) => a + Number(b || 0), 0);
 
       const cleanId = parseInt(idProducto);
       
+      // IMPORTANTE: NO escribimos `productos.stock` desde el form. El stock agregado
+      // se recalcula desde SUM(producto_tallas.stock_talla) vía RPC tras sincronizar
+      // tallas. Eso evita pisar descuentos de ventas que hayan ocurrido entre la
+      // carga del formulario y el guardado (race condition admin vs venta aprobada).
       const { error } = await supabase.from('productos').update({
         nombre,
         precio: Math.round(parseFloat(precio)),
-        stock: stockTotal,
         categoria,
         descripcion,
         grupo_id: grupoId.trim() || null,
@@ -318,22 +320,61 @@ export default function EditarProductoPage() {
         console.warn('[editar producto] Limpieza de uploads (red):', cleanupErr);
       }
 
-      // Intentar actualizar tallas, pero atrapar el error específicamente aquí
+      // --- Sincronización de tallas: upsert diff (no DELETE+INSERT masivo) ---
+      // Comparamos la selección actual del form con las filas existentes en DB:
+      //  - tallasMantener (en form y en DB) → UPDATE stock_talla con el valor del form.
+      //  - tallasNuevas   (en form, no en DB) → INSERT.
+      //  - tallasQuitar   (en DB, no en form) → DELETE (se retira esa talla del inventario).
+      // Esto evita perder el stock_talla ajustado por ventas intermedias en tallas
+      // que el admin no modificó, y si lo modificó es intencional (está editando).
       try {
-        const { error: deleteError } = await supabase.from('producto_tallas').delete().eq('producto_id', cleanId);
-        if (deleteError) throw deleteError;
-
-        const insertTallas = Object.entries(stocksPorTalla).map(([tallaId, stockVal]) => ({
-          producto_id: cleanId,
-          talla_id: parseInt(tallaId),
-          stock_talla: Number(stockVal || 0)
-        }));
-
-        const { error: tallasError } = await supabase
+        const { data: tallasActuales, error: fetchTallasErr } = await supabase
           .from('producto_tallas')
-          .insert(insertTallas);
+          .select('talla_id, stock_talla')
+          .eq('producto_id', cleanId);
+        if (fetchTallasErr) throw fetchTallasErr;
 
-        if (tallasError) throw tallasError;
+        const actuales = new Map((tallasActuales ?? []).map((t: any) => [String(t.talla_id), Number(t.stock_talla ?? 0)]));
+        const formEntries = Object.entries(stocksPorTalla).map(([tid, stk]) => ({ talla_id: parseInt(tid), stock: Number(stk || 0) }));
+
+        const aActualizar = formEntries.filter((e) => actuales.has(String(e.talla_id)));
+        const aInsertar  = formEntries.filter((e) => !actuales.has(String(e.talla_id)));
+        const formIds = new Set(formEntries.map((e) => String(e.talla_id)));
+        const aQuitar = (tallasActuales ?? []).filter((t: any) => !formIds.has(String(t.talla_id)));
+
+        for (const e of aActualizar) {
+          const { error: updErr } = await supabase
+            .from('producto_tallas')
+            .update({ stock_talla: e.stock })
+            .eq('producto_id', cleanId)
+            .eq('talla_id', e.talla_id);
+          if (updErr) throw updErr;
+        }
+
+        if (aInsertar.length > 0) {
+          const { error: insErr } = await supabase
+            .from('producto_tallas')
+            .insert(aInsertar.map((e) => ({
+              producto_id: cleanId,
+              talla_id: e.talla_id,
+              stock_talla: e.stock,
+            })));
+          if (insErr) throw insErr;
+        }
+
+        for (const t of aQuitar) {
+          const { error: delErr } = await supabase
+            .from('producto_tallas')
+            .delete()
+            .eq('producto_id', cleanId)
+            .eq('talla_id', (t as any).talla_id);
+          if (delErr) throw delErr;
+        }
+
+        // Recalcular el agregado `productos.stock` desde SUM(producto_tallas.stock_talla)
+        // vía RPC. Hecho DESPUÉS de sincronizar tallas → refleja ventas intermedias.
+        const { error: recalcErr } = await supabase.rpc('recalcular_stock_producto', { p_pid: cleanId });
+        if (recalcErr) throw recalcErr;
 
         const { error: delColorErr } = await supabase.from('producto_colores').delete().eq('producto_id', cleanId);
         if (delColorErr) throw delColorErr;

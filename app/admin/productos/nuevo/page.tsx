@@ -76,13 +76,15 @@ export default function NuevoProductoPage() {
     setStocksPorTalla({});
   };
 
-  const handleTallaToggle = (id: string) => {
+  // Nueva talla arranca con stock 0 para evitar crear inventario fantasma si el
+// admin se olvida de ajustar el campo tras activar la talla.
+const handleTallaToggle = (id: string) => {
     setStocksPorTalla(prev => {
       const newStocks = { ...prev };
       if (id in newStocks) {
         delete newStocks[id];
       } else {
-        newStocks[id] = 1;
+        newStocks[id] = 0;
       }
       return newStocks;
     });

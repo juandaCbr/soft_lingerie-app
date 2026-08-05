@@ -79,45 +79,75 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
   }
 
-  if (venta.estado_pago === "APROBADO") {
+  if (venta.estado_pago === "APROBADO" && venta.stock_descontado === true) {
     return NextResponse.json({ ok: true, duplicado: true });
   }
 
-  if (venta.estado_pago !== "PENDIENTE") {
-    return NextResponse.json({ error: "Solo se pueden marcar pedidos en estado PENDIENTE" }, { status: 400 });
+  if (venta.estado_pago !== "PENDIENTE" && !(venta.estado_pago === "APROBADO" && venta.stock_descontado === false)) {
+    return NextResponse.json({ error: "Solo se pueden marcar pedidos en estado PENDIENTE (o APROBADO con stock pendiente)" }, { status: 400 });
   }
 
-  const refActual = String(venta.referencia_wompi ?? "").trim();
-  const sufijoAdmin = " [pago confirmado admin]";
-  const updateRow: { estado_pago: string; referencia_wompi?: string } = { estado_pago: "APROBADO" };
-  if (refActual && !refActual.includes("[pago confirmado admin]")) {
-    updateRow.referencia_wompi = refActual + sufijoAdmin;
+  // Transición atómica a APROBADO solo si era PENDIENTE.
+  if (venta.estado_pago !== "APROBADO") {
+    const refActual = String(venta.referencia_wompi ?? "").trim();
+    const sufijoAdmin = " [pago confirmado admin]";
+    const updateRow: { estado_pago: string; referencia_wompi?: string } = { estado_pago: "APROBADO" };
+    if (refActual && !refActual.includes("[pago confirmado admin]")) {
+      updateRow.referencia_wompi = refActual + sufijoAdmin;
+    }
+
+    const { data: actualizados, error: updErr } = await admin
+      .from("ventas_realizadas")
+      .update(updateRow)
+      .eq("id", ventaId)
+      .eq("estado_pago", "PENDIENTE")
+      .select("id");
+
+    if (updErr) {
+      console.error("venta-marcar-pagada:", updErr);
+      return NextResponse.json({ error: updErr.message }, { status: 500 });
+    }
+
+    if (!actualizados?.length) {
+      // Otro consumidor ganó la carrera: re-leer para ver estado real.
+      const { data: refrescada } = await admin
+        .from("ventas_realizadas")
+        .select("estado_pago, stock_descontado")
+        .eq("id", ventaId)
+        .maybeSingle();
+      if (refrescada?.estado_pago === "APROBADO" && refrescada?.stock_descontado === true) {
+        return NextResponse.json({ ok: true, duplicado: true });
+      }
+    }
   }
 
-  const { data: actualizados, error: updErr } = await admin
-    .from("ventas_realizadas")
-    .update(updateRow)
-    .eq("id", ventaId)
-    .eq("estado_pago", "PENDIENTE")
-    .select("id");
+  // --- Descuento de stock (idempotente vía flag stock_descontado) ---
+  if (!venta.stock_descontado) {
+    try {
+      const { todoOk } = await aplicarDescuentoStockDesdeDetalle(admin, venta.detalle_compra);
 
-  if (updErr) {
-    console.error("venta-marcar-pagada:", updErr);
-    return NextResponse.json({ error: updErr.message }, { status: 500 });
-  }
+      const { error: flagErr } = await admin
+        .from("ventas_realizadas")
+        .update({ stock_descontado: true })
+        .eq("id", ventaId)
+        .eq("stock_descontado", false);
 
-  if (!actualizados?.length) {
-    return NextResponse.json({ ok: true, duplicado: true });
-  }
+      if (flagErr) {
+        console.error("venta-marcar-pagada flag:", flagErr);
+        return NextResponse.json(
+          { error: "Pedido marcado pagado pero la flag de stock no se actualizó; reintente para completar." },
+          { status: 500 },
+        );
+      }
 
-  try {
-    await aplicarDescuentoStockDesdeDetalle(admin, venta.detalle_compra);
-  } catch (e) {
-    console.error("venta-marcar-pagada stock:", e);
-    return NextResponse.json(
-      { error: "Pedido marcado pagado pero falló la actualización de stock; revisa inventario manualmente." },
-      { status: 500 },
-    );
+      return NextResponse.json({ ok: true, stockParcial: !todoOk ? true : undefined });
+    } catch (e) {
+      console.error("venta-marcar-pagada stock:", e);
+      return NextResponse.json(
+        { error: "Pedido marcado pagado pero el descuento de stock quedó pendiente. Vuelve a marcar para reintentar." },
+        { status: 500 },
+      );
+    }
   }
 
   return NextResponse.json({ ok: true });

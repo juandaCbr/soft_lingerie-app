@@ -192,7 +192,7 @@ function AdminPedidosContent() {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "No se pudo eliminar");
-      toast.success("Pedido eliminado y unidades devueltas al inventario.");
+      toast.success("Pedido pendiente eliminado.");
       setPedidoAEliminarPendiente(null);
       await cargarVentas();
       scrollToTop();
@@ -476,7 +476,7 @@ function AdminPedidosContent() {
                               <Trash2 size={14} /> Eliminar pedido pendiente
                             </button>
                             <p className="text-[8px] text-center opacity-50 font-medium leading-relaxed px-1">
-                              Borra el pedido y suma de vuelta las unidades al inventario según las líneas del carrito.
+                              Borra el pedido. Como era pendiente de pago, no afecta el inventario (nunca descontó stock).
                             </p>
                           </>
                         )}
@@ -492,7 +492,12 @@ function AdminPedidosContent() {
                               </div>
                             )}
                             {venta.estado_logistico === 'ENVIADO' && <button onClick={() => setPedidoAFinalizar(venta)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} /> Marcar como Entregado</button>}
-                            {venta.estado_logistico === 'ENTREGADO' && <button onClick={() => setPedidoAEliminar(venta)} className="w-full bg-red-50 text-red-600 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2"><Trash2 size={14} /> Eliminar del Historial</button>}
+                            {/* ENTREGADO es histórico: no se elimina para no perder el registro de ventas.
+                                El stock ya se descontó al aprobar; por la regla de no-devolución, borrarlo
+                                no repone inventario, así que se conserva como auditable. */}
+                            {venta.estado_logistico === 'ENTREGADO' && (
+                              <div className="w-full bg-emerald-50 text-emerald-700 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"><CheckCircle2 size={14} /> Venta Finalizada</div>
+                            )}
                           </>
                         )}
                         <a href="https://comercios.wompi.co/" target="_blank" className="w-full bg-gray-50 text-[#4a1d44]/40 py-3 rounded-2xl font-bold text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-[#4a1d44] border border-transparent hover:border-[#4a1d44]/10 transition-all">Auditar en Wompi <ExternalLink size={12} /></a>
@@ -585,7 +590,7 @@ function AdminPedidosContent() {
               </div>
               <h2 className="text-2xl font-black font-playfair">¿Eliminar pedido pendiente?</h2>
               <p className="text-sm opacity-60 mt-3 px-2 text-balance">
-                Se borrará el registro y las <strong>unidades de cada producto</strong> en el detalle se <strong>sumarán de vuelta</strong> al inventario (producto y talla). Úsalo para pedidos duplicados, pruebas o carritos abandonados.
+                Se borrará el registro del pedido. Como estaba pendiente de pago, <strong>nunca descontó inventario</strong>, así que no se altera el stock. Úsalo para pedidos duplicados, pruebas o carritos abandonados.
               </p>
               <p className="text-xs font-bold text-[#4a1d44] mt-4">{normalizeNombreCliente(pedidoAEliminarPendiente.nombre_cliente ?? '')}</p>
             </div>
@@ -597,7 +602,7 @@ function AdminPedidosContent() {
                 className="w-full bg-amber-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 {procesandoAccion ? <Loader2 className="animate-spin" /> : <Trash2 size={18} />}
-                Eliminar y devolver stock
+                Eliminar pedido
               </button>
               <button type="button" onClick={() => setPedidoAEliminarPendiente(null)} className="w-full bg-gray-50 text-gray-500 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">
                 Cancelar

@@ -94,8 +94,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback(async (product: any, talla?: any, qty: number = 1) => {
     const tallaId = talla?.id || null;
-    const stockMax = Number(talla?.stock ?? product.stock_disponible ?? product.stock ?? 0);
     const requiereTalla = Array.isArray(product?.producto_tallas) && product.producto_tallas.length > 0;
+
+    // Validación de stock en tiempo real: el catálogo puede venir cacheado (ISR 60s)
+    // y mostrar cupo que ya no existe. Antes de validar, consultamos el stock fresco
+    // de la talla (o del producto si no usa tallas) para evitar sobreventa visible.
+    let stockMax = Number(talla?.stock ?? product.stock_disponible ?? product.stock ?? 0);
+    try {
+      if (tallaId) {
+        const { data: pt } = await supabase
+          .from('producto_tallas')
+          .select('stock_talla')
+          .eq('producto_id', product.id)
+          .eq('talla_id', tallaId)
+          .maybeSingle();
+        if (pt && typeof pt.stock_talla === 'number') stockMax = pt.stock_talla;
+      } else if (!requiereTalla) {
+        const { data: p } = await supabase
+          .from('productos')
+          .select('stock')
+          .eq('id', product.id)
+          .maybeSingle();
+        if (p && typeof p.stock === 'number') stockMax = p.stock;
+      }
+    } catch {
+      // Si la consulta fresca falla, usamos el snapshot del catálogo como fallback.
+      // El descuento real atómico (RPC descontar_stock_pedido) sigue siendo la barrera final.
+    }
 
     if (stockMax <= 0 || (requiereTalla && !tallaId)) {
       return false;

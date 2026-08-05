@@ -1,7 +1,9 @@
 import { Truck, MapPin, User, Mail, ShieldCheck, Loader2 } from "lucide-react";
 import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from "@/app/lib/checkout-config";
+import { validarNombreCompleto } from "@/app/lib/utils";
 import type { CheckoutFormData } from "./checkout-types";
+import { useState } from "react";
 
 type CheckoutShippingFormProps = {
   formData: CheckoutFormData;
@@ -20,6 +22,9 @@ export function CheckoutShippingForm({
   loading,
   cartEmpty,
 }: CheckoutShippingFormProps) {
+  // Validación visual del nombre: se evalúa on-blur y al escribir si ya hubo error.
+  const [nombreTouched, setNombreTouched] = useState(false);
+  const errorNombre = nombreTouched ? validarNombreCompleto(formData.nombre) : null;
   return (
     <form onSubmit={onSubmit} className="space-y-6 animate-in fade-in duration-500">
       <div className="space-y-4">
@@ -43,14 +48,33 @@ export function CheckoutShippingForm({
           />
         </div>
 
-        <input
-          required
-          name="nombre"
-          value={formData.nombre}
-          onChange={onFieldChange}
-          className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
-          placeholder="Nombre completo"
-        />
+        <div className="space-y-1.5">
+          <label className="text-[12px] font-black uppercase tracking-widest opacity-60 ml-1 flex items-center gap-2">
+            <User size={12} /> Nombre y apellido
+          </label>
+          <input
+            required
+            name="nombre"
+            value={formData.nombre}
+            onChange={(e) => {
+              onFieldChange(e);
+              if (nombreTouched) {
+                // revalida en vivo tras el primer blur para que el usuario vea
+                // cómo el error desaparece al añadir el apellido.
+              }
+            }}
+            onBlur={() => setNombreTouched(true)}
+            className={`w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border transition-all focus:border-[#4a1d44]/10 ${
+              errorNombre ? "border-red-400 focus:border-red-500" : "border-transparent"
+            }`}
+            placeholder="Ej: María Pérez (nombre y apellido)"
+          />
+          {errorNombre && (
+            <p className="text-[11px] font-bold text-red-500 ml-1 flex items-center gap-1">
+              {errorNombre}
+            </p>
+          )}
+        </div>
         <input
           required
           type="tel"

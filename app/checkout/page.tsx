@@ -12,7 +12,7 @@ import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import toast from "react-hot-toast";
-import { normalizeDocumentoCliente, normalizeNombreCliente } from "@/app/lib/utils";
+import { normalizeDocumentoCliente, normalizeNombreCliente, validarNombreCompleto } from "@/app/lib/utils";
 import { getCostoEnvioCheckout } from "@/app/lib/checkout-config";
 import { CheckoutPageHeader } from "@/components/checkout/CheckoutPageHeader";
 import { CheckoutShippingForm } from "@/components/checkout/CheckoutShippingForm";
@@ -219,6 +219,11 @@ export default function CheckoutPage() {
     }
 
     const nombreCliente = normalizeNombreCliente(formData.nombre);
+    const errorNombre = validarNombreCompleto(formData.nombre);
+    if (errorNombre) {
+      toast.error(errorNombre);
+      return;
+    }
     if (!nombreCliente) {
       toast.error("Introduce tu nombre completo.");
       return;

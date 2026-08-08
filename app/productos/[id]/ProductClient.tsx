@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ShoppingCart, ArrowLeft, Check, ChevronLeft, ChevronRight, ChevronDown, ShieldCheck, Heart, Truck, Ruler, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -18,6 +18,18 @@ import { slugify } from '@/app/lib/utils';
 import { getSiteUrl } from '@/app/lib/site-url';
 import { toMetaDescription } from '@/app/lib/seo-text';
 
+function subscribeCatalogReturnQuery() {
+  return () => {};
+}
+
+function getCatalogReturnQueryClient(): string | null {
+  return new URLSearchParams(window.location.search).get('cv');
+}
+
+function getCatalogReturnQueryServer(): null {
+  return null;
+}
+
 export default function ProductClient({ producto, variantesIniciales, relacionadosIniciales, tallasPorVarianteIniciales }: { 
   producto: any, 
   variantesIniciales: any[], 
@@ -25,9 +37,12 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
   tallasPorVarianteIniciales: Record<string, any[]>
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   /** Query string del catálogo (p. ej. `q=a&cat=b`) para volver con filtros si no hay historial. */
-  const catalogReturnQuery = searchParams.get('cv');
+  const catalogReturnQuery = useSyncExternalStore(
+    subscribeCatalogReturnQuery,
+    getCatalogReturnQueryClient,
+    getCatalogReturnQueryServer,
+  );
   const { addToCart, cart } = useCart();
   const scrollRef = useRef<HTMLDivElement>(null);
 

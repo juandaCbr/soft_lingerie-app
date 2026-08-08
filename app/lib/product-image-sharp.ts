@@ -4,7 +4,7 @@
  * - Anchos máximos; altura proporcional (fit inside, sin deformar).
  * - Detail con tope de tamaño en bytes (calidad adaptativa).
  */
-import sharp from 'sharp';
+import sharp, { type Sharp } from 'sharp';
 
 /** Ancho máximo en px; la altura la calcula Sharp manteniendo proporción. */
 export const PRODUCT_IMAGE_THUMB_WIDTH = 250;
@@ -13,12 +13,12 @@ export const PRODUCT_IMAGE_WEBP_QUALITY_THUMB = 78;
 /** Objetivo máximo para el archivo detail (WebP). */
 export const PRODUCT_IMAGE_DETAIL_MAX_BYTES = 100 * 1024;
 
-export function pipelineOrientado(buffer: Buffer): sharp.Sharp {
+export function pipelineOrientado(buffer: Buffer): Sharp {
   return sharp(buffer).rotate();
 }
 
 export async function webpDetailBajoTope(
-  pipeline: sharp.Sharp,
+  pipeline: Sharp,
   maxBytes: number,
 ): Promise<{ buffer: Buffer; qualityUsed: number }> {
   let q = 82;

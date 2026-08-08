@@ -1,228 +1,191 @@
-## Escala de prioridad usada
+# Backlog de mejoras — Soft Lingerie
 
-- **P0 (Critica / inmediata)**: impacto directo en conversion, SEO base o performance severa.
-- **P1 (Alta)**: impacto fuerte, deberia entrar en proximos sprints.
-- **P2 (Media)**: mejora relevante pero no bloqueante.
-- **P3 (Baja / estrategica)**: nice-to-have o depende de etapas futuras.
+Documento de trabajo para ejecutar mejoras de forma incremental. Esta lista se
+revisó contra la implementación actual; no todo lo que figuraba en la versión
+anterior continúa pendiente.
 
----
+## Criterio de prioridad
 
-## UX
-
-### Navegacion y descubrimiento
-1. **Breadcrumbs**
-   - **Impresion**: mejora orientacion + enlazado interno; bajo riesgo de implementacion.
-   - **Prioridad**: P1
-
-2. **Buscador**
-   - **Impresion**: alto impacto en descubrimiento y conversion (catalogos medianos/grandes).
-   - **Prioridad**: P0
-
-3. **Paginacion en catalogo**
-   - **Impresion**: clave para rendimiento percibido y UX si hoy carga todo de golpe.
-   - **Prioridad**: P0 (si carga todo); P2 (si ya pagina bien)
-
-4. **Filtros activos visibles (chips)**
-   - **Impresion**: reduce friccion y errores de navegacion filtrada.
-   - **Prioridad**: P1
-
-### Checkout y conversion
-5. **Progress bar en checkout**
-   - **Impresion**: mejora claridad del proceso, reduce abandono por incertidumbre.
-   - **Prioridad**: P1
-
-6. **Resumen de pedido siempre visible en mobile**
-   - **Impresion**: impacto directo en confianza y decision final de compra.
-   - **Prioridad**: P0
-
-7. **Validacion de stock en tiempo real**
-   - **Impresion**: evita frustracion y caidas tardias en conversion; mas complejo tecnicamente.
-   - **Prioridad**: P1
-
-8. **Autofill de direccion**
-   - **Impresion**: quick win de UX (muy buena relacion impacto/esfuerzo).
-   - **Prioridad**: P0
-
-9. **Persistencia de carrito al cerrar pestana**
-   - **Impresion**: basico de e-commerce; si falla, afecta fuerte retorno de usuarios.
-   - **Prioridad**: P0 (validacion y hardening)
-
-### Producto
-10. **Zoom/lightbox de imagen**
-    - **Impresion**: en lenceria es importante por textura/detalle; influye en conversion.
-    - **Prioridad**: P1
-
-11. **Guia de tallas contextual**
-    - **Impresion**: reduce devoluciones y dudas; muy relevante para apparel.
-    - **Prioridad**: P0
-
-12. **Stock bajo ("quedan pocas unidades")**
-    - **Impresion**: buen disparador de urgencia, pero debe ser veraz para no perder confianza.
-    - **Prioridad**: P2
-
-13. **Feedback de "agregado al carrito"**
-    - **Impresion**: esencial de usabilidad; evita clics duplicados y confusion.
-    - **Prioridad**: P0
-
-### Mobile-first
-14. **Bottom nav bar**
-    - **Impresion**: puede mejorar navegacion frecuente en mobile, pero requiere buen diseno IA.
-    - **Prioridad**: P2
-
-15. **Swipe en galeria**
-    - **Impresion**: comportamiento esperado en mobile; mejora natural de interaccion.
-    - **Prioridad**: P1
-
-16. **Sticky "Agregar al carrito"**
-    - **Impresion**: de las mejoras mobile con mayor efecto en conversion.
-    - **Prioridad**: P0
+- **P0 — inmediata:** mejora transversal de rendimiento, conversión o SEO técnico que afecta páginas públicas clave.
+- **P1 — próximo sprint:** impacto comercial o de descubrimiento alto, sin bloquear la operación actual.
+- **P2 — planificable:** mejora útil de UX, accesibilidad o escalabilidad; no urgente.
+- **P3 — estratégica / condicional:** depende de métricas, contenido, hosting o una decisión de producto previa.
 
 ---
 
-## Rendimiento / Velocidad
+## P0 — Primera ola
 
-### Critico
-1. **Quitar `force-dynamic` en ficha y pasar a ISR**
-   - **Impresion**: probablemente el mayor cuello de botella real.
-   - **Prioridad**: P0
+### 1. Optimizar la imagen crítica de la home (LCP)
 
-2. **Admin pages client-side con Supabase directo**
-   - **Impresion**: importante para panel, menos urgente para storefront publico.
-   - **Prioridad**: P2 (P1 si el admin es usado intensivamente)
+- **Estado:** pendiente.
+- **Motivo:** el hero público usa una etiqueta `<img>` sin la optimización y prioridad de `next/image`.
+- **Alcance futuro:** optimizar la imagen principal, sus dimensiones, `sizes` y prioridad sin deteriorar la composición visual.
+- **Criterio de aceptación:** la imagen hero conserva calidad y no provoca salto de layout; queda correctamente priorizada en carga.
 
-3. **Preload de imagenes criticas**
-   - **Impresion**: mejora LCP si se aplica selectivamente (sin sobrecargar preload).
-   - **Prioridad**: P1
+### 2. Definir la estrategia SEO de variantes por `grupo_id`
 
-4. **Optimizacion de font loading (Playfair pesos minimos)**
-   - **Impresion**: quick win tecnico en LCP/CLS.
-   - **Prioridad**: P0
-
-5. **Bundle split de `react-colorful` (solo admin)**
-   - **Impresion**: muy buena practica para separar publico/admin.
-   - **Prioridad**: P1
-
-6. **`colombia.ts` (1162 lineas) y code-splitting**
-   - **Impresion**: importante confirmar scope de carga; puede penalizar JS inicial.
-   - **Prioridad**: P1
-
-### Moderado
-7. **`next/image` `sizes` correctos**
-   - **Impresion**: optimizacion clasica con impacto acumulado fuerte.
-   - **Prioridad**: P1
-
-8. **Uso de SWR con fallback/hidratacion**
-   - **Impresion**: util, pero conviene despues de estabilizar SSR/ISR/cache base.
-   - **Prioridad**: P2
-
-9. **Caching sistematico de queries Supabase server**
-   - **Impresion**: importante para latencia y costo; requiere diseno cuidadoso.
-   - **Prioridad**: P1
-
-10. **Eliminar `repomix-output.xml` del build/indexacion**
-    - **Impresion**: higiene de repo/deploy; impacto tecnico bajo pero recomendable.
-    - **Prioridad**: P2
-
-11. **Mover script Wompi del layout global a checkout**
-    - **Impresion**: gran impacto en bloqueo de render y CWV globales.
-    - **Prioridad**: P0
-
-12. **Skeletons en home**
-    - **Impresion**: mejora performance percibida mas que real; util para UX.
-    - **Prioridad**: P2
-
-### Menor prioridad
-13. **Compresion gzip/brotli**
-    - **Impresion**: fundamental en infraestructura; suele ser quick win de alto impacto si no esta.
-    - **Prioridad**: P0 (verificacion inmediata)
-
-14. **HTTP/2 o HTTP/3**
-    - **Impresion**: importante a nivel servidor/CDN, pero depende de hosting.
-    - **Prioridad**: P2
-
-15. **Service Worker / PWA**
-    - **Impresion**: estrategico; no es lo primero para mejorar conversion inmediata.
-    - **Prioridad**: P3
+- **Estado:** requiere decisión de producto antes de desarrollar.
+- **Decisión necesaria:** determinar si las variantes (por ejemplo, colores) son páginas comerciales independientes o representaciones del mismo producto.
+- **Si son independientes:** mantener URL y canonical propios con contenido diferenciado.
+- **Si son el mismo producto:** consolidar señal SEO con una URL canónica y las redirecciones necesarias.
+- **Criterio de aceptación:** cada variante tiene una única estrategia de indexación coherente con sitemap, canonical y navegación.
 
 ---
 
-## SEO
+## P1 — Próximo sprint
 
-### Critico
-1. **JSON-LD `Product` con `offers`**
-   - **Impresion**: absolutamente clave para rich results en e-commerce.
-   - **Prioridad**: P0
+### 3. Crear páginas indexables por categoría
 
-2. **Metadata de producto completa (`description`, `og:image`, `keywords`)**
-   - **Impresion**: basico SEO on-page por producto.
-   - **Prioridad**: P0
+- **Estado:** pendiente.
+- **Motivo:** hoy existen filtros de catálogo, pero no rutas orientadas a búsquedas por categoría.
+- **Alcance futuro:** rutas, textos SEO, metadata, canonical, enlazado interno y sitemap para categorías reales del catálogo.
+- **Criterio de aceptación:** cada categoría activa importante tiene URL propia, H1, metadata y productos pertinentes.
 
-3. **Canonical correcto en slug+ID**
-   - **Impresion**: esencial para evitar dilucion por duplicados.
-   - **Prioridad**: P0
+### 4. Añadir CTA sticky de “Añadir al carrito” en móvil
 
-4. **Redirecciones/canonical entre variantes (`grupo_id`)**
-   - **Impresion**: critico para consolidar senales SEO.
-   - **Prioridad**: P0
+- **Estado:** pendiente.
+- **Motivo:** el bloque de compra de la ficha es sticky desde desktop, no en móvil.
+- **Alcance futuro:** barra fija móvil que respete la selección de talla, disponibilidad y el área segura del dispositivo.
+- **Criterio de aceptación:** el CTA queda accesible al desplazarse, no tapa contenido ni el carrito y refleja correctamente el estado agotado.
 
-5. **Paginas de categorias**
-   - **Impresion**: alto potencial de trafico long-tail y arquitectura SEO.
-   - **Prioridad**: P1
+### 5. Mostrar filtros activos como chips y permitir limpiarlos fácilmente
 
-6. **Blog/contenido editorial**
-   - **Impresion**: gran valor a mediano plazo, menor urgencia tactica inmediata.
-   - **Prioridad**: P2
+- **Estado:** pendiente.
+- **Motivo:** los filtros ya se conservan en URL, pero falta una representación clara de la selección activa.
+- **Criterio de aceptación:** cada filtro activo se puede identificar y retirar individualmente; existe una acción para restablecer todos.
 
-### Moderado
-7. **Alt text descriptivo**
-   - **Impresion**: SEO + accesibilidad, bajo esfuerzo y efecto acumulado.
-   - **Prioridad**: P1
+### 6. Completar autocompletado nativo del checkout
 
-8. **Jerarquia de headings (H1 unico)**
-   - **Impresion**: higiene SEO basica, debe quedar correcta en todas las plantillas.
-   - **Prioridad**: P1
+- **Estado:** pendiente parcial.
+- **Motivo:** email usa `autoComplete`, pero faltan atributos estándar para nombre, teléfono y dirección.
+- **Alcance futuro:** aplicar atributos HTML de autocompletado. No incorporar todavía una API externa de direcciones.
+- **Criterio de aceptación:** navegadores y gestores de direcciones completan los campos compatibles sin alterar la validación actual.
 
-9. **Internal linking con `<a href>` real**
-   - **Impresion**: muy importante para crawlability y autoridad interna.
-   - **Prioridad**: P1
+### 7. Ajustar rastreo SEO: robots y sitemap
 
-10. **`robots.ts` bloquear rutas sin valor SEO**
-    - **Impresion**: buena higiene de rastreo y presupuesto de crawl.
-    - **Prioridad**: P1
+- **Estado:** pendiente.
+- **Motivo:** `/rastreo` aparece en sitemap aunque es una herramienta de consulta individual, y las fechas de páginas estáticas se regeneran como si siempre hubieran cambiado.
+- **Criterio de aceptación:** el sitemap contiene solo URLs indexables y sus fechas reflejan cambios reales; robots bloquea rutas privadas o sin valor de búsqueda.
 
-11. **`sitemap` con `lastmod` real**
-    - **Impresion**: mejora calidad de indexacion y actualizacion.
-    - **Prioridad**: P1
+### 8. Mejorar texto alternativo de imágenes de producto
 
-12. **OG image por producto**
-    - **Impresion**: mas social/CTR que SEO puro, pero valioso comercialmente.
-    - **Prioridad**: P2
+- **Estado:** pendiente parcial.
+- **Motivo:** hoy el alt suele ser únicamente el nombre de la prenda.
+- **Criterio de aceptación:** imágenes principales y miniaturas describen producto, color o vista cuando aporte información, sin repetir texto innecesariamente.
 
-13. **`hreflang="es"`**
-    - **Impresion**: util, aunque con un solo idioma su impacto es acotado.
-    - **Prioridad**: P3
+### 9. Añadir zoom/lightbox y gesto táctil a la galería
 
-14. **Rich snippets de reviews (`AggregateRating`)**
-    - **Impresion**: muy potente, pero depende de tener resenas reales confiables.
-    - **Prioridad**: P2
-
-15. **CWV como prioridad SEO**
-    - **Impresion**: totalmente correcto; debe tratarse como linea transversal.
-    - **Prioridad**: P0
+- **Estado:** pendiente.
+- **Motivo:** la ficha tiene miniaturas y controles, pero no inspección ampliada ni interacción táctil explícita.
+- **Criterio de aceptación:** en móvil se puede recorrer la galería de forma natural y ampliar una imagen sin afectar accesibilidad ni rendimiento.
 
 ---
 
-## Lectura global (impresion final)
+## P2 — Planificable
 
-- El documento esta bien orientado y cubre los 3 frentes correctos: UX, rendimiento y SEO.
-- Las recomendaciones mas valiosas son las que corrigen render/bloqueo global y SEO estructurado por producto.
-- Hay varias quick wins de alto retorno (autofill, feedback carrito, fuentes, Wompi, metadata, JSON-LD).
-- Algunas recomendaciones deberian ejecutarse solo tras validacion tecnica (paginacion real, carga real de `colombia.ts`, estado de compresion del servidor).
+### 10. Implementar paginación real del catálogo cuando el volumen lo justifique
 
-## Prioridad agregada sugerida (primera ola)
+- **Estado:** pendiente condicionado por tamaño del catálogo.
+- **Nota:** ya existe carga progresiva visual, pero la consulta trae todos los productos.
+- **Criterio para iniciar:** métricas o crecimiento del catálogo muestran impacto de transferencia, memoria o tiempo de filtrado.
+- **Criterio de aceptación:** la consulta usa paginación/cursor, conserva filtros y URLs, y evita duplicados entre grupos.
 
-1. `force-dynamic` -> ISR en ficha producto (P0)
-2. Script Wompi solo en checkout (P0)
-3. JSON-LD `Product` + metadata/canonical variantes (P0)
-4. Autofill + feedback "agregado" + resumen visible checkout (P0)
-5. Optimizacion de fuentes + verificar compresion servidor (P0)
+### 11. Mejorar el resumen de pedido en móvil
+
+- **Estado:** pendiente.
+- **Nota:** el resumen ya es visible en checkout; esta mejora sería hacerlo más accesible durante el desplazamiento (por ejemplo, bloque colapsable o barra con total).
+- **Criterio de aceptación:** el total y el enlace al detalle son accesibles sin tapar campos ni acciones de pago.
+
+### 12. Mostrar breadcrumbs visibles en la interfaz
+
+- **Estado:** pendiente parcial.
+- **Nota:** ya existe `BreadcrumbList` en JSON-LD para buscadores.
+- **Criterio de aceptación:** la ficha muestra Inicio → Catálogo → Producto mediante enlaces funcionales y sin duplicar el H1.
+
+### 13. Añadir indicador de progreso del checkout
+
+- **Estado:** pendiente.
+- **Criterio de aceptación:** comunica de forma clara “Datos de envío” y “Pago”, con el paso actual accesible para lector de pantalla.
+
+### 14. Revisar imágenes no críticas y uso de `next/image`
+
+- **Estado:** pendiente.
+- **Motivo:** carrito, checkout y algunas áreas secundarias aún usan `<img>`.
+- **Criterio de aceptación:** se priorizan las superficies públicas de mayor tráfico y no se empeora el coste de JavaScript ni la experiencia admin.
+
+### 15. Mensaje de stock bajo, basado en datos reales
+
+- **Estado:** pendiente.
+- **Criterio de aceptación:** se define un umbral por talla/variante y solo se muestra cuando el inventario fresco lo respalda.
+
+### 16. Blog o contenido editorial
+
+- **Estado:** pendiente.
+- **Dependencia:** estrategia de contenidos, responsables y calendario de publicación.
+- **Criterio de aceptación:** el contenido responde a intención de búsqueda real, enlaza a categorías o productos y cuenta con mantenimiento editorial.
+
+---
+
+## P3 — Estratégico o sujeto a validación
+
+### 17. Navegación inferior móvil
+
+- **Estado:** por validar con analítica y pruebas de UX.
+- **Motivo:** puede beneficiar navegación recurrente, pero también competir con el carrito y el CTA de producto.
+
+### 18. PWA / Service Worker
+
+- **Estado:** estratégico.
+- **Motivo:** no es una palanca inmediata de conversión; requiere definir el comportamiento offline y la estrategia de actualización.
+
+### 19. Reviews y `AggregateRating`
+
+- **Estado:** bloqueado hasta contar con reseñas reales y un proceso para moderarlas.
+
+### 20. `hreflang`
+
+- **Estado:** no prioritario mientras exista un único idioma/mercado.
+
+### 21. Rendimiento de infraestructura: Brotli, HTTP/2 y HTTP/3
+
+- **Estado:** requiere comprobar hosting/CDN de producción.
+- **Nota:** no puede determinarse desde este repositorio. Verificar antes de programar cambios de aplicación.
+
+### 22. Refactor de páginas admin a carga server-side
+
+- **Estado:** mejora técnica opcional.
+- **Motivo:** no impacta directamente la experiencia de compra pública.
+
+### 23. Dividir `colombia.ts`
+
+- **Estado:** no prioritario.
+- **Motivo:** hoy se consume desde checkout, no desde home o catálogo. Considerar solo si las métricas del bundle de checkout lo justifican.
+
+---
+
+## Ya implementado — no planificar como trabajo nuevo
+
+- Widget de Wompi cargado únicamente en `/checkout` con estrategia no bloqueante; los flujos de pago, webhook, descuento de stock y notificaciones no se modificaron.
+- Ficha de producto con ISR de 60 segundos, caché de datos e invalidación desde administración.
+- Buscador del catálogo con estado en URL.
+- Carga progresiva visual de productos.
+- Persistencia del carrito de invitado en `localStorage`.
+- Validación de stock fresco al añadir al carrito y barrera atómica al descontar inventario.
+- Feedback de producto añadido mediante toast.
+- Guía de tallas disponible desde la ficha.
+- Metadata por producto: descripción, canonical, Open Graph y Twitter.
+- JSON-LD `Product` con oferta, precio, disponibilidad y breadcrumbs estructurados.
+- Skeleton del catálogo.
+- SWR con datos iniciales del servidor en catálogo.
+- `sizes` y prioridad en imágenes principales de catálogo y ficha.
+- Aislamiento por ruta de `react-colorful` en administración; no requiere code-splitting adicional ahora.
+
+---
+
+## Orden de ejecución sugerido
+
+1. Imagen crítica y LCP de home.
+2. Decisión e implementación SEO de variantes.
+3. Páginas de categoría.
+4. CTA sticky móvil, filtros activos y autocompletado nativo de checkout.
+5. Rastreo SEO, alt text y galería.

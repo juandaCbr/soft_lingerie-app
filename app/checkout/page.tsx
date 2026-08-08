@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { COLOMBIA_COMPLETA } from "@/app/lib/colombia";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { supabase } from "@/app/lib/supabase";
 import toast from "react-hot-toast";
 import { normalizeDocumentoCliente, normalizeNombreCliente, validarNombreCompleto } from "@/app/lib/utils";
@@ -315,6 +316,8 @@ export default function CheckoutPage() {
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">
+      {/* El widget se conserva disponible para el checkout, sin afectar las rutas públicas restantes. */}
+      <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />
       <CheckoutPageHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">

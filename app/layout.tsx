@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 // import DiscountModal from "@/components/DiscountModal"; // Desactivado: popup de bienvenida/descuento al cargar
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
-import Script from "next/script";
 import SiteFooter from "@/components/SiteFooter";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSiteUrl } from "@/app/lib/site-url";
@@ -49,12 +48,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <head>
-        <Script 
-          src="https://checkout.wompi.co/widget.js" 
-          strategy="beforeInteractive" 
-        />
-      </head>
       <body 
         className={`${inter.variable} ${playfair.variable} antialiased bg-[#fdf8f6] text-[#4a1d44]`}
         suppressHydrationWarning={true}

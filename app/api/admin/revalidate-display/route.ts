@@ -2,10 +2,11 @@
  * Invalida la caché de Next.js en home, catálogo y (opcional) ficha de producto
  * tras guardar cambios en el admin, para que listados y SEO reflejen `imagenes_locales` al instante.
  */
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { PRODUCTO_DETALLE_CACHE_TAG } from '@/app/lib/cache-tags';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
 
   revalidatePath('/');
   revalidatePath('/productos');
+  revalidatePath('/productos/[id]', 'page');
+  revalidateTag(PRODUCTO_DETALLE_CACHE_TAG, { expire: 0 });
   if (productPath && productPath.startsWith('/productos/')) {
     revalidatePath(productPath);
   }

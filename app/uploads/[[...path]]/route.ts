@@ -17,7 +17,9 @@ const MIME: Record<string, string> = {
 function uploadRootDir(): string {
   const raw = process.env.UPLOAD_DIR?.trim() || 'uploads';
   const normalized = raw.replace(/^\.\//, '');
-  return path.resolve(process.cwd(), normalized);
+  // UPLOAD_DIR puede ser un volumen absoluto fuera del proyecto. Turbopack no
+  // debe intentar incluir ese árbol dinámico dentro del artefacto de despliegue.
+  return path.resolve(/* turbopackIgnore: true */ normalized);
 }
 
 /**
@@ -34,8 +36,8 @@ export async function GET(
   }
 
   const root = uploadRootDir();
-  const resolvedRoot = path.resolve(root);
-  const requested = path.resolve(path.join(root, ...segments));
+  const resolvedRoot = path.resolve(/* turbopackIgnore: true */ root);
+  const requested = path.resolve(path.join(/* turbopackIgnore: true */ root, ...segments));
 
   const rootWithSep = resolvedRoot.endsWith(path.sep) ? resolvedRoot : `${resolvedRoot}${path.sep}`;
   if (requested !== resolvedRoot && !requested.startsWith(rootWithSep)) {

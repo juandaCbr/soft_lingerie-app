@@ -24,7 +24,9 @@ export const runtime = 'nodejs';
 function uploadRootDir(): string {
   const raw = process.env.UPLOAD_DIR?.trim() || 'uploads';
   const normalized = raw.replace(/^\.\//, '');
-  return path.join(process.cwd(), normalized);
+  // path.resolve conserva una ruta absoluta configurada en producción; path.join
+  // la convertiría erróneamente en una ruta relativa al proyecto.
+  return path.resolve(/* turbopackIgnore: true */ normalized);
 }
 
 /** Cliente con bypass RLS; solo usar después de validar que el caller es admin. */
@@ -195,7 +197,7 @@ export async function POST(request: Request) {
   // --- Disco: misma convención que subida local ({slug}-{id}); no borra carpetas legacy con otro patrón ---
   const slug = slugify(nombre);
   if (slug) {
-    const dir = path.join(uploadRootDir(), 'productos', `${slug}-${pid}`);
+    const dir = path.join(/* turbopackIgnore: true */ uploadRootDir(), 'productos', `${slug}-${pid}`);
     if (existsSync(dir)) {
       try {
         await rm(dir, { recursive: true, force: true });

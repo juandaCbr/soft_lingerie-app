@@ -301,6 +301,8 @@ Guardado como JSON en `ventas_realizadas.detalle_compra`: líneas de producto (i
 - **Referencias en DB:** campo JSON `imagenes_locales` en `productos` (`{ thumb, detail }[]`).
 - **Helper:** `app/lib/image-helper.ts` — resuelve URL local vs Supabase Storage vs placeholder. inicialmente se usó Supabase Storage pero se cambió a local para optimizar el rendimiento y el uso de recursos.
 - **next/image:** patrones remotos para Supabase Storage, localhost y `NEXT_PUBLIC_SITE_URL` en `next.config.ts`.
+- **Producción:** `UPLOAD_DIR` es una ruta absoluta a un volumen persistente fuera del repositorio. Las rutas Node que la usen deben resolverla con `path.resolve` (nunca `path.join(process.cwd(), ...)`, que rompe rutas absolutas) y conservar la validación contra path traversal al servir archivos.
+- **Turbopack:** como la ruta es dinámica y externa, los `path.resolve`/`path.join` que parten de `UPLOAD_DIR` llevan `/* turbopackIgnore: true */`. No eliminar esa marca ni convertir el directorio en una ruta estática: evita que el build trace e incluya todo el proyecto en el artefacto de servidor.
 
 ---
 
@@ -343,7 +345,7 @@ Ver `.env_example` completo. Mínimas para desarrollo:
 3. **Admin:** toda ruta bajo `/admin` asume auth + `es_admin`; APIs admin validan sesión y perfil.
 4. **Pagos:** cambios en checkout/Wompi deben mantener idempotencia en `procesarPedidoWompiAprobado`.
 5. **Stock:** descontar solo vía RPC `descontar_stock_pedido` (envuelto en `aplicarDescuentoStockDesdeDetalle`); nunca duplicar la lógica de descuento. Eliminar pedidos nunca repone stock. Editar tallas en admin usa upsert diff + `recalcular_stock_producto`, nunca DELETE+INSERT masivo ni `productos.stock` escrito desde el form.
-6. **Imágenes:** nuevas subidas deben seguir el pipeline sharp existente y actualizar `imagenes_locales`.
+6. **Imágenes:** nuevas subidas deben seguir el pipeline sharp existente y actualizar `imagenes_locales`. En producción `UPLOAD_DIR` es absoluto y externo; usar `path.resolve` y preservar `turbopackIgnore` junto con las validaciones de ruta existentes.
 7. **ISR:** home y catálogo usan `revalidate = 60`; tras cambios admin usar `/api/admin/revalidate-display`.
 8. **Idioma:** UI y mensajes al usuario en español colombiano.
 9. **Scope:** cambios mínimos y alineados con patrones existentes; no sobre-ingeniería.

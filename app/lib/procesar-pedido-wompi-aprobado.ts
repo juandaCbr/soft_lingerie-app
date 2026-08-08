@@ -237,9 +237,10 @@ export async function procesarPedidoWompiAprobado(
     resumenArticulos += `• ${line.nombre} (Talla: ${(line.talla as { nombre?: string } | null)?.nombre || "Única"}) x${line.quantity}\n`;
   }
 
-  // El RPC valida stock>=qty por línea. Si alguna línea falla, el pedido queda
-  // APROBADO + stock_descontado=false para reintento manual (no interrumpimos la
-  // transición a APROBADO por una talla agotada — el admin decide).
+  // El RPC valida stock>=qty por línea. Si el descuento falla (RPC caído o talla
+  // agotada), el pedido queda APROBADO + stock_descontado=false para reintento,
+  // pero NO bloqueamos la notificación: la venta es real y el admin debe saberlo.
+  let stockPendiente = false;
   try {
     await aplicarDescuentoStockDesdeDetalle(supabaseAdmin, pedido.detalle_compra);
 
@@ -257,24 +258,33 @@ export async function procesarPedidoWompiAprobado(
       });
     }
   } catch (stockErr) {
-    // El descuento falló (stock insuficiente o error RPC). No marcamos flag: reintento seguro.
+    // El descuento falló (error RPC / stock insuficiente). No marcamos la flag para
+    // permitir un reintento seguro, pero continuamos para notificar la venta de todos modos.
     console.error("procesarPedidoWompiAprobado descuento stock:", stockErr, {
       referencia: reference,
       pedidoId: pedido.id,
     });
-    return {
-      ok: false,
-      reason: recienAprobado ? "Pedido aprobado pero el descuento de stock quedó pendiente (reintente)" : "Descuento de stock pendiente (reintente)",
-    };
+    stockPendiente = true;
   }
 
-  const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
-  const notificado = await enviarNotificacionAdmin(mensajePush);
-  if (!notificado) {
-    console.warn("Venta aprobada pero la notificación push no pudo enviarse.", {
-      referencia: reference,
-      pedidoId: pedido.id,
-    });
+  // Notificar solo en la primera aprobación (recienAprobado). En reintentos para
+  // recuperar el descuento la venta ya fue notificada, así que se evita duplicar.
+  if (recienAprobado) {
+    const mensajePush = `¡Se ha realizado una venta por $${Number(pedido.monto_total as number).toLocaleString("es-CO")}!\n\nCliente: ${pedido.nombre_cliente}\nCiudad: ${pedido.ciudad}\n\nArtículos:\n${resumenArticulos}`;
+    const notificado = await enviarNotificacionAdmin(mensajePush);
+    if (!notificado) {
+      console.warn("Venta aprobada pero la notificación push no pudo enviarse.", {
+        referencia: reference,
+        pedidoId: pedido.id,
+      });
+    }
+  }
+
+  if (stockPendiente) {
+    return {
+      ok: false,
+      reason: "Pedido aprobado y notificado, pero el descuento de stock quedó pendiente (reintente)",
+    };
   }
 
   return { ok: true };

@@ -270,9 +270,9 @@ function AdminPedidosContent() {
           
           <div className="flex flex-col gap-5 w-full md:w-auto">
             <div className="flex gap-2">
-              <button onClick={() => { setFiltroEstadoPago('APROBADO'); }} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
-              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
-              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
+              <button onClick={() => { setFiltroEstadoPago('APROBADO'); }} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border hover:cursor-pointer ${filtroEstadoPago === 'APROBADO' ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pagados</button>
+              <button onClick={() => setFiltroEstadoPago('PENDIENTE')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border hover:cursor-pointer ${filtroEstadoPago === 'PENDIENTE' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Pendientes</button>
+              <button onClick={() => setFiltroEstadoPago('Todos')} className={`px-8 py-4 rounded-2xl text-xs font-bold transition-all border hover:cursor-pointer ${filtroEstadoPago === 'Todos' ? 'bg-gray-800 text-white shadow-lg' : 'bg-white text-[#4a1d44]/40 border-transparent'}`}>Todos</button>
             </div>
 
             <div className={`flex bg-white/60 p-1.5 rounded-[1.5rem] gap-1.5 shadow-inner transition-all duration-500 overflow-x-auto scrollbar-hide md:overflow-visible ${filtroEstadoPago !== 'APROBADO' ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
@@ -415,7 +415,7 @@ function AdminPedidosContent() {
 
                     <div className="w-full lg:w-64 flex flex-col justify-between items-start lg:items-end gap-6">
                       <div className="text-left lg:text-right w-full">
-                        <p className="text-[10px] opacity-30 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
+                        <p className="text-[11px] opacity-50 uppercase font-black tracking-widest mb-1">Total Cobrado</p>
                         <p className="text-4xl font-black text-[#4a1d44]">${Number(venta.monto_total).toLocaleString('es-CO')}</p>
                         
                         <div className="mt-2 space-y-1">
@@ -427,14 +427,14 @@ function AdminPedidosContent() {
                             return metodo === 'CONTRAENTREGA' ? (
                               <div className="flex flex-col items-start lg:items-end">
                                 <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">⚠️ Cobrar Envío al entregar</span>
-                                {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Costo estimado: ${Number(costo).toLocaleString('es-CO')}</p>}
+                                {costo > 0 && <p className="text-[10px] font-bold opacity-50 mt-1">Costo estimado: ${Number(costo).toLocaleString('es-CO')}</p>}
                               </div>
                             ) : (
                               <div className="flex flex-col items-start lg:items-end">
                                 {venta.estado_pago === 'APROBADO' ? (
                                   <>
                                     <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">✓ Envío Pagado</span>
-                                    {costo > 0 && <p className="text-[10px] font-bold opacity-40 mt-1">Incluye: ${Number(costo).toLocaleString('es-CO')}</p>}
+                                    {costo > 0 && <p className="text-[10px] font-bold opacity-50 mt-1">Incluye: ${Number(costo).toLocaleString('es-CO')}</p>}
                                   </>
                                 ) : (
                                   <>
@@ -471,7 +471,7 @@ function AdminPedidosContent() {
                             <button
                               type="button"
                               onClick={() => setPedidoAEliminarPendiente(venta)}
-                              className="w-full bg-amber-50 text-amber-800 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-200 transition-all flex items-center justify-center gap-2 border border-amber-200"
+                              className="w-full bg-amber-50 text-rose-800 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-200 transition-all flex items-center justify-center gap-2 border border-rose-200"
                             >
                               <Trash2 size={14} /> Eliminar pedido pendiente
                             </button>
@@ -583,9 +583,9 @@ function AdminPedidosContent() {
 
       {pedidoAEliminarPendiente && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-amber-200/80">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative border border-rose-200/80">
             <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
                 <Trash2 size={40} />
               </div>
               <h2 className="text-2xl font-black font-playfair">¿Eliminar pedido pendiente?</h2>
@@ -599,7 +599,7 @@ function AdminPedidosContent() {
                 type="button"
                 disabled={procesandoAccion}
                 onClick={handleConfirmarEliminarPendiente}
-                className="w-full bg-amber-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full bg-rose-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 {procesandoAccion ? <Loader2 className="animate-spin" /> : <Trash2 size={18} />}
                 Eliminar pedido

@@ -2,7 +2,7 @@
 
 Tienda en línea construida con Next.js: catálogo, carrito, checkout con Wompi y panel administrativo.
 
-**Autor:** Juan David Cabrera Salas — [juandacabrera178@gmail.com](mailto:juandacabrera178@gmail.com)
+**Autor:** Juan David Cabrera Gutierrez — [juandacabrera178@gmail.com](mailto:juandacabrera178@gmail.com)
 
 ## Requisitos
 

@@ -33,9 +33,17 @@ const SELECT = `
 /** Orden natural de tallas; las que no estén aquí van al final por su `orden` en la BD. */
 const ORDEN_TALLAS = ["XS", "S", "M", "L", "XL", "XXL"];
 
+/**
+ * Tallas que se muestran juntas en un solo enlace (pedido de Natalia: XS y S van en el mismo).
+ * Dentro del enlace cada prenda dice en cuál de las dos hay, y siguen existiendo /tallas/xs y /tallas/s.
+ */
+const TALLAS_JUNTAS = [{ nombre: "XS y S", slug: "xs-s", tallas: ["XS", "S"] }];
+
 export type TallaCatalogo = {
   nombre: string;
   slug: string;
+  /** Tallas reales que incluye: ["M"] para una talla, ["XS", "S"] para el enlace combinado */
+  tallas: string[];
   /** Prendas (grupos) con stock en esta talla */
   cantidad: number;
 };
@@ -48,6 +56,8 @@ export type PrendaTalla = {
   imagen: string;
   href: string;
   colores: { nombre: string; hex: string | null }[];
+  /** De las tallas pedidas, en cuáles hay stock de esta prenda (en el combinado: "XS", "S" o ambas) */
+  tallas: string[];
 };
 
 const supabaseAdmin = createClient(
@@ -81,8 +91,11 @@ function agrupar(variantes: ProductoCatalogoVariante[]) {
   return [...grupos.values()];
 }
 
-/** Todas las tallas que usan los productos (con o sin stock), en orden natural (XS, S, M, L, XL…). */
-const getTodasLasTallas = cache(async (): Promise<TallaCatalogo[]> => {
+/**
+ * Todas las tallas que usan los productos (con o sin stock), en orden natural (XS, S, M, L, XL…),
+ * y aparte los enlaces combinados (TALLAS_JUNTAS).
+ */
+const getTodasLasTallas = cache(async (): Promise<{ tallas: TallaCatalogo[]; juntas: TallaCatalogo[] }> => {
   const [variantes, { data: tablaTallas }] = await Promise.all([
     cargarVariantes(),
     supabaseAdmin.from("tallas").select("nombre, orden"),
@@ -95,39 +108,75 @@ const getTodasLasTallas = cache(async (): Promise<TallaCatalogo[]> => {
       if (pt.tallas?.nombre) ordenBd.set(pt.tallas.nombre, Number(pt.tallas.orden ?? 99));
 
   const grupos = agrupar(variantes);
+  const contar = (nombres: string[]) =>
+    grupos.filter((g) => g.some((v) => nombres.some((n) => tieneStockEnTalla(v, n)))).length;
   const tallas: TallaCatalogo[] = [...ordenBd.keys()].map((nombre) => ({
     nombre,
     slug: slugify(nombre),
-    cantidad: grupos.filter((g) => g.some((v) => tieneStockEnTalla(v, nombre))).length,
+    tallas: [nombre],
+    cantidad: contar([nombre]),
   }));
 
   const posicion = (n: string) => {
     const i = ORDEN_TALLAS.indexOf(n.toUpperCase());
     return i >= 0 ? i : 100 + (ordenBd.get(n) ?? 99);
   };
-  return tallas.sort((a, b) => posicion(a.nombre) - posicion(b.nombre));
+  tallas.sort((a, b) => posicion(a.nombre) - posicion(b.nombre));
+
+  // Enlaces combinados (solo con las tallas que existen en la BD)
+  const juntas: TallaCatalogo[] = TALLAS_JUNTAS.map((j) => ({
+    ...j,
+    tallas: j.tallas.filter((n) => ordenBd.has(n)),
+  }))
+    .filter((j) => j.tallas.length > 0)
+    .map((j) => ({ ...j, cantidad: contar(j.tallas) }));
+
+  return { tallas, juntas };
 });
 
-/** Tallas con al menos una prenda disponible (las que se muestran como botones). */
-export const getTallasDisponibles = cache(async (): Promise<TallaCatalogo[]> =>
-  (await getTodasLasTallas()).filter((t) => t.cantidad > 0),
-);
+/**
+ * Tallas con al menos una prenda disponible (las que se muestran como botones). Las tallas que van
+ * juntas (XS y S) aparecen como un solo botón, en el lugar de la primera.
+ */
+export const getTallasDisponibles = cache(async (): Promise<TallaCatalogo[]> => {
+  const { tallas, juntas } = await getTodasLasTallas();
+  const botones: TallaCatalogo[] = [];
+  for (const t of tallas) {
+    const junta = juntas.find((j) => j.tallas.includes(t.nombre));
+    if (!junta) botones.push(t);
+    else if (!botones.includes(junta)) botones.push(junta);
+  }
+  return botones.filter((t) => t.cantidad > 0);
+});
 
 /**
- * Prendas con stock en la talla pedida (por slug: "m", "xl"…). Una talla existente pero sin stock
+ * Prendas con stock en la talla pedida (por slug: "m", "xs-s"…). Una talla existente pero sin stock
  * devuelve la lista vacía (la página muestra "por ahora no hay"); null solo si la talla no existe.
+ * `junta` es el enlace combinado al que pertenece (o que es) la talla, con sus tallas sueltas en
+ * `separadas`, para poder ver "solo XS" o "solo S" dentro del mismo catálogo.
  */
 export const getCatalogoTalla = cache(
-  async (slug: string): Promise<{ talla: TallaCatalogo; prendas: PrendaTalla[] } | null> => {
-    const tallas = await getTodasLasTallas();
-    const talla = tallas.find((t) => t.slug === slug.toLowerCase());
+  async (
+    slug: string,
+  ): Promise<{
+    talla: TallaCatalogo;
+    prendas: PrendaTalla[];
+    junta: { talla: TallaCatalogo; separadas: TallaCatalogo[] } | null;
+  } | null> => {
+    const { tallas, juntas } = await getTodasLasTallas();
+    const talla = [...juntas, ...tallas].find((t) => t.slug === slug.toLowerCase());
     if (!talla) return null;
+
+    const tallaJunta = juntas.find((j) => j === talla || j.tallas.includes(talla.nombre));
+    const junta = tallaJunta
+      ? { talla: tallaJunta, separadas: tallas.filter((t) => tallaJunta.tallas.includes(t.nombre)) }
+      : null;
 
     const variantes = await cargarVariantes();
     const prendas: PrendaTalla[] = [];
     for (const grupo of agrupar(variantes)) {
       const conStock = grupo
-        .filter((v) => tieneStockEnTalla(v, talla.nombre))
+        .filter((v) => talla.tallas.some((n) => tieneStockEnTalla(v, n)))
         .sort((a, b) => timestamp(b.created_at) - timestamp(a.created_at));
       if (conStock.length === 0) continue;
 
@@ -147,6 +196,7 @@ export const getCatalogoTalla = cache(
         imagen: getProductoImage(rep, 0, "detail"),
         href: `/productos/${slugify(rep.nombre)}-${rep.id}`,
         colores,
+        tallas: talla.tallas.filter((n) => conStock.some((v) => tieneStockEnTalla(v, n))),
       });
     }
 
@@ -156,7 +206,7 @@ export const getCatalogoTalla = cache(
       return timestamp(vb?.created_at) - timestamp(va?.created_at);
     });
 
-    return { talla, prendas };
+    return { talla, prendas, junta };
   },
 );
 

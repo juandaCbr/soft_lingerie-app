@@ -53,7 +53,8 @@ export default async function CatalogoTallaPage({ params }: Params) {
   const { talla: slug } = await params;
   const [data, tallas] = await Promise.all([getCatalogoTalla(slug), getTallasDisponibles()]);
   if (!data) notFound();
-  const { talla, prendas } = data;
+  const { talla, prendas, junta } = data;
+  const combinada = talla.tallas.length > 1;
 
   return (
     <main className="pb-20 font-display text-ink">
@@ -65,8 +66,13 @@ export default async function CatalogoTallaPage({ params }: Params) {
 
           <p className="font-accent text-[clamp(0.9rem,1.6vw,1.2rem)] font-semibold uppercase tracking-[0.32em]">Catálogo</p>
           <h1 className="mt-1 flex items-baseline justify-center gap-[0.25em] font-extrabold leading-[0.85] tracking-[-0.05em]">
-            <span className="text-[clamp(2.5rem,7vw,5.5rem)]">Talla</span>
-            <span className="text-wordmark w-max px-[0.12em] text-[clamp(5rem,16vw,12rem)]">{talla.nombre}</span>
+            <span className="text-[clamp(2.5rem,7vw,5.5rem)]">{combinada ? "Tallas" : "Talla"}</span>
+            <span
+              // pb + mb negativo: la cola de la "y" queda dentro del degradado sin mover el resto
+              className={`text-wordmark -mb-[0.18em] w-max whitespace-nowrap px-[0.12em] pb-[0.18em] ${combinada ? "text-[clamp(3.75rem,12vw,9rem)]" : "text-[clamp(5rem,16vw,12rem)]"}`}
+            >
+              {talla.nombre}
+            </span>
           </h1>
           <p className="mt-3 text-base text-ink/75 md:text-lg">
             {prendas.length} {prendas.length === 1 ? "prenda disponible" : "prendas disponibles"} en tu talla
@@ -75,7 +81,8 @@ export default async function CatalogoTallaPage({ params }: Params) {
           {/* Cambiar de talla */}
           <nav aria-label="Otras tallas" className="mt-6 flex flex-wrap justify-center gap-2">
             {tallas.map((t) => {
-              const activa = t.slug === talla.slug;
+              // En /tallas/xs o /tallas/s queda marcado el botón "XS y S"
+              const activa = t.slug === talla.slug || t.slug === junta?.talla.slug;
               return (
                 <Link
                   key={t.slug}
@@ -90,6 +97,30 @@ export default async function CatalogoTallaPage({ params }: Params) {
               );
             })}
           </nav>
+
+          {/* Dentro del enlace XS y S: ver las dos o solo una */}
+          {junta && (
+            <nav
+              aria-label={`Filtrar ${junta.talla.nombre}`}
+              className="mx-auto mt-3 flex w-max max-w-full items-center gap-1 rounded-full bg-white/60 p-1 text-sm font-semibold"
+            >
+              {[{ ...junta.talla, nombre: "Ambas" }, ...junta.separadas.map((t) => ({ ...t, nombre: `Solo ${t.nombre}` }))].map((t) => {
+                const activa = t.slug === talla.slug;
+                return (
+                  <Link
+                    key={t.slug}
+                    href={`/tallas/${t.slug}`}
+                    aria-current={activa ? "page" : undefined}
+                    className={`inline-flex min-h-10 items-center rounded-full px-4 transition-colors ${
+                      activa ? "bg-white text-ink shadow-sm" : "text-ink/65 hover:text-ink"
+                    }`}
+                  >
+                    {t.nombre}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
 
           {prendas.length > 0 && (
             <a
@@ -137,7 +168,7 @@ export default async function CatalogoTallaPage({ params }: Params) {
                   />
                   {/* La talla queda en la foto: si la clienta toma captura, ya sale */}
                   <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white md:left-4 md:top-4 md:text-sm">
-                    Talla {talla.nombre}
+                    Talla {p.tallas.join(" · ")}
                   </span>
                 </Link>
 
@@ -159,14 +190,32 @@ export default async function CatalogoTallaPage({ params }: Params) {
                   )}
 
                   <div className="mt-auto flex flex-col gap-2 pt-4">
-                    <a
-                      href={whatsappPedidoHref(p, talla.nombre)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-12 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-3 text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:gap-2 sm:px-4 sm:text-sm"
-                    >
-                      <MessageCircle size={16} aria-hidden className="shrink-0" /> Pedir por WhatsApp
-                    </a>
+                    {p.tallas.length > 1 ? (
+                      // Hay en las dos tallas del enlace: un botón por talla, así el mensaje ya dice cuál
+                      <div className="flex gap-1.5 sm:gap-2">
+                        {p.tallas.map((t) => (
+                          <a
+                            key={t}
+                            href={whatsappPedidoHref(p, t)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Pedir ${p.nombre} en talla ${t} por WhatsApp`}
+                            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-2 text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:text-sm"
+                          >
+                            <MessageCircle size={16} aria-hidden className="hidden shrink-0 sm:block" /> Pedir {t}
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <a
+                        href={whatsappPedidoHref(p, p.tallas[0] ?? talla.nombre)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-12 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-3 text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:gap-2 sm:px-4 sm:text-sm"
+                      >
+                        <MessageCircle size={16} aria-hidden className="shrink-0" /> Pedir por WhatsApp
+                      </a>
+                    )}
                     <Link
                       href={p.href}
                       className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"

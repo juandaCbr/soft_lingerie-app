@@ -36,7 +36,11 @@ export default async function TallasPage() {
                   href={`/tallas/${t.slug}`}
                   className="group flex h-full flex-col items-center justify-center gap-1 rounded-[1.75rem] bg-white px-4 py-6 shadow-xl shadow-ink/10 transition-[translate,background-color] duration-300 hover:-translate-y-1 hover:bg-ink hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
                 >
-                  <span className="text-5xl font-extrabold tracking-[-0.05em] md:text-6xl">{t.nombre}</span>
+                  <span
+                    className={`whitespace-nowrap font-extrabold tracking-[-0.05em] ${t.tallas.length > 1 ? "text-4xl md:text-5xl" : "text-5xl md:text-6xl"}`}
+                  >
+                    {t.nombre}
+                  </span>
                   <span className="text-sm font-medium text-ink/60 group-hover:text-white/70">
                     {t.cantidad} {t.cantidad === 1 ? "prenda" : "prendas"}
                   </span>

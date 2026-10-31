@@ -122,9 +122,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ tall
       const anchoTexto = CELDA_W - 16;
       page.drawText(recortar(prenda.nombre, negrita, 10.5, anchoTexto), { x: xTexto, y: yTop - FOTO - 16, size: 10.5, font: negrita, color: INK });
       page.drawText(`${formatoPrecio(prenda.precio)} COP`, { x: xTexto, y: yTop - FOTO - 31, size: 10, font: negrita, color: INK });
-      const colores = prenda.colores.map((c) => c.nombre).join(", ");
-      if (colores) {
-        page.drawText(recortar(colores, regular, 8.5, anchoTexto), { x: xTexto, y: yTop - FOTO - 44, size: 8.5, font: regular, color: GRIS });
+      // En el catálogo combinado (XS y S) se aclara en cuál talla hay
+      const detalle = [
+        talla.tallas.length > 1 ? `Talla ${prenda.tallas.join(" y ")}` : "",
+        prenda.colores.map((c) => c.nombre).join(", "),
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      if (detalle) {
+        page.drawText(recortar(detalle, regular, 8.5, anchoTexto), { x: xTexto, y: yTop - FOTO - 44, size: 8.5, font: regular, color: GRIS });
       }
     }
 

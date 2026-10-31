@@ -243,7 +243,7 @@ export default function GestionProductosPage() {
             <Link href="/admin" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10 text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors">
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-2xl font-black font-playfair text-[#4a1d44]">Inventario</h1>
+            <h1 className="text-2xl font-black font-display text-[#4a1d44]">Inventario</h1>
             <div className="w-10" />
           </div>
 
@@ -427,7 +427,7 @@ export default function GestionProductosPage() {
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
                 <AlertTriangle size={32} />
               </div>
-              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-playfair uppercase italic">Confirmar accion</h2>
+              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-display uppercase">Confirmar accion</h2>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">
                 ¿Deseas eliminar permanentemente <span className="font-bold text-[#4a1d44]">"{productoAEliminar?.nombre}"</span>? Esta accion no se puede deshacer.
               </p>

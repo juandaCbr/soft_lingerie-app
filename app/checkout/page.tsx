@@ -315,13 +315,13 @@ export default function CheckoutPage() {
   const cartLines = cart as CheckoutCartLine[];
 
   return (
-    <main className="max-w-6xl mx-auto p-6 md:p-12 text-[#4a1d44] min-h-screen">
+    <main className="mx-auto min-h-screen max-w-6xl px-4 pb-16 pt-8 font-display text-ink sm:px-6 md:px-10 md:pt-12">
       {/* El widget se conserva disponible para el checkout, sin afectar las rutas públicas restantes. */}
       <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />
       <CheckoutPageHeader />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-12">
+        <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-ink/5 ring-1 ring-ink/5 md:p-10">
           {!preparandoPago ? (
             <CheckoutShippingForm
               formData={formData}

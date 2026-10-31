@@ -46,11 +46,11 @@ export function CheckoutPaymentStep({
   return (
     <div className="flex flex-col items-stretch py-10 space-y-8 animate-in zoom-in duration-500">
       <div className="text-center space-y-2">
-        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-green-600 mx-auto mb-4">
-          <Lock size={32} />
+        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-brand-accent text-ink">
+          <Lock size={28} />
         </div>
-        <h2 className="text-2xl font-black italic font-playfair">Finalizar Pago</h2>
-        <p className="text-xs opacity-60 uppercase tracking-widest font-bold">Selecciona tu método preferido</p>
+        <h2 className="text-3xl font-bold tracking-[-0.03em]">Finalizar pago</h2>
+        <p className="text-base text-ink/65">Selecciona tu método preferido</p>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -59,27 +59,27 @@ export function CheckoutPaymentStep({
             <button
               type="button"
               onClick={() => onSelectMetodo(metodo.id)}
-              className={`w-full group p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${
+              className={`group flex w-full items-center justify-between rounded-[1.5rem] border-2 p-4 transition-colors md:p-5 ${
                 metodoPagoSeleccionado === metodo.id
-                  ? "border-[#4a1d44] bg-[#4a1d44]/5"
-                  : "border-[#4a1d44]/5 bg-[#fdf8f6] hover:border-[#4a1d44]/20"
+                  ? "border-ink bg-brand-accent/40"
+                  : "border-transparent bg-cream hover:border-ink/15"
               }`}
             >
               <div className="flex items-center gap-4">
-                <div className="p-2 rounded-xl transition-all bg-white shadow-sm border border-black/5 flex items-center justify-center w-12 h-10 overflow-hidden">
+                <div className="flex h-10 w-12 items-center justify-center overflow-hidden rounded-xl bg-white p-2 shadow-sm">
                   <img src={metodo.logo} alt={metodo.label} className="w-full h-full object-contain" />
                 </div>
                 <span
-                  className={`text-[11px] font-black uppercase tracking-widest ${
-                    metodoPagoSeleccionado === metodo.id ? "text-[#4a1d44]" : "opacity-60"
+                  className={`text-base font-semibold ${
+                    metodoPagoSeleccionado === metodo.id ? "text-ink" : "text-ink/70"
                   }`}
                 >
                   {metodo.label}
                 </span>
               </div>
               <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                  metodoPagoSeleccionado === metodo.id ? "border-[#4a1d44] bg-[#4a1d44]" : "border-[#4a1d44]/10"
+                className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors ${
+                  metodoPagoSeleccionado === metodo.id ? "border-ink bg-ink" : "border-ink/20 bg-white"
                 }`}
               >
                 {metodoPagoSeleccionado === metodo.id && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
@@ -87,7 +87,7 @@ export function CheckoutPaymentStep({
             </button>
 
             {metodoPagoSeleccionado === metodo.id && (
-              <div className="p-6 bg-white border border-[#4a1d44]/10 rounded-[2rem] shadow-inner space-y-4 animate-in slide-in-from-top-4 duration-300">
+              <div className="space-y-4 rounded-[1.75rem] bg-white p-5 ring-1 ring-ink/10 animate-in slide-in-from-top-4 duration-300 md:p-6">
                 {metodo.id === "CARD" && (
                   <CheckoutPaymentCardFields
                     paymentData={paymentData}
@@ -125,9 +125,9 @@ export function CheckoutPaymentStep({
       <button
         type="button"
         onClick={onVolverAEditar}
-        className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 self-center"
+        className="self-center text-sm font-semibold text-ink/60 underline decoration-brand-primary decoration-2 underline-offset-4 transition-colors hover:text-ink"
       >
-        ← Corregir datos de envio
+        ← Corregir datos de envío
       </button>
     </div>
   );

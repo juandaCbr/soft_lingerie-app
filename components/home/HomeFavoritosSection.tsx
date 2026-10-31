@@ -1,8 +1,10 @@
 "use client";
 
-import { Star } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import type { HomeProducto } from "@/app/lib/home-types";
 import { HomeProductCard } from "./HomeProductCard";
+import { HomeSectionHeader } from "./HomeSectionHeader";
 
 type HomeFavoritosSectionProps = {
   favoritos: Array<{
@@ -11,36 +13,49 @@ type HomeFavoritosSectionProps = {
   }>;
 };
 
-export function HomeFavoritosSection({ favoritos }: HomeFavoritosSectionProps) {
-  return (
-    <section className="bg-white py-16 sm:py-20 md:py-24 px-3 sm:px-4 border-y border-[#4a1d44]/5">
-      <div className="max-w-7xl mx-auto w-full min-w-0">
-        <div className="flex flex-col items-center text-center mb-16">
-          <div className="flex items-center gap-2 mb-4">
-            <Star className="text-amber-500 fill-amber-500" size={16} />
-            <span className="font-black tracking-[0.3em] text-[#4a1d44]/60 text-[12px] uppercase">
-              Best Sellers
-            </span>
-            <Star className="text-amber-500 fill-amber-500" size={16} />
-          </div>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold font-playfair text-[#4a1d44] italic tracking-tighter px-1">
-            Favoritos
-          </h2>
-          <p className="text-[#4a1d44]/60 text-[10px] sm:text-xs md:text-lg max-w-xl mt-3 sm:mt-4 font-medium uppercase tracking-widest px-2">
-            Las prendas más deseadas por nuestras clientas.
-          </p>
-        </div>
+/** Prendas pequeñas junto a la destacada: con la tarjeta del catálogo completan un bloque de 2×2 */
+const MAX_RESTO = 3;
 
-        {favoritos.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10 lg:gap-x-6 lg:gap-y-12">
-            {favoritos.map(({ prod, etiqueta }) => (
-              <HomeProductCard key={prod.id} prod={prod} etiqueta={etiqueta} layout="grid" />
+/** El más vendido en grande + bloque de 2×2 a su lado (tres prendas y la tarjeta hacia el catálogo). */
+export function HomeFavoritosSection({ favoritos }: HomeFavoritosSectionProps) {
+  const [destacado, ...otros] = favoritos;
+  const resto = otros.slice(0, MAX_RESTO);
+
+  return (
+    <section id="favoritos" className="scroll-mt-24 bg-cream px-4 py-24 sm:px-6 md:py-32 lg:px-8">
+      <div className="mx-auto w-full min-w-0 max-w-7xl">
+        <HomeSectionHeader
+          watermark="Deseo"
+          eyebrow="Más vendidos"
+          title="Favoritos"
+          description="Las prendas más deseadas por nuestras clientas."
+        />
+
+        {destacado ? (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-4 lg:gap-y-12">
+            <HomeProductCard prod={destacado.prod} etiqueta={destacado.etiqueta} variant="feature" />
+            {resto.map(({ prod, etiqueta }) => (
+              <HomeProductCard key={prod.id} prod={prod} etiqueta={etiqueta} variant="grid" />
             ))}
+            <Link
+              href="/productos"
+              data-reveal-card
+              className="group flex aspect-[3/4] flex-col justify-between rounded-[1.5rem] bg-ink p-5 text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink md:p-6"
+            >
+              <span className="text-sm font-semibold text-white/60">Catálogo</span>
+              <span>
+                <span className="block font-display text-2xl font-bold leading-[0.95] tracking-[-0.03em] md:text-3xl xl:text-4xl">
+                  Descubre toda
+                </span>
+                <span className="block font-display text-2xl font-bold leading-[0.95] tracking-[-0.03em] text-brand-accent md:text-4xl">la colección</span>
+                <span className="mt-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink transition-transform duration-500 group-hover:translate-x-2">
+                  <ArrowRight size={18} aria-hidden />
+                </span>
+              </span>
+            </Link>
           </div>
         ) : (
-          <div className="w-full text-center py-20 opacity-30 italic font-medium">
-            Descubre nuestra colección...
-          </div>
+          <p className="w-full py-20 text-center font-display text-lg font-medium text-ink/40">Descubre nuestra colección...</p>
         )}
       </div>
     </section>

@@ -9,6 +9,10 @@ import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { normalizeImagenesLocales } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
+import CrearCategoriaInline from '@/components/admin/CrearCategoriaInline';
+
+/** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
+const agregarCategoria = (lista: { nombre: string }[], c: { id: number | string; nombre: string }) => [...lista.filter((x) => x.nombre !== c.nombre), c].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
 
 export default function EditarProductoPage() {
   const params = useParams();
@@ -425,7 +429,7 @@ export default function EditarProductoPage() {
       <div className="max-w-2xl mx-auto">
         <header className="flex items-center gap-4 mb-8">
           <Link href="/admin/productos" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10"><ArrowLeft size={20} /></Link>
-          <h1 className="text-2xl font-black font-playfair italic uppercase">Editar Prenda</h1>
+          <h1 className="text-2xl font-black font-display uppercase">Editar Prenda</h1>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -670,6 +674,14 @@ export default function EditarProductoPage() {
                   />
                   <button type="button" onClick={() => { setEsCategoriaManual(false); setCategoria(""); }} className="bg-gray-100 px-5 rounded-2xl font-black text-[10px]">X</button>
                 </div>
+              )}
+              {!esCategoriaManual && (
+                <CrearCategoriaInline
+                  onCreada={(c) => {
+                    setCategoriasDB((prev) => agregarCategoria(prev, c));
+                    setCategoria(c.nombre);
+                  }}
+                />
               )}
             </div>
 

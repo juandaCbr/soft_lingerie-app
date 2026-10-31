@@ -17,7 +17,7 @@ type PanelsProps = {
 export function CheckoutPaymentCardFields({ paymentData, onPaymentChange, cardBrand }: PanelsProps) {
   return (
     <div className="space-y-5 pt-4 animate-in slide-in-from-top-2">
-      <div className="bg-[#4a1d44]/5 p-6 rounded-[2rem] border border-[#4a1d44]/10 space-y-4">
+      <div className="space-y-4 rounded-[1.5rem] bg-cream p-5 md:p-6">
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
             {cardBrand ? (
@@ -32,7 +32,7 @@ export function CheckoutPaymentCardFields({ paymentData, onPaymentChange, cardBr
             placeholder="0000 0000 0000 0000"
             value={paymentData.cardNumber}
             onChange={onPaymentChange}
-            className="w-full p-4 pl-14 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold tracking-widest"
+            className="w-full rounded-2xl bg-white p-4 pl-14 text-base font-semibold tracking-widest text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/30 focus:ring-2 focus:ring-brand-primary"
           />
           {cardBrand && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -46,7 +46,7 @@ export function CheckoutPaymentCardFields({ paymentData, onPaymentChange, cardBr
           placeholder="Nombre como aparece en la tarjeta"
           value={paymentData.cardHolder}
           onChange={onPaymentChange}
-          className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-xs font-bold uppercase tracking-widest"
+          className="w-full rounded-2xl bg-white p-4 text-sm font-semibold uppercase tracking-wide text-ink outline-none ring-1 ring-ink/10 transition placeholder:normal-case placeholder:tracking-normal placeholder:text-ink/40 focus:ring-2 focus:ring-brand-primary"
         />
         <div className="grid grid-cols-2 gap-4">
           <input
@@ -55,7 +55,7 @@ export function CheckoutPaymentCardFields({ paymentData, onPaymentChange, cardBr
             placeholder="MM / YY"
             value={paymentData.expiry}
             onChange={onPaymentChange}
-            className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold text-center"
+            className="w-full rounded-2xl bg-white p-4 text-center text-base font-semibold text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:ring-2 focus:ring-brand-primary"
           />
           <input
             type="text"
@@ -63,13 +63,13 @@ export function CheckoutPaymentCardFields({ paymentData, onPaymentChange, cardBr
             placeholder="CVV"
             value={paymentData.cvv}
             onChange={onPaymentChange}
-            className="w-full p-4 rounded-2xl bg-white border border-[#4a1d44]/5 outline-none focus:border-[#4a1d44] transition-all text-sm font-bold text-center"
+            className="w-full rounded-2xl bg-white p-4 text-center text-base font-semibold text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:ring-2 focus:ring-brand-primary"
           />
         </div>
       </div>
-      <div className="flex items-center justify-center gap-2 opacity-40">
-        <ShieldCheck size={14} />
-        <p className="text-[9px] font-bold uppercase tracking-widest">Pago cifrado de extremo a extremo</p>
+      <div className="flex items-center justify-center gap-2 text-ink/55">
+        <ShieldCheck size={15} />
+        <p className="text-sm font-medium">Pago cifrado de extremo a extremo</p>
       </div>
     </div>
   );
@@ -115,8 +115,8 @@ export function CheckoutPaymentPseInfo() {
         />
       </div>
       <div className="space-y-2">
-        <h4 className="text-sm font-black uppercase text-[#4a1d44] tracking-widest">Portal Oficial PSE</h4>
-        <p className="text-[11px] opacity-60 max-w-[280px] mx-auto leading-relaxed">
+        <h4 className="text-lg font-semibold text-ink">Portal oficial PSE</h4>
+        <p className="mx-auto max-w-[300px] text-sm leading-relaxed text-ink/65">
           Al hacer clic en el botón de abajo, te llevaré al **Portal Seguro de Wompi** donde podrás elegir tu banco y
           completar tu pago.
         </p>
@@ -139,8 +139,8 @@ export function CheckoutPaymentBancolombiaInfo() {
           <Bike size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]">Bancolombia Directo</p>
-          <p className="text-[9px] opacity-60">Transferencia desde tu cuenta</p>
+          <p className="text-base font-semibold text-ink">Bancolombia directo</p>
+          <p className="text-sm text-ink/60">Transferencia desde tu cuenta</p>
         </div>
       </div>
       <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">

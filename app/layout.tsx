@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Manrope, Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 // import DiscountModal from "@/components/DiscountModal"; // Desactivado: popup de bienvenida/descuento al cargar
@@ -9,8 +9,11 @@ import SiteFooter from "@/components/SiteFooter";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSiteUrl } from "@/app/lib/site-url";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+// Sans para textos + geométrica gruesa para la marca y títulos
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
+// Serif de acento: solo para la palabra LINGERIE de la marca (contraste con SOFT)
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["600"], variable: "--font-accent-serif", display: "swap" });
 
 const siteUrl = getSiteUrl();
 
@@ -49,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body 
-        className={`${inter.variable} ${playfair.variable} antialiased bg-[#fdf8f6] text-[#4a1d44]`}
+        className={`${manrope.variable} ${outfit.variable} ${playfair.variable} antialiased bg-[#fdf8f6] text-[#4a1d44]`}
         suppressHydrationWarning={true}
       >
         <CartProvider>

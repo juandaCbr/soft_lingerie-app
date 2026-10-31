@@ -132,7 +132,7 @@ export default function EstadisticasPage() {
 
     if (loading) return (
         <div className="min-h-screen bg-[#fdf8f6] flex items-center justify-center">
-            <div className="animate-pulse text-[#4a1d44] font-black font-playfair uppercase">Procesando metricas...</div>
+            <div className="animate-pulse text-[#4a1d44] font-black font-display uppercase">Procesando metricas...</div>
         </div>
     );
 
@@ -146,7 +146,7 @@ export default function EstadisticasPage() {
                             <ArrowLeft size={20} />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-black font-playfair uppercase italic tracking-tighter">Reportes de Ventas</h1>
+                            <h1 className="text-3xl font-black font-display uppercase tracking-tighter">Reportes de Ventas</h1>
                             <p className="opacity-40 text-[10px] font-black uppercase tracking-widest">Analisis automatico de ingresos</p>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ export default function EstadisticasPage() {
 
                 <div className="mt-12 bg-[#4a1d44] text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-center gap-10">
                     <div className="flex-1">
-                        <h3 className="text-2xl font-black font-playfair mb-3 italic tracking-tight flex items-center gap-3">
+                        <h3 className="text-2xl font-black font-display mb-3 tracking-tight flex items-center gap-3">
                             <TrendingUp className="text-green-400" /> Rendimiento de Soft Lingerie
                         </h3>
                         <p className="text-xs opacity-60 leading-relaxed max-w-2xl font-medium">

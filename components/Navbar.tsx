@@ -1,68 +1,96 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import LinkComponent from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { ShoppingBag, User, LogOut, Menu, X, MessageCircle, Instagram } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { useCart } from '@/context/CartContext';
-import AdminButton from './AdminButton'; 
+import { contactWhatsAppHref, CONTACT_INSTAGRAM_URL } from '@/app/lib/contacto';
+import AdminButton from './AdminButton';
 
-const NavLink = ({ href, children, pathname }: { href: string, children: React.ReactNode, pathname: string }) => {
-  const active = pathname === href;
+const LINKS = [
+  { href: '/', label: 'Inicio' },
+  { href: '/productos', label: 'Catálogo' },
+  { href: '/rastreo', label: 'Rastrear pedido' },
+  { href: '/contacto', label: 'Contacto' },
+];
+
+const isActive = (pathname: string, href: string) =>
+  href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+
+const iconButton =
+  'grid h-11 w-11 place-items-center rounded-full text-ink/70 transition-colors duration-300 hover:bg-brand-accent/70 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
+
+/** Marca: misma voz que el hero (SOFT pesado y apretado, LINGERIE fino y espaciado) */
+function Wordmark() {
   return (
-    <LinkComponent href={href} className="relative py-2 px-1">
-      <span className={`
-        block transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase font-bold text-[14px] md:text-[15px]
-        ${active 
-          ? 'text-[#4a1d44] tracking-[0.15em] opacity-100' 
-          : 'text-[#4a1d44] opacity-30 hover:opacity-100 hover:tracking-[0.1em] tracking-normal'
-        }
-      `}>
-        {children}
+    <LinkComponent href="/" aria-label="Soft Lingerie, inicio" className="group flex items-center gap-3">
+      <Image
+        src="/logo.jpg"
+        alt=""
+        width={48}
+        height={48}
+        className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-ink/10 md:h-11 md:w-11"
+        priority
+      />
+      <span className="flex flex-col leading-none text-ink">
+        <span className="text-xl font-extrabold tracking-[-0.05em] md:text-2xl">SOFT</span>
+        <span className="mt-0.5 font-accent text-[9px] font-semibold uppercase tracking-[0.36em] transition-[letter-spacing] duration-700 group-hover:tracking-[0.5em] md:text-[10px]">
+          Lingerie
+        </span>
       </span>
-      <span className={`
-        absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#4a1d44] rounded-full 
-        transition-all duration-700 ease-out
-        ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
-      `}></span>
     </LinkComponent>
   );
-};
+}
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isHidden, setIsHidden] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const lastScrollY = useRef(0);
 
   const cartContext = useCart();
   const totalItems = cartContext?.totalItems ?? 0;
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
-    }
-  }, [pathname]);
+  // Cierra el menú al cambiar de página
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setIsMenuOpen(false);
+  }
 
+  // Se esconde al bajar y vuelve al subir; la posición previa va en un ref para no re-renderizar en cada scroll
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 80) {
-        setIsVisible(false);
-        setIsMenuOpen(false);
-      } else {
-        setIsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
+      const y = window.scrollY;
+      setIsHidden(y > lastScrollY.current && y > 120);
+      setIsScrolled(y > 8);
+      lastScrollY.current = y;
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Con el menú móvil abierto no se desplaza la página de fondo
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setIsMenuOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isMenuOpen]);
 
   useEffect(() => {
     const getSession = async () => {
@@ -70,7 +98,7 @@ export default function Navbar() {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
       } catch (err) {
-        console.error("Error session:", err);
+        console.error('Error session:', err);
       } finally {
         setLoading(false);
       }
@@ -88,101 +116,160 @@ export default function Navbar() {
     router.refresh();
   };
 
+  const hidden = isHidden && !isMenuOpen;
+
   return (
     <>
-      <div 
-        className={`fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[90] transition-opacity duration-500 md:hidden ${
-          isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      <nav
+        className={`fixed inset-x-0 top-0 z-[100] font-display transition-[translate,background-color,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          hidden ? '-translate-y-full' : 'translate-y-0'
+        } ${
+          isMenuOpen
+            ? 'bg-transparent'
+            : isScrolled
+              ? 'bg-cream/85 shadow-[0_1px_0_rgba(74,29,68,0.08)] backdrop-blur-xl'
+              : 'bg-cream'
         }`}
-        onClick={() => setIsMenuOpen(false)}
-      />
-
-      <nav className={`fixed top-0 left-0 right-0 z-[100] bg-white/60 backdrop-blur-2xl transition-all duration-700 ease-in-out ${
-        isVisible ? "translate-y-0 shadow-sm" : "-translate-y-full"
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex justify-between items-center relative z-[101]">
-          
-          <div className="flex items-center gap-4">
-            <button 
-              className="md:hidden text-[#4a1d44] p-1 active:scale-90 transition-transform" 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+      >
+        <div className="relative z-[102] mx-auto flex h-16 max-w-[96rem] items-center justify-between gap-6 px-4 sm:px-6 md:h-20 lg:px-8">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className={`${iconButton} -ml-2 md:hidden`}
+              onClick={() => setIsMenuOpen((open) => !open)}
+              aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={isMenuOpen}
+              aria-controls="menu-movil"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-            
-            <LinkComponent href="/" className="flex flex-row items-center gap-3 md:gap-4 group cursor-pointer">
-              <Image
-                src="/logo.jpg"
-                alt="Soft Lingeria Valledupar"
-                width={48}
-                height={48}
-                className="h-10 w-10 md:h-12 md:w-12 shrink-0 rounded-full object-cover ring-1 ring-[#4a1d44]/10"
-                priority
-              />
-              <div className="flex flex-col">
-                <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out tracking-tight group-hover:tracking-[0.05em]">
-                  Soft
-                </span>
-                <span className="text-[16px] md:text-2xl font-black text-[#4a1d44] leading-none uppercase transition-all duration-1000 ease-out opacity-80 tracking-widest group-hover:tracking-[0.35em]">
-                  Lingerie
-                </span>
-              </div>
-            </LinkComponent>
+            <Wordmark />
           </div>
 
-          <div className="hidden md:flex items-center gap-10">
-            <NavLink href="/" pathname={pathname}>Inicio</NavLink>
-            <NavLink href="/productos" pathname={pathname}>Catálogo</NavLink>
-            <NavLink href="/rastreo" pathname={pathname}>Rastreo</NavLink>
-            <NavLink href="/contacto" pathname={pathname}>Contacto</NavLink>
-          </div>
-
-          <div className="flex gap-4 md:gap-6 items-center">
-            <div className="hidden sm:block">
-              {!loading && <AdminButton />}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {!loading && (
-                user ? (
-                  <button onClick={handleLogout} title="Cerrar Sesión" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
-                    <LogOut size={20} />
-                  </button>
-                ) : (
-                  <LinkComponent href="/login" title="Mi Cuenta" className="text-[#4a1d44]/60 hover:text-[#4a1d44] transition-colors duration-500">
-                    <User size={22} />
+          <ul className="hidden items-center gap-1 md:flex">
+            {LINKS.map(({ href, label }) => {
+              const active = isActive(pathname, href);
+              return (
+                <li key={href}>
+                  <LinkComponent
+                    href={href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative block rounded-full px-4 py-2 text-[15px] font-medium transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                      active ? 'text-ink' : 'text-ink/55 hover:text-ink'
+                    }`}
+                  >
+                    {label}
+                    <span
+                      aria-hidden
+                      className={`absolute inset-x-4 -bottom-0.5 h-[3px] origin-left rounded-full bg-brand-primary transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                        active ? 'scale-x-100' : 'scale-x-0'
+                      }`}
+                    />
                   </LinkComponent>
-                )
-              )}
-              
-              <LinkComponent href="/carrito" className="relative group">
-                <div className="bg-[#4a1d44] text-white p-2.5 rounded-full shadow-lg group-hover:scale-105 transition-all duration-500">
-                  <ShoppingCart className="w-5 h-5" />
-                </div>
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-white text-[#4a1d44] text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-[#4a1d44]">
-                    {totalItems}
-                  </span>
-                )}
-              </LinkComponent>
-            </div>
-          </div>
-        </div>
+                </li>
+              );
+            })}
+          </ul>
 
-        <div className={`md:hidden overflow-hidden transition-all duration-1000 ease-in-out bg-white/95 backdrop-blur-md relative z-[101] ${
-          isMenuOpen ? "max-h-screen opacity-100 border-b border-[#4a1d44]/5" : "max-h-0 opacity-0"
-        }`}>
-          <div className="p-10 flex flex-col items-center gap-6">
-            <LinkComponent href="/" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Inicio</LinkComponent>
-            <LinkComponent href="/productos" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Catálogo</LinkComponent>
-            <LinkComponent href="/rastreo" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase">Rastrear Pedido</LinkComponent>
-            <LinkComponent href="/contacto" onClick={() => setIsMenuOpen(false)} className="text-base font-bold tracking-[0.15em] text-[#4a1d44] uppercase pb-4 w-full text-center border-b border-[#4a1d44]/5">Contacto</LinkComponent>
-            <div className="pt-2">
-              {!loading && <AdminButton />}
-            </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="hidden lg:block">{!loading && <AdminButton />}</div>
+
+            {!loading &&
+              (user ? (
+                <button type="button" onClick={handleLogout} aria-label="Cerrar sesión" title="Cerrar sesión" className={iconButton}>
+                  <LogOut size={20} />
+                </button>
+              ) : (
+                <LinkComponent href="/login" aria-label="Mi cuenta" title="Mi cuenta" className={iconButton}>
+                  <User size={21} />
+                </LinkComponent>
+              ))}
+
+            <LinkComponent
+              href="/carrito"
+              aria-label={totalItems > 0 ? `Carrito, ${totalItems} prendas` : 'Carrito'}
+              className="group relative grid h-11 w-11 place-items-center rounded-full bg-ink text-white shadow-lg shadow-ink/20 transition-transform duration-300 hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <ShoppingBag size={19} />
+              {totalItems > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-accent px-1 text-[11px] font-bold tabular-nums text-ink ring-2 ring-cream">
+                  {totalItems}
+                </span>
+              )}
+            </LinkComponent>
           </div>
         </div>
       </nav>
+
+      {/* Menú móvil: el mismo cielo rosa del hero, con enlaces grandes y nubes al pie */}
+      <div
+        id="menu-movil"
+        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen}
+        className={`fixed inset-0 z-[99] flex flex-col overflow-hidden bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] font-display transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
+          isMenuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'
+        }`}
+      >
+        <ul className="flex flex-1 flex-col justify-center gap-2 px-6 pt-16">
+          {LINKS.map(({ href, label }, i) => {
+            const active = isActive(pathname, href);
+            return (
+              <li
+                key={href}
+                className={`transition-[opacity,translate] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
+                style={{ transitionDelay: isMenuOpen ? `${120 + i * 60}ms` : '0ms' }}
+              >
+                <LinkComponent
+                  href={href}
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`block py-1 text-[clamp(2.5rem,12vw,3.5rem)] font-extrabold leading-[1.05] tracking-[-0.05em] ${
+                    active ? 'text-white' : 'text-ink'
+                  }`}
+                >
+                  {label}
+                </LinkComponent>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="relative z-[1] flex items-center justify-between gap-4 px-6 pb-8">
+          <div>{!loading && <AdminButton />}</div>
+          <div className="flex gap-2">
+            <a
+              href={contactWhatsAppHref()}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Escríbenos por WhatsApp"
+              className="grid h-12 w-12 place-items-center rounded-full bg-ink text-white"
+            >
+              <MessageCircle size={20} aria-hidden />
+            </a>
+            <a
+              href={CONTACT_INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Síguenos en Instagram"
+              className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink"
+            >
+              <Instagram size={20} aria-hidden />
+            </a>
+          </div>
+        </div>
+
+        <Image
+          src="/images/nube-rosa.webp"
+          alt=""
+          aria-hidden
+          width={2400}
+          height={1227}
+          sizes="200vw"
+          className="pointer-events-none absolute -bottom-[30%] left-1/2 h-[55%] w-auto max-w-none -translate-x-1/2 opacity-90"
+        />
+      </div>
     </>
   );
 }

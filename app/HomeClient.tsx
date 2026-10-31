@@ -2,6 +2,12 @@
 
 import { useMemo, useRef, useState } from "react";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeMarquee } from "@/components/home/HomeMarquee";
+import { HomeManifesto } from "@/components/home/HomeManifesto";
+import { HomeCursor } from "@/components/home/HomeCursor";
+import { HomeScrollProgress } from "@/components/home/HomeScrollProgress";
+import { HomeCategorias, type HomeCategoria } from "@/components/home/HomeCategorias";
+import { useHomeMotion } from "@/components/home/useHomeMotion";
 import { HomeNovedadesSection } from "@/components/home/HomeNovedadesSection";
 import { HomeFavoritosSection } from "@/components/home/HomeFavoritosSection";
 import { HomePageClosing } from "@/components/home/HomePageClosing";
@@ -17,6 +23,8 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
   const [ventas] = useState<VentaDetalleHome[]>(ventasIniciales);
 
   const scrollNovedades = useRef<HTMLDivElement>(null);
+  const motionScope = useRef<HTMLDivElement>(null);
+  useHomeMotion(motionScope);
 
   const getSafeTimestamp = (value: string) => {
     const ts = new Date(value).getTime();
@@ -129,6 +137,19 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
     return [...combinados, ...recientesRelleno];
   }, [productosAgrupados, ventas]);
 
+  /** Categorías con más prendas, con la prenda más reciente como imagen */
+  const categorias = useMemo<HomeCategoria[]>(() => {
+    const porCategoria = new Map<string, HomeCategoria>();
+    [...productosAgrupados.representativeByGroup.values()].sort(sortByRecientes).forEach((p) => {
+      const nombre = (typeof p.categoria === "object" ? p.categoria?.nombre : p.categoria)?.trim();
+      if (!nombre) return;
+      const actual = porCategoria.get(nombre);
+      if (actual) actual.cantidad += 1;
+      else porCategoria.set(nombre, { nombre, cantidad: 1, producto: p });
+    });
+    return [...porCategoria.values()].sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
+  }, [productosAgrupados]);
+
   const scrollHorizontal = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
     if (ref.current) {
       const { scrollLeft, clientWidth } = ref.current;
@@ -138,8 +159,13 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
   };
 
   return (
-    <div className="bg-[#fdf8f6] min-h-screen w-full overflow-x-hidden">
+    <div ref={motionScope} className="group/home min-h-screen w-full overflow-x-clip bg-cream font-display">
+      <HomeScrollProgress />
+      <HomeCursor />
       <HomeHero />
+      <HomeMarquee />
+      <HomeManifesto productos={novedades.slice(1, 3)} />
+      <HomeCategorias categorias={categorias} />
       <HomeNovedadesSection
         novedades={novedades}
         scrollRef={scrollNovedades}

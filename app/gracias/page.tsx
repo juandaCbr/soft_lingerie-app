@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCart } from "@/context/CartContext";
 import { esCiudadEnvioLocal } from "@/app/lib/checkout-config";
+import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
 
 function GraciasContent() {
     const [isMounted, setIsMounted] = useState(false);
@@ -60,51 +61,54 @@ function GraciasContent() {
     };
 
     if (!isMounted) {
-        return <div className="min-h-screen bg-[#faf8f7] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-[#4a1d44]/10 border-t-[#4a1d44] rounded-full animate-spin" />
+        return <div className="min-h-screen bg-cream flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-ink/10 border-t-ink rounded-full animate-spin" />
         </div>;
     }
 
     return (
-        <main className="min-h-screen bg-[#faf8f7] flex flex-col items-center justify-center p-6 text-center text-[#4a1d44]">
-            <div className="bg-white p-8 md:p-16 rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(74,29,68,0.12)] max-w-2xl w-full border border-white/60 ring-1 ring-[#4a1d44]/5 backdrop-blur-xl">
+        <main className="min-h-screen bg-cream px-2 pb-16 font-display text-ink sm:px-3">
+            {/* Celebración en el cielo rosa de la marca */}
+            <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-40 pt-14 text-center md:rounded-[2.75rem] md:pb-48 md:pt-20">
+                <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[36%] opacity-60 md:w-[14%]" />
+                <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
 
-                <div className="flex justify-center mb-8 animate-in zoom-in duration-500">
-                    <div className="bg-green-50 p-6 rounded-full border-8 border-green-100">
-                        <CheckCircle className="text-green-500" size={64} strokeWidth={2.5} />
-                    </div>
+                <div className="relative mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-white text-ink shadow-xl shadow-ink/15 animate-in zoom-in duration-500">
+                    <CheckCircle size={40} strokeWidth={2.25} />
                 </div>
-
-                <h1 className="text-4xl md:text-5xl font-black font-playfair uppercase tracking-tighter mb-4 text-[#361531]">
+                <h1 className="relative text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">
                     ¡Gracias por tu compra!
                 </h1>
-
-                <p className="text-base md:text-lg opacity-70 mb-8 leading-relaxed max-w-lg mx-auto">
+                <p className="relative mx-auto mt-5 max-w-lg text-base leading-relaxed text-ink/75 md:text-lg">
                     Tu pago ha sido procesado con éxito. Hemos recibido tu pedido correctamente.
                 </p>
 
+                <HomeCloudBank className="inset-x-0 bottom-0 top-[80%]" />
+            </div>
+
+            <div className="relative z-10 mx-auto -mt-28 max-w-2xl space-y-4 px-2 text-center sm:px-4">
                 {/* MENSAJE INTELIGENTE SEGÚN CIUDAD */}
-                <div className={`p-8 rounded-[2.5rem] mb-10 border transition-all duration-700 ${esValledupar ? 'bg-pink-50 border-pink-100 shadow-sm' : 'bg-[#fdf8f6] border-[#4a1d44]/5'}`}>
+                <div className={`rounded-[2rem] p-6 shadow-xl shadow-ink/10 ring-1 transition-all duration-700 md:p-8 ${esValledupar ? 'bg-ink text-white ring-ink' : 'bg-white ring-ink/5'}`}>
                     {esValledupar ? (
                         <div className="flex flex-col items-center gap-4">
-                            <div className="bg-white p-4 rounded-full shadow-md text-pink-600 animate-bounce">
-                                <Bike size={40} />
+                            <div className="grid h-16 w-16 place-items-center rounded-full bg-brand-accent text-ink">
+                                <Bike size={30} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-pink-700 uppercase tracking-tight">Prioridad Valledupar 💖</h3>
-                                <p className="text-sm text-pink-600/80 font-medium mt-2 leading-relaxed">
-                                    ¡Estás en nuestra ciudad! Un domiciliario saldrá en breve hacia tu dirección para entregarte <strong>hoy mismo</strong>.
+                                <h3 className="text-2xl font-bold tracking-[-0.03em]">Prioridad Valledupar 💖</h3>
+                                <p className="mt-2 text-base leading-relaxed text-white/75">
+                                    ¡Estás en nuestra ciudad! Un domiciliario saldrá en breve hacia tu dirección para entregarte <strong className="text-brand-accent">hoy mismo</strong>.
                                 </p>
                             </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-4">
-                            <div className="bg-white p-4 rounded-full shadow-sm text-[#4a1d44]/40">
-                                <Truck size={40} />
+                            <div className="grid h-16 w-16 place-items-center rounded-full bg-brand-accent text-ink">
+                                <Truck size={30} />
                             </div>
                             <div>
-                                <h3 className="text-base font-black uppercase tracking-widest opacity-40">Envío Nacional</h3>
-                                <p className="text-base opacity-60 font-medium mt-2 leading-relaxed">
+                                <h3 className="text-2xl font-bold tracking-[-0.03em]">Envío nacional</h3>
+                                <p className="mt-2 text-base leading-relaxed text-ink/70">
                                     Estamos preparando tu paquete para entregarlo a la transportadora lo antes posible.
                                 </p>
                             </div>
@@ -113,31 +117,31 @@ function GraciasContent() {
                 </div>
 
                 {/* CUADRO DE REFERENCIA */}
-                <div className="bg-white p-6 rounded-3xl border border-[#4a1d44]/10 mb-10 shadow-inner">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Referencia de Pedido</p>
-                    <div className="flex items-center justify-center gap-3">
-                        <code className="text-xl font-black tracking-tight text-[#4a1d44]">{referencia}</code>
-                        <button onClick={copiarReferencia} className="p-2 hover:bg-[#fdf8f6] rounded-full transition-all text-[#4a1d44]/60 hover:text-[#4a1d44]">
+                <div className="rounded-[2rem] bg-white p-6 ring-1 ring-ink/5">
+                    <p className="text-sm font-semibold text-brand-dark">Referencia de pedido</p>
+                    <div className="mt-2 flex items-center justify-center gap-3">
+                        <code className="font-display text-2xl font-bold tabular-nums tracking-tight text-ink">{referencia}</code>
+                        <button onClick={copiarReferencia} aria-label="Copiar referencia" className="grid h-10 w-10 place-items-center rounded-full text-ink/55 transition-colors hover:bg-brand-accent/60 hover:text-ink">
                             <ClipboardCheck size={20} />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col items-center justify-center gap-3 pt-4 sm:flex-row">
                     <Link
                         href={`/rastreo?ref=${referencia}`}
-                        className="w-full sm:w-auto bg-[#4a1d44] text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-[#5c2454] transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-[0.15em] text-xs"
+                        className="flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-ink px-8 text-sm font-bold text-white shadow-xl shadow-ink/25 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:w-auto"
                     >
                         <Search size={18} />
-                        Rastrear Pedido
+                        Rastrear pedido
                     </Link>
 
                     <Link
                         href="/productos"
-                        className="w-full sm:w-auto bg-white text-[#4a1d44] px-8 py-4 rounded-full font-bold shadow-sm border border-[#4a1d44]/10 hover:bg-[#f2e1d9] hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-[0.15em] text-xs"
+                        className="flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-white px-8 text-sm font-bold text-ink ring-1 ring-ink/15 transition-colors hover:bg-brand-accent/50 active:scale-[0.98] sm:w-auto"
                     >
                         <ShoppingBag size={18} />
-                        Seguir Comprando
+                        Seguir comprando
                     </Link>
                 </div>
             </div>
@@ -147,7 +151,7 @@ function GraciasContent() {
 
 export default function GraciasPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#faf8f7]" />}>
+        <Suspense fallback={<div className="min-h-screen bg-cream" />}>
             <GraciasContent />
         </Suspense>
     );

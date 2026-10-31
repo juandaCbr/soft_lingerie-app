@@ -26,14 +26,14 @@ export function CheckoutShippingForm({
   const [nombreTouched, setNombreTouched] = useState(false);
   const errorNombre = nombreTouched ? validarNombreCompleto(formData.nombre) : null;
   return (
-    <form onSubmit={onSubmit} className="space-y-6 animate-in fade-in duration-500">
+    <form onSubmit={onSubmit} className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-4">
-        <h2 className="text-base font-black uppercase tracking-widest flex items-center gap-2 mb-4">
-          <User size={14} /> Datos de contacto
+        <h2 className="mb-2 flex items-center gap-2 text-xl font-bold tracking-[-0.02em]">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-accent text-ink"><User size={15} /></span> Datos de contacto
         </h2>
 
         <div className="space-y-1.5">
-          <label className="text-[12px] font-black uppercase tracking-widest opacity-60 ml-1 flex items-center gap-2">
+          <label className="ml-1 flex items-center gap-2 text-sm font-semibold text-ink/75">
             <Mail size={12} /> Correo electrónico
           </label>
           <input
@@ -43,13 +43,13 @@ export function CheckoutShippingForm({
             autoComplete="email"
             value={formData.email}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
             placeholder="tu@correo.com"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[12px] font-black uppercase tracking-widest opacity-60 ml-1 flex items-center gap-2">
+          <label className="ml-1 flex items-center gap-2 text-sm font-semibold text-ink/75">
             <User size={12} /> Nombre y apellido
           </label>
           <input
@@ -64,13 +64,13 @@ export function CheckoutShippingForm({
               }
             }}
             onBlur={() => setNombreTouched(true)}
-            className={`w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border transition-all focus:border-[#4a1d44]/10 ${
-              errorNombre ? "border-red-400 focus:border-red-500" : "border-transparent"
+            className={`w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary ${
+              errorNombre ? "ring-2 ring-red-400 focus:ring-red-500" : ""
             }`}
             placeholder="Ej: María Pérez (nombre y apellido)"
           />
           {errorNombre && (
-            <p className="text-[11px] font-bold text-red-500 ml-1 flex items-center gap-1">
+            <p className="ml-1 flex items-center gap-1 text-sm font-medium text-red-600">
               {errorNombre}
             </p>
           )}
@@ -81,11 +81,11 @@ export function CheckoutShippingForm({
           name="telefono"
           value={formData.telefono}
           onChange={onFieldChange}
-          className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
+          className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
           placeholder="WhatsApp / Celular"
         />
         <div className="space-y-1.5">
-          <label className="text-[12px] font-black uppercase tracking-widest opacity-60 ml-1">
+          <label className="ml-1 text-sm font-semibold text-ink/75">
             Número de cédula/documento
           </label>
           <input
@@ -97,22 +97,22 @@ export function CheckoutShippingForm({
             maxLength={15}
             value={formData.documento_cliente}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none border border-transparent focus:border-[#4a1d44]/10 transition-all"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
             placeholder="Ej: 1234567890"
           />
         </div>
       </div>
 
-      <div className="space-y-4 pt-6 border-t border-gray-50">
-        <h2 className="text-[12px] font-black uppercase tracking-widest opacity-70 flex items-center gap-2 mb-4">
-          <MapPin size={14} /> Dirección de envío
+      <div className="space-y-4 border-t border-ink/5 pt-8">
+        <h2 className="mb-2 flex items-center gap-2 text-xl font-bold tracking-[-0.02em]">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-accent text-ink"><MapPin size={15} /></span> Dirección de envío
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
             name="departamento"
             value={formData.departamento}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none cursor-pointer"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary cursor-pointer"
           >
             {Object.keys(COLOMBIA_COMPLETA)
               .sort()
@@ -126,7 +126,7 @@ export function CheckoutShippingForm({
             name="ciudad"
             value={formData.ciudad}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none cursor-pointer"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary cursor-pointer"
           >
             {ciudadesDisponibles.map((city) => (
               <option key={city} value={city}>
@@ -137,13 +137,13 @@ export function CheckoutShippingForm({
         </div>
 
         {esCiudadEnvioLocal(formData.ciudad) && (
-          <div className="bg-green-50 border border-green-100 p-5 rounded-3xl flex items-center gap-4 animate-in zoom-in duration-500">
-            <div className="bg-green-500 p-2 rounded-full text-white">
+          <div className="flex items-center gap-4 rounded-[1.5rem] bg-brand-accent/60 p-5 animate-in zoom-in duration-500">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-white">
               <Truck size={20} />
             </div>
             <div>
-              <p className="text-sm font-black text-green-900 leading-none">Envio Local</p>
-              <p className="text-xs text-green-700 mt-1">Recibe hoy mismo en {CHECKOUT_ENVIO.ciudadLocal}.</p>
+              <p className="text-base font-semibold leading-none text-ink">Envío local</p>
+              <p className="mt-1 text-sm text-ink/70">Recibe hoy mismo en {CHECKOUT_ENVIO.ciudadLocal}.</p>
             </div>
           </div>
         )}
@@ -154,15 +154,15 @@ export function CheckoutShippingForm({
             name="direccion"
             value={formData.direccion}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none"
-            placeholder="Direccion (Calle y Numero)"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
+            placeholder="Dirección (calle y número)"
           />
           <input
             required
             name="barrio"
             value={formData.barrio}
             onChange={onFieldChange}
-            className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none"
+            className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
             placeholder="Barrio"
           />
         </div>
@@ -170,15 +170,15 @@ export function CheckoutShippingForm({
           name="apartamento"
           value={formData.apartamento}
           onChange={onFieldChange}
-          className="w-full p-4 rounded-2xl bg-[#fdf8f6] outline-none"
-          placeholder="Apto, Torre o Casa (Opcional)"
+          className="w-full rounded-2xl bg-cream px-5 py-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
+          placeholder="Apto, torre o casa (opcional)"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading || cartEmpty}
-        className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#6b2b62] transition active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+        className="flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-ink text-lg font-bold text-white shadow-xl shadow-ink/25 transition-colors hover:bg-brand-dark active:scale-[0.98] disabled:opacity-50"
       >
         {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />}
         {loading ? "Preparando pedido..." : "Confirmar información"}

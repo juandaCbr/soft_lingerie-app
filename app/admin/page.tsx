@@ -120,7 +120,7 @@ export default function AdminDashboard() {
       <div className="max-w-6xl mx-auto">
 
         <header className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-black font-playfair text-[#4a1d44] mb-2 uppercase italic tracking-tighter">
+          <h1 className="text-3xl md:text-4xl font-black font-display text-[#4a1d44] mb-2 uppercase tracking-tighter">
             Panel de Administración
           </h1>
           <p className="text-[#4a1d44]/70">Bienvenida. Resumen operativo de Soft Lingerie.</p>

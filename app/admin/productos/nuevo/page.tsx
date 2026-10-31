@@ -7,6 +7,10 @@ import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ru
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { slugify } from '@/app/lib/utils';
+import CrearCategoriaInline from '@/components/admin/CrearCategoriaInline';
+
+/** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
+const agregarCategoria = (lista: { nombre: string }[], c: { id: number | string; nombre: string }) => [...lista.filter((x) => x.nombre !== c.nombre), c].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
 
 export default function NuevoProductoPage() {
   const router = useRouter();
@@ -329,7 +333,7 @@ const handleTallaToggle = (id: string) => {
         </button>
 
         <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-[#4a1d44]/5">
-          <h1 className="text-3xl font-black font-playfair mb-8 text-[#4a1d44]">Nuevo Producto</h1>
+          <h1 className="text-3xl font-black font-display mb-8 text-[#4a1d44]">Nuevo Producto</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-3">
@@ -501,6 +505,12 @@ const handleTallaToggle = (id: string) => {
                     ))}
                   </select>
                 </div>
+                <CrearCategoriaInline
+                  onCreada={(c) => {
+                    setCategoriasDB((prev) => agregarCategoria(prev, c));
+                    setFormData((prev) => ({ ...prev, categoria: c.nombre }));
+                  }}
+                />
               </div>
             </div>
 

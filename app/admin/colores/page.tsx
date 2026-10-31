@@ -292,7 +292,7 @@ export default function GestionColoresPage() {
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="text-2xl font-black font-playfair italic uppercase leading-tight">
+              <h1 className="text-2xl font-black font-display uppercase leading-tight">
                 Gestión de Colores
               </h1>
               <p className="text-xs opacity-40 font-bold uppercase tracking-widest mt-0.5">
@@ -540,7 +540,7 @@ export default function GestionColoresPage() {
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
                 <AlertTriangle size={32} />
               </div>
-              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-playfair uppercase italic">
+              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-display uppercase">
                 Confirmar acción
               </h2>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">

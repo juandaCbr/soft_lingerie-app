@@ -212,7 +212,7 @@ export default function BotonWompi({
     }
 
     return (
-        <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="w-full bg-[#4a1d44] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#5c2454] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
+        <button type="button" disabled={disabled || cargando} onClick={procesarPagoNativo} className="flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-ink font-display text-base font-bold text-white shadow-xl shadow-ink/25 transition-colors hover:bg-brand-dark active:scale-[0.98] disabled:opacity-50">
             {cargando ? "Procesando de forma segura..." : "Finalizar pedido ahora"}
         </button>
     );

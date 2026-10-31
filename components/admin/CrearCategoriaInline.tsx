@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Plus, Loader2, X, Check } from "lucide-react";
 import toast from "react-hot-toast";
 
-type Categoria = { id: number | string; nombre: string };
+export type Categoria = { id: number | string; nombre: string };
+
+/** Agrega (o reemplaza) la categoría recién creada en la lista del selector, en orden alfabético. */
+export const agregarCategoria = <T extends { nombre: string }>(lista: T[], c: Categoria) =>
+  [...lista.filter((x) => x.nombre !== c.nombre), c].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
 
 /**
  * "+ Nueva categoría" junto al selector de categoría (Nuevo / Editar producto).

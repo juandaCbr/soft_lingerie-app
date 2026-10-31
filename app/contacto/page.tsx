@@ -16,7 +16,7 @@ import {
   CONTACT_INSTAGRAM_HANDLE,
   CONTACT_EMAIL,
 } from '@/app/lib/contacto';
-import { HomeCloud, HomeCloudBank } from '@/components/home/HomeCloud';
+import { CieloRosa } from '@/components/ui/CieloRosa';
 
 const canal =
   'group flex items-center justify-between gap-4 rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-ink/5 transition-[box-shadow,translate] duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-ink/10 md:p-6';
@@ -28,10 +28,7 @@ export default function ContactoPage() {
     <div className="min-h-screen bg-cream pb-20 font-display text-ink">
       {/* Encabezado: el cielo rosa de la marca */}
       <div className="px-2 sm:px-3">
-        <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-36 pt-14 text-center md:rounded-[2.75rem] md:pb-44 md:pt-20">
-          <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[36%] opacity-60 md:w-[14%]" />
-          <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
-
+        <CieloRosa className="px-6 pb-36 pt-14 text-center md:pb-44 md:pt-20">
           <p className="relative text-sm font-semibold text-brand-dark">Atención personalizada</p>
           <h1 className="relative mx-auto mt-2 max-w-3xl text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">
             Estamos para acompañarte
@@ -48,9 +45,7 @@ export default function ContactoPage() {
               <Heart size={15} className="text-brand-dark" aria-hidden /> Atención personalizada y discreta
             </li>
           </ul>
-
-          <HomeCloudBank className="inset-x-0 bottom-0 top-[80%]" />
-        </div>
+        </CieloRosa>
       </div>
 
       {/* Canales de contacto */}

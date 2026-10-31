@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCart } from "@/context/CartContext";
 import { esCiudadEnvioLocal } from "@/app/lib/checkout-config";
-import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
+import { CieloRosa } from "@/components/ui/CieloRosa";
 
 function GraciasContent() {
     const [isMounted, setIsMounted] = useState(false);
@@ -69,10 +69,7 @@ function GraciasContent() {
     return (
         <main className="min-h-screen bg-cream px-2 pb-16 font-display text-ink sm:px-3">
             {/* Celebración en el cielo rosa de la marca */}
-            <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-40 pt-14 text-center md:rounded-[2.75rem] md:pb-48 md:pt-20">
-                <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[36%] opacity-60 md:w-[14%]" />
-                <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
-
+            <CieloRosa className="px-6 pb-40 pt-14 text-center md:pb-48 md:pt-20">
                 <div className="relative mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-white text-ink shadow-xl shadow-ink/15 animate-in zoom-in duration-500">
                     <CheckCircle size={40} strokeWidth={2.25} />
                 </div>
@@ -82,9 +79,7 @@ function GraciasContent() {
                 <p className="relative mx-auto mt-5 max-w-lg text-base leading-relaxed text-ink/75 md:text-lg">
                     Tu pago ha sido procesado con éxito. Hemos recibido tu pedido correctamente.
                 </p>
-
-                <HomeCloudBank className="inset-x-0 bottom-0 top-[80%]" />
-            </div>
+            </CieloRosa>
 
             <div className="relative z-10 mx-auto -mt-28 max-w-2xl space-y-4 px-2 text-center sm:px-4">
                 {/* MENSAJE INTELIGENTE SEGÚN CIUDAD */}

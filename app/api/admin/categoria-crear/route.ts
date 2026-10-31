@@ -6,58 +6,13 @@
  * - Si ya existe una con el mismo nombre (sin importar mayúsculas ni tildes), devuelve esa en vez de duplicarla.
  * - Los productos guardan la categoría por NOMBRE (productos.categoria), así que basta con que exista en la tabla.
  */
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { assertAdminSession, getServiceClient } from '@/app/lib/admin-auth';
 
 export const runtime = 'nodejs';
 
 const LARGO_MIN = 2;
 const LARGO_MAX = 60;
-
-/** Cliente con bypass RLS; solo usar después de validar que el caller es admin. */
-function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
-/** Misma idea que proxy.ts en /admin: usuario logueado + perfiles.es_admin. */
-async function assertAdminSession(): Promise<{ ok: true } | { ok: false; status: number }> {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            /* set desde route: puede ignorarse si el middleware refresca sesión */
-          }
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, status: 401 };
-
-  const { data: perfil } = await supabase.from('perfiles').select('es_admin').eq('id', user.id).single();
-  if (!perfil?.es_admin) return { ok: false, status: 403 };
-
-  return { ok: true };
-}
 
 /** "  set   premium " → "Set premium" se respeta tal cual lo escribe la admin, solo se limpian espacios. */
 const limpiarNombre = (valor: unknown) => String(valor ?? '').replace(/\s+/g, ' ').trim();

@@ -14,7 +14,8 @@ import {
   ArrowUp,
 } from "lucide-react";
 import ProductoCard from "@/components/ProductoCard";
-import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
+import { HomeCloud } from "@/components/home/HomeCloud";
+import { CieloRosa } from "@/components/ui/CieloRosa";
 import type {
   ProductoCatalogoGrupo,
   ProductoCatalogoVariante,
@@ -293,10 +294,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
 
       {/* Encabezado: el mismo cielo rosa del hero, con la palabra grande y nubes al pie */}
       <header className="px-2 sm:px-3">
-        <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-28 pt-14 text-center md:rounded-[2.75rem] md:pb-36 md:pt-20">
-          <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[34%] opacity-60 md:w-[14%]" />
-          <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
-
+        <CieloRosa banco="top-[78%]" className="px-6 pb-28 pt-14 text-center md:pb-36 md:pt-20">
           <p className="relative text-sm font-semibold text-brand-dark">Colección Soft Lingerie</p>
           <h1 className="text-wordmark relative mx-auto mt-2 w-max max-w-full px-[0.12em] text-[clamp(3.75rem,13vw,10rem)] font-extrabold leading-[0.85] tracking-[-0.06em]">
             Catálogo
@@ -304,9 +302,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
           <p className="relative mt-4 font-accent text-[clamp(0.95rem,1.6vw,1.25rem)] font-semibold uppercase tracking-[0.32em] text-ink">
             {productosFinales.length} diseños disponibles
           </p>
-
-          <HomeCloudBank className="inset-x-0 bottom-0 top-[78%]" />
-        </div>
+        </CieloRosa>
       </header>
 
       <div className="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">

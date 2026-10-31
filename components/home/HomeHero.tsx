@@ -15,7 +15,7 @@ export function HomeHero() {
     <section data-hero className="bg-cream px-2 pb-2 sm:px-3 sm:pb-3">
       <div
         data-hero-stage
-        className="relative isolate h-[calc(100svh-4.5rem)] min-h-[34rem] overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] md:h-[calc(100svh-5.75rem)] md:rounded-[2.75rem]"
+        className="relative isolate h-[calc(100svh-4.5rem)] min-h-[34rem] overflow-hidden rounded-[1.75rem] bg-cielo md:h-[calc(100svh-5.75rem)] md:rounded-[2.75rem]"
       >
         {/* Cielo: nubes lejanas que se mueven poco */}
         <div data-hero-layer="sky" className="absolute inset-0 -z-10">

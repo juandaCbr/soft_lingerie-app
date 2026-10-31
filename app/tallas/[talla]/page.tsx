@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, MessageCircle, ArrowUpRight, Heart } from "lucide-react";
-import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
-import {
-  formatoPrecio,
-  getCatalogoTalla,
-  getTallasDisponibles,
-  whatsappPedidoHref,
-} from "@/app/lib/catalogo-tallas";
-import { contactWhatsAppHref } from "@/app/lib/contacto";
+import { Download } from "lucide-react";
+import { CieloRosa } from "@/components/ui/CieloRosa";
+import { TallaTitulo } from "@/components/tallas/TallaTitulo";
+import { FiltroTallasJuntas, SelectorTallas } from "@/components/tallas/SelectorTallas";
+import { PrendaTallaCard } from "@/components/tallas/PrendaTallaCard";
+import { TallaVacia } from "@/components/tallas/TallaVacia";
+import { getCatalogoTalla, getTallasDisponibles } from "@/app/lib/catalogo-tallas";
 import { getSiteUrl } from "@/app/lib/site-url";
 
 /** Igual que el catálogo: se regenera cada 60 s, así lo que cambie en el panel aparece solo. */
@@ -54,73 +50,19 @@ export default async function CatalogoTallaPage({ params }: Params) {
   const [data, tallas] = await Promise.all([getCatalogoTalla(slug), getTallasDisponibles()]);
   if (!data) notFound();
   const { talla, prendas, junta } = data;
-  const combinada = talla.tallas.length > 1;
 
   return (
     <main className="pb-20 font-display text-ink">
       {/* Encabezado: cielo rosa con "Catálogo Talla M" */}
       <div className="px-2 sm:px-3">
-        <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-5 pb-32 pt-12 text-center md:rounded-[2.75rem] md:pb-40 md:pt-16">
-          <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] -z-10 aspect-[2/1] w-[40%] opacity-60 md:w-[16%]" />
-          <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] -z-10 aspect-[2/1] w-[34%] opacity-50 md:w-[13%]" />
-
-          <p className="font-accent text-[clamp(0.9rem,1.6vw,1.2rem)] font-semibold uppercase tracking-[0.32em]">Catálogo</p>
-          <h1 className="mt-1 flex items-baseline justify-center gap-[0.25em] font-extrabold leading-[0.85] tracking-[-0.05em]">
-            <span className="text-[clamp(2.5rem,7vw,5.5rem)]">{combinada ? "Tallas" : "Talla"}</span>
-            <span
-              // pb + mb negativo: la cola de la "y" queda dentro del degradado sin mover el resto
-              className={`text-wordmark -mb-[0.18em] w-max whitespace-nowrap px-[0.12em] pb-[0.18em] ${combinada ? "text-[clamp(3.75rem,12vw,9rem)]" : "text-[clamp(5rem,16vw,12rem)]"}`}
-            >
-              {talla.nombre}
-            </span>
-          </h1>
+        <CieloRosa variante="pagina" className="px-5 pb-32 pt-12 text-center md:pb-40 md:pt-16">
+          <TallaTitulo talla={talla} />
           <p className="mt-3 text-base text-ink/75 md:text-lg">
             {prendas.length} {prendas.length === 1 ? "prenda disponible" : "prendas disponibles"} en tu talla
           </p>
 
-          {/* Cambiar de talla */}
-          <nav aria-label="Otras tallas" className="mt-6 flex flex-wrap justify-center gap-2">
-            {tallas.map((t) => {
-              // En /tallas/xs o /tallas/s queda marcado el botón "XS y S"
-              const activa = t.slug === talla.slug || t.slug === junta?.talla.slug;
-              return (
-                <Link
-                  key={t.slug}
-                  href={`/tallas/${t.slug}`}
-                  aria-current={activa ? "page" : undefined}
-                  className={`grid h-12 min-w-12 place-items-center rounded-full px-4 text-base font-bold transition-colors ${
-                    activa ? "bg-ink text-white" : "bg-white/85 text-ink hover:bg-white"
-                  }`}
-                >
-                  {t.nombre}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Dentro del enlace XS y S: ver las dos o solo una */}
-          {junta && (
-            <nav
-              aria-label={`Filtrar ${junta.talla.nombre}`}
-              className="mx-auto mt-3 flex w-max max-w-full items-center gap-1 rounded-full bg-white/60 p-1 text-sm font-semibold"
-            >
-              {[{ ...junta.talla, nombre: "Ambas" }, ...junta.separadas.map((t) => ({ ...t, nombre: `Solo ${t.nombre}` }))].map((t) => {
-                const activa = t.slug === talla.slug;
-                return (
-                  <Link
-                    key={t.slug}
-                    href={`/tallas/${t.slug}`}
-                    aria-current={activa ? "page" : undefined}
-                    className={`inline-flex min-h-10 items-center rounded-full px-4 transition-colors ${
-                      activa ? "bg-white text-ink shadow-sm" : "text-ink/65 hover:text-ink"
-                    }`}
-                  >
-                    {t.nombre}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+          <SelectorTallas tallas={tallas} actual={talla} junta={junta?.talla} />
+          {junta && <FiltroTallasJuntas junta={junta.talla} separadas={junta.separadas} actual={talla} />}
 
           {prendas.length > 0 && (
             <a
@@ -130,101 +72,16 @@ export default async function CatalogoTallaPage({ params }: Params) {
               <Download size={16} aria-hidden /> Descargar catálogo en PDF
             </a>
           )}
-
-          <HomeCloudBank className="inset-x-0 bottom-0 top-[80%] -z-10" />
-        </div>
+        </CieloRosa>
       </div>
 
       <div className="mx-auto max-w-[96rem] px-4 pt-10 sm:px-6 md:pt-14 lg:px-8">
         {prendas.length === 0 ? (
-          <div className="mx-auto flex max-w-xl flex-col items-center rounded-[2rem] bg-white px-6 py-20 text-center ring-1 ring-ink/5">
-            <Heart size={40} className="mb-4 text-brand-primary" aria-hidden />
-            <p className="text-xl font-semibold">Por ahora no hay prendas en talla {talla.nombre}</p>
-            <p className="mt-2 text-ink/60">Escríbenos y te avisamos apenas llegue algo para ti.</p>
-            <a
-              href={contactWhatsAppHref()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-7 text-sm font-bold text-white"
-            >
-              <MessageCircle size={17} aria-hidden /> Escríbenos por WhatsApp
-            </a>
-          </div>
+          <TallaVacia talla={talla.nombre} />
         ) : (
           <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
             {prendas.map((p, i) => (
-              <li key={p.id} className="flex flex-col">
-                <Link
-                  href={p.href}
-                  className="group relative block aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-blush md:rounded-[1.75rem]"
-                >
-                  <Image
-                    src={p.imagen}
-                    alt={p.nombre}
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 25vw"
-                    priority={i < 4}
-                    className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
-                  />
-                  {/* La talla queda en la foto: si la clienta toma captura, ya sale */}
-                  <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white md:left-4 md:top-4 md:text-sm">
-                    Talla {p.tallas.join(" · ")}
-                  </span>
-                </Link>
-
-                <div className="mt-3 flex flex-1 flex-col px-1">
-                  {p.categoria && <p className="text-xs font-semibold text-ink/50">{p.categoria}</p>}
-                  <h2 className="mt-0.5 text-base font-semibold leading-snug md:text-lg">{p.nombre}</h2>
-                  <p className="mt-1 text-lg font-bold tabular-nums">
-                    {formatoPrecio(p.precio)} <span className="text-xs font-medium text-ink/45">COP</span>
-                  </p>
-                  {p.colores.length > 0 && (
-                    <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-ink/60">
-                      {p.colores.map((c) => (
-                        <span key={c.nombre} className="inline-flex items-center gap-1">
-                          <span aria-hidden className="h-3 w-3 rounded-full ring-1 ring-ink/15" style={{ backgroundColor: c.hex || "#ccc" }} />
-                          {c.nombre}
-                        </span>
-                      ))}
-                    </p>
-                  )}
-
-                  <div className="mt-auto flex flex-col gap-2 pt-4">
-                    {p.tallas.length > 1 ? (
-                      // Hay en las dos tallas del enlace: un botón por talla, así el mensaje ya dice cuál
-                      <div className="flex gap-1.5 sm:gap-2">
-                        {p.tallas.map((t) => (
-                          <a
-                            key={t}
-                            href={whatsappPedidoHref(p, t)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Pedir ${p.nombre} en talla ${t} por WhatsApp`}
-                            className="inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-2 text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:text-sm"
-                          >
-                            <MessageCircle size={16} aria-hidden className="hidden shrink-0 sm:block" /> Pedir {t}
-                          </a>
-                        ))}
-                      </div>
-                    ) : (
-                      <a
-                        href={whatsappPedidoHref(p, p.tallas[0] ?? talla.nombre)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-12 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-3 text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:gap-2 sm:px-4 sm:text-sm"
-                      >
-                        <MessageCircle size={16} aria-hidden className="shrink-0" /> Pedir por WhatsApp
-                      </a>
-                    )}
-                    <Link
-                      href={p.href}
-                      className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"
-                    >
-                      Ver detalle <ArrowUpRight size={15} aria-hidden />
-                    </Link>
-                  </div>
-                </div>
-              </li>
+              <PrendaTallaCard key={p.id} prenda={p} tallaPorDefecto={talla.nombre} prioridad={i < 4} />
             ))}
           </ul>
         )}

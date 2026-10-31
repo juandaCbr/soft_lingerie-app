@@ -79,6 +79,11 @@ html.lenis body {
   --font-accent: var(--font-accent-serif), Georgia, serif;
 }
 
+/* Cielo rosa de la marca (hero, encabezados de página y menú móvil). Un solo lugar para cambiarlo */
+@utility bg-cielo {
+  background-image: radial-gradient(130% 90% at 50% 0%, #d7a9c7 0%, #e5bed7 38%, #f2cbe2 72%, #f6d6e9 100%);
+}
+
 /* Palabra de marca: blanco que se desvanece hacia abajo, como el título del hero */
 .text-wordmark {
   background-image: linear-gradient(180deg, #ffffff 0%, rgb(255 255 255 / 0.92) 45%, rgb(255 255 255 / 0.2) 100%);

@@ -206,7 +206,7 @@ export default function Navbar() {
         id="menu-movil"
         aria-hidden={!isMenuOpen}
         inert={!isMenuOpen}
-        className={`fixed inset-0 z-[99] flex flex-col overflow-hidden bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] font-display transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
+        className={`fixed inset-0 z-[99] flex flex-col overflow-hidden bg-cielo font-display transition-[opacity,translate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
           isMenuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'
         }`}
       >

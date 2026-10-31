@@ -5,7 +5,7 @@ import { Trash2, ArrowLeft, Plus, Minus, ShieldCheck, ArrowRight, ShoppingBag } 
 import Link from "next/link";
 import { useMemo, useEffect, useState } from "react";
 import { getProductoImage, withSupabaseListThumbnailParams } from "@/app/lib/image-helper";
-import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
+import { CieloRosa } from "@/components/ui/CieloRosa";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
@@ -28,10 +28,7 @@ export default function CartPage() {
   if (totalItems === 0) {
     return (
       <div className="px-2 pb-6 font-display text-ink sm:px-3">
-        <div className="relative isolate flex min-h-[70vh] flex-col items-center justify-center overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-32 pt-16 text-center md:rounded-[2.75rem]">
-          <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[36%] opacity-60 md:w-[14%]" />
-          <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
-
+        <CieloRosa className="flex min-h-[70vh] flex-col items-center justify-center px-6 pb-32 pt-16 text-center">
           <div className="relative mb-6 grid h-20 w-20 place-items-center rounded-full bg-white/80 text-ink shadow-xl shadow-ink/10">
             <ShoppingBag size={32} aria-hidden />
           </div>
@@ -48,9 +45,7 @@ export default function CartPage() {
             Explorar la colección
             <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
           </Link>
-
-          <HomeCloudBank className="inset-x-0 bottom-0 top-[80%]" />
-        </div>
+        </CieloRosa>
       </div>
     );
   }

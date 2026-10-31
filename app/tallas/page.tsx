@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { HomeCloud, HomeCloudBank } from "@/components/home/HomeCloud";
+import { CieloRosa } from "@/components/ui/CieloRosa";
 import { getTallasDisponibles } from "@/app/lib/catalogo-tallas";
 
 export const revalidate = 60;
@@ -18,10 +18,7 @@ export default async function TallasPage() {
 
   return (
     <main className="px-2 pb-6 font-display text-ink sm:px-3">
-      <div className="relative isolate flex min-h-[calc(100svh-6rem)] flex-col items-center justify-center overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-5 pb-36 pt-14 text-center md:rounded-[2.75rem]">
-        <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] -z-10 aspect-[2/1] w-[40%] opacity-60 md:w-[16%]" />
-        <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] -z-10 aspect-[2/1] w-[34%] opacity-50 md:w-[13%]" />
-
+      <CieloRosa variante="pagina" banco="top-[82%]" className="flex min-h-[calc(100svh-6rem)] flex-col items-center justify-center px-5 pb-36 pt-14 text-center">
         <p className="text-sm font-semibold text-brand-dark">Soft Lingerie</p>
         <h1 className="mt-2 text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">Catálogo por tallas</h1>
         <p className="mx-auto mt-4 max-w-md text-base text-ink/70 md:text-lg">
@@ -58,9 +55,7 @@ export default async function TallasPage() {
         >
           Ver todo el catálogo <ArrowRight size={16} aria-hidden />
         </Link>
-
-        <HomeCloudBank className="inset-x-0 bottom-0 top-[82%] -z-10" />
-      </div>
+      </CieloRosa>
     </main>
   );
 }

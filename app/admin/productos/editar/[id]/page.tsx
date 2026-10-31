@@ -9,10 +9,9 @@ import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { normalizeImagenesLocales } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
-import CrearCategoriaInline from '@/components/admin/CrearCategoriaInline';
+import CrearCategoriaInline, { agregarCategoria } from '@/components/admin/CrearCategoriaInline';
 
 /** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
-const agregarCategoria = (lista: { nombre: string }[], c: { id: number | string; nombre: string }) => [...lista.filter((x) => x.nombre !== c.nombre), c].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
 
 export default function EditarProductoPage() {
   const params = useParams();

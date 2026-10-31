@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from '@/app/lib/checkout-config';
-import { HomeCloud, HomeCloudBank } from '@/components/home/HomeCloud';
+import { HomeCloudBank } from '@/components/home/HomeCloud';
+import { CieloRosa } from '@/components/ui/CieloRosa';
 import { contactWhatsAppHref } from '@/app/lib/contacto';
 
 /** Qué puede escribir la clienta en el buscador (solo informativo) */
@@ -114,14 +115,11 @@ function RastreoContent() {
     <main className="min-h-screen bg-cream pb-20 font-display text-ink">
       {/* Encabezado: el cielo rosa de la marca con el buscador flotando sobre las nubes */}
       <div className="px-2 sm:px-3">
-        <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-6 pb-36 pt-14 text-center md:rounded-[2.75rem] md:pb-40 md:pt-20">
-          <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] aspect-[2/1] w-[36%] opacity-60 md:w-[14%]" />
-          <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] aspect-[2/1] w-[30%] opacity-50 md:w-[12%]" />
+        <CieloRosa banco="top-[78%]" className="px-6 pb-36 pt-14 text-center md:pb-40 md:pt-20">
           <p className="relative text-sm font-semibold text-brand-dark">Seguimiento</p>
           <h1 className="relative mt-2 text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">Rastrea tu pedido</h1>
           <p className="relative mx-auto mt-4 max-w-md text-base text-ink/70 md:text-lg">Ingresa tu correo, tu número de pedido o tu guía de envío.</p>
-          <HomeCloudBank className="inset-x-0 bottom-0 top-[78%]" />
-        </div>
+        </CieloRosa>
       </div>
 
       <div className="mx-auto -mt-20 max-w-2xl px-4 sm:px-6">

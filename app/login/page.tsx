@@ -7,7 +7,7 @@ import { Lock, Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useCart } from '@/context/CartContext'; // 1. Importamos el hook del carrito
-import { HomeCloud, HomeCloudBank } from '@/components/home/HomeCloud';
+import { CieloRosa } from '@/components/ui/CieloRosa';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -69,10 +69,7 @@ function LoginForm() {
   };
 
   return (
-    <main className="relative isolate mx-2 mb-4 flex min-h-[calc(100svh-6rem)] items-center justify-center overflow-hidden rounded-[1.75rem] bg-[radial-gradient(130%_90%_at_50%_0%,#d7a9c7_0%,#e5bed7_38%,#f2cbe2_72%,#f6d6e9_100%)] px-4 pb-28 pt-12 font-display text-ink sm:mx-3 md:rounded-[2.75rem]">
-        <HomeCloud fade sizes="20vw" className="left-[-5%] top-[8%] -z-10 aspect-[2/1] w-[40%] opacity-60 md:w-[16%]" />
-        <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[4%] -z-10 aspect-[2/1] w-[34%] opacity-50 md:w-[13%]" />
-        <HomeCloudBank className="inset-x-0 bottom-0 top-[82%] -z-10" />
+    <CieloRosa as="main" variante="pagina" banco="top-[82%]" className="mx-2 mb-4 flex min-h-[calc(100svh-6rem)] items-center justify-center px-4 pb-28 pt-12 font-display text-ink sm:mx-3">
       <div className="relative z-10 w-full max-w-md rounded-[2rem] bg-white p-7 shadow-2xl shadow-ink/15 md:p-10">
         
         {mensajeExito && (
@@ -144,7 +141,7 @@ function LoginForm() {
           </p>
         </div>
       </div>
-    </main>
+    </CieloRosa>
   );
 }
 

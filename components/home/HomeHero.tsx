@@ -69,14 +69,14 @@ export function HomeHero() {
         {/* Banco de nubes trasero */}
         <div data-hero-layer="back" className="absolute inset-x-0 bottom-0 top-[80%] z-[1] will-change-transform md:top-[82%]">
           <div data-depth="0.55" className="h-full w-full">
-            <HomeCloudBank centerLobe className="inset-0" imgClassName="opacity-90 [filter:brightness(0.93)_saturate(1.15)]" />
+            <HomeCloudBank preload centerLobe className="inset-0" imgClassName="opacity-90 [filter:brightness(0.93)_saturate(1.15)]" />
           </div>
         </div>
 
         {/* Banco de nubes delantero */}
         <div data-hero-layer="front" className="absolute inset-x-0 bottom-0 top-[80%] z-[3] will-change-transform md:top-[84%]">
           <div data-depth="1" className="h-full w-full">
-            <HomeCloudBank className="inset-0 motion-safe:animate-cloud-in" />
+            <HomeCloudBank preload className="inset-0 motion-safe:animate-cloud-in" />
           </div>
         </div>
 
@@ -84,7 +84,8 @@ export function HomeHero() {
         <div className="pointer-events-none absolute inset-0 z-[4] mx-auto flex max-w-[96rem] flex-col justify-end px-5 pb-6 pt-6 sm:px-8 md:px-[6%] md:pb-9 md:pt-9">
           <div className="flex flex-col items-center gap-4 md:grid md:grid-cols-3 md:items-end">
             <p
-              className="hidden max-w-[24rem] text-base font-medium leading-relaxed text-ink/80 motion-safe:animate-fade-up md:block"
+              // Visible también en celular: Google indexa sobre todo la versión móvil y aquí está "Lencería en Valledupar"
+              className="max-w-[20rem] text-center text-sm font-semibold leading-relaxed text-ink/85 motion-safe:animate-fade-up md:max-w-[24rem] md:text-left md:text-base md:font-medium md:text-ink/80"
               style={{ animationDelay: "800ms" }}
             >
               Lencería en Valledupar: encaje, satín y tul en diseños exclusivos, con envíos a toda Colombia.

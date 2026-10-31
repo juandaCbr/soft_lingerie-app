@@ -18,10 +18,13 @@ export function HomeCloudBank({
   className = "",
   centerLobe = false,
   imgClassName = "",
+  preload = false,
 }: {
   className?: string;
   centerLobe?: boolean;
   imgClassName?: string;
+  /** Bancos del hero: se ven al abrir la página, así que se cargan primero (mejora el LCP) */
+  preload?: boolean;
 }) {
   const img = (pos: string, flip = false) => (
     <Image
@@ -30,6 +33,7 @@ export function HomeCloudBank({
       width={NUBE.width}
       height={NUBE.height}
       sizes="(max-width: 768px) 200vw, 60vw"
+      preload={preload}
       className={`absolute h-[300%] w-auto max-w-none ${flip ? "-scale-x-100" : ""} ${pos} ${imgClassName}`}
     />
   );

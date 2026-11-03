@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { slugify } from '@/app/lib/utils';
 import CrearCategoriaInline, { agregarCategoria } from '@/components/admin/CrearCategoriaInline';
+import { camposSoloCatalogo, SoloCatalogoSelector, useSoloCatalogoDisponible } from '@/components/admin/SoloCatalogo';
 
 /** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
 
@@ -33,7 +34,9 @@ export default function NuevoProductoPage() {
     categoria: '',
     grupo_id: '',
     destacado_home: false,
+    solo_catalogo: false,
   });
+  const soloCatalogoDisponible = useSoloCatalogoDisponible();
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -72,6 +75,7 @@ export default function NuevoProductoPage() {
       categoria: '',
       grupo_id: '',
       destacado_home: false,
+      solo_catalogo: false,
     });
     setArchivosImagenes([]);
     setPrevisualizaciones([]);
@@ -221,6 +225,7 @@ const handleTallaToggle = (id: string) => {
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null,
           destacado_home: formData.destacado_home,
+          ...camposSoloCatalogo({ disponible: soloCatalogoDisponible, solo: formData.solo_catalogo }),
           imagenes_urls: [],
           imagenes_locales: [],
         }])
@@ -388,6 +393,15 @@ const handleTallaToggle = (id: string) => {
               </div>
             </div>
 
+            {soloCatalogoDisponible && (
+              <SoloCatalogoSelector
+                solo={formData.solo_catalogo}
+                onChange={(solo) => setFormData((prev) => ({ ...prev, solo_catalogo: solo }))}
+              />
+            )}
+
+            {/* Destacar en la home solo aplica a lo que se vende en la tienda */}
+            {!formData.solo_catalogo && (
             <div className="space-y-2">
               <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">
                 ¿Producto destacado?
@@ -416,6 +430,7 @@ const handleTallaToggle = (id: string) => {
                 </span>
               </button>
             </div>
+            )}
 
             <div className="space-y-4">
               <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">

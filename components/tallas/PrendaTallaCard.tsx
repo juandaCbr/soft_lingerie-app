@@ -53,25 +53,34 @@ export function PrendaTallaCard({
   /** Las primeras fotos (las que se ven sin bajar) se cargan primero */
   prioridad?: boolean;
 }) {
+  const claseFoto = "group relative block aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-blush md:rounded-[1.75rem]";
+  const foto = (
+    <>
+      <Image
+        src={prenda.imagen}
+        alt={prenda.nombre}
+        fill
+        sizes="(max-width: 1024px) 50vw, 25vw"
+        priority={prioridad}
+        className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
+      />
+      {/* La talla queda en la foto: si la clienta toma captura, ya sale */}
+      <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white md:left-4 md:top-4 md:text-sm">
+        Talla {prenda.tallas.join(" · ")}
+      </span>
+    </>
+  );
+
   return (
     <li className="flex flex-col">
-      <Link
-        href={prenda.href}
-        className="group relative block aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-blush md:rounded-[1.75rem]"
-      >
-        <Image
-          src={prenda.imagen}
-          alt={prenda.nombre}
-          fill
-          sizes="(max-width: 1024px) 50vw, 25vw"
-          priority={prioridad}
-          className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
-        />
-        {/* La talla queda en la foto: si la clienta toma captura, ya sale */}
-        <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white md:left-4 md:top-4 md:text-sm">
-          Talla {prenda.tallas.join(" · ")}
-        </span>
-      </Link>
+      {/* Las prendas "solo catálogo" no tienen ficha en la tienda: la foto no es un enlace */}
+      {prenda.href ? (
+        <Link href={prenda.href} className={claseFoto}>
+          {foto}
+        </Link>
+      ) : (
+        <div className={claseFoto}>{foto}</div>
+      )}
 
       <div className="mt-3 flex flex-1 flex-col px-1">
         {prenda.categoria && <p className="text-xs font-semibold text-ink/50">{prenda.categoria}</p>}
@@ -92,12 +101,14 @@ export function PrendaTallaCard({
 
         <div className="mt-auto flex flex-col gap-2 pt-4">
           <BotonesPedido prenda={prenda} tallaPorDefecto={tallaPorDefecto} />
-          <Link
-            href={prenda.href}
-            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"
-          >
-            Ver detalle <ArrowUpRight size={15} aria-hidden />
-          </Link>
+          {prenda.href && (
+            <Link
+              href={prenda.href}
+              className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"
+            >
+              Ver detalle <ArrowUpRight size={15} aria-hidden />
+            </Link>
+          )}
         </div>
       </div>
     </li>

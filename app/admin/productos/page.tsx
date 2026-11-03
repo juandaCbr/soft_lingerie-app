@@ -9,6 +9,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
+import { EtiquetaSoloCatalogo } from '@/components/admin/SoloCatalogo';
 import Link from 'next/link';
 import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -28,6 +29,8 @@ type Producto = {
   imagenes_urls?: string[];
   imagenes_locales?: { thumb: string; detail: string }[] | null;
   activo: boolean;
+  /** Solo sale en el catálogo por tallas (columna nueva; puede no existir) */
+  solo_catalogo?: boolean;
 };
 
 export default function GestionProductosPage() {
@@ -324,7 +327,7 @@ export default function GestionProductosPage() {
                       />
                       {producto.stock <= 0 && (
                         <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
-                          <div className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                          <div className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
                             SIN STOCK
                           </div>
                         </div>
@@ -358,13 +361,17 @@ export default function GestionProductosPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 md:justify-end md:ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => toggleActivo(producto.id, producto.activo)}
-                        className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 py-2.5 px-4 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
-                      >
-                        {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
-                      </button>
+                      {producto.solo_catalogo ? (
+                        <EtiquetaSoloCatalogo />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleActivo(producto.id, producto.activo)}
+                          className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 py-2.5 px-4 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+                        >
+                          {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
+                        </button>
+                      )}
 
                       <Link
                         href={`/admin/productos/editar/${producto.id}`}

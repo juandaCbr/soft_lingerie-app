@@ -10,6 +10,7 @@ import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { normalizeImagenesLocales } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
 import CrearCategoriaInline, { agregarCategoria } from '@/components/admin/CrearCategoriaInline';
+import { camposSoloCatalogo, SoloCatalogoSelector } from '@/components/admin/SoloCatalogo';
 
 /** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
 
@@ -43,6 +44,10 @@ export default function EditarProductoPage() {
   const [coloresDB, setColoresDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
   const [destacadoHome, setDestacadoHome] = useState(false);
+  // "Solo catálogo por tallas": disponible solo si la columna ya existe en la BD
+  const [soloCatalogoDisponible, setSoloCatalogoDisponible] = useState(false);
+  const [soloCatalogo, setSoloCatalogo] = useState(false);
+  const [soloCatalogoAntes, setSoloCatalogoAntes] = useState(false);
 
   const cargarProducto = useCallback(async () => {
     if (!idProducto) {
@@ -79,6 +84,9 @@ export default function EditarProductoPage() {
         setRotasLocales(new Set());
         setGrupoId(data.grupo_id != null && data.grupo_id !== '' ? String(data.grupo_id) : '');
         setDestacadoHome(data.destacado_home === true);
+        setSoloCatalogoDisponible('solo_catalogo' in data);
+        setSoloCatalogo(data.solo_catalogo === true);
+        setSoloCatalogoAntes(data.solo_catalogo === true);
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
@@ -293,6 +301,7 @@ export default function EditarProductoPage() {
         descripcion,
         grupo_id: grupoId.trim() || null,
         destacado_home: destacadoHome,
+        ...camposSoloCatalogo({ disponible: soloCatalogoDisponible, solo: soloCatalogo, antes: soloCatalogoAntes }),
         imagenes_urls: listaFinalUrls,
         imagenes_locales: localesMut.length > 0 ? localesMut : null,
       }).eq('id', cleanId);
@@ -572,6 +581,10 @@ export default function EditarProductoPage() {
               </div>
             </div>
 
+            {soloCatalogoDisponible && <SoloCatalogoSelector solo={soloCatalogo} onChange={setSoloCatalogo} />}
+
+            {/* Destacar en la home solo aplica a lo que se vende en la tienda */}
+            {!soloCatalogo && (
             <div className="space-y-2">
               <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">
                 ¿Producto destacado?
@@ -598,6 +611,7 @@ export default function EditarProductoPage() {
                 </span>
               </button>
             </div>
+            )}
 
             {/* TALLAS Y STOCKS ESPECÍFICOS */}
             <div className="space-y-4">

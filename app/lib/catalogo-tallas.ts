@@ -10,6 +10,9 @@ import type { ProductoCatalogoVariante } from "./catalog-types";
 /**
  * Catálogo por talla (/tallas/[talla] y su PDF). SOLO LECTURA: misma consulta que el catálogo
  * (productos activos + colores + stock por talla). No escribe nada ni toca pedidos o stock.
+ *
+ * Además de lo que se vende en la tienda incluye las prendas "solo catálogo" (productos.solo_catalogo):
+ * están ocultas en la tienda (activo = false) y solo se piden por WhatsApp. Ver components/admin/SoloCatalogo.
  */
 
 const SELECT = `
@@ -54,7 +57,8 @@ export type PrendaTalla = {
   precio: number;
   categoria: string | null;
   imagen: string;
-  href: string;
+  /** Ficha en la tienda; null si la prenda es "solo catálogo" (no tiene página) */
+  href: string | null;
   colores: { nombre: string; hex: string | null }[];
   /** De las tallas pedidas, en cuáles hay stock de esta prenda (en el combinado: "XS", "S" o ambas) */
   tallas: string[];
@@ -74,10 +78,25 @@ const timestamp = (value?: string) => {
   return Number.isFinite(ts) ? ts : 0;
 };
 
-/** Una sola consulta por render (React cache), compartida por la página y la metadata. */
-const cargarVariantes = cache(async (): Promise<ProductoCatalogoVariante[]> => {
+type VarianteTalla = ProductoCatalogoVariante & { solo_catalogo?: boolean | null };
+
+/** Se vende en la tienda (tiene ficha). Las "solo catálogo" no. */
+const enTienda = (v: VarianteTalla) => v.solo_catalogo !== true;
+
+/**
+ * Una sola consulta por render (React cache), compartida por la página y la metadata.
+ * Si la columna solo_catalogo todavía no existe en la BD, la primera consulta falla y se usa la de
+ * siempre (solo productos activos): el catálogo funciona igual que antes de este cambio.
+ */
+const cargarVariantes = cache(async (): Promise<VarianteTalla[]> => {
+  const conSoloCatalogo = await supabaseAdmin
+    .from("productos")
+    .select(`${SELECT}, solo_catalogo`)
+    .or("activo.eq.true,solo_catalogo.eq.true");
+  if (!conSoloCatalogo.error) return (conSoloCatalogo.data || []) as unknown as VarianteTalla[];
+
   const { data } = await supabaseAdmin.from("productos").select(SELECT).eq("activo", true);
-  return (data || []) as unknown as ProductoCatalogoVariante[];
+  return (data || []) as unknown as VarianteTalla[];
 });
 
 function agrupar(variantes: ProductoCatalogoVariante[]) {
@@ -181,6 +200,8 @@ export const getCatalogoTalla = cache(
       if (conStock.length === 0) continue;
 
       const rep = conStock[0];
+      // La ficha enlaza a una variante que se venda en la tienda (si el grupo tiene alguna)
+      const conFicha = conStock.find(enTienda);
       const categoria = typeof rep.categoria === "object" ? rep.categoria?.nombre ?? null : rep.categoria ?? null;
       const colores = conStock
         .map((v) => firstColorFromVariante(v))
@@ -194,7 +215,7 @@ export const getCatalogoTalla = cache(
         precio: Number(rep.precio),
         categoria: categoria ? String(categoria).trim() : null,
         imagen: getProductoImage(rep, 0, "detail"),
-        href: `/productos/${slugify(rep.nombre)}-${rep.id}`,
+        href: conFicha ? `/productos/${slugify(conFicha.nombre)}-${conFicha.id}` : null,
         colores,
         tallas: talla.tallas.filter((n) => conStock.some((v) => tieneStockEnTalla(v, n))),
       });
@@ -210,9 +231,13 @@ export const getCatalogoTalla = cache(
   },
 );
 
-/** Enlace a WhatsApp con el pedido ya escrito (prenda, talla y enlace a la ficha). */
-export function whatsappPedidoHref(prenda: Pick<PrendaTalla, "nombre" | "href">, talla: string) {
-  const mensaje = `¡Hola! Quiero pedir *${prenda.nombre}* en talla *${talla}*.\n${getSiteUrl()}${prenda.href}`;
+/**
+ * Enlace a WhatsApp con el pedido ya escrito (prenda, talla y enlace a la ficha). Las prendas
+ * "solo catálogo" no tienen ficha: el mensaje dice que viene del catálogo para que Natalia la ubique.
+ */
+export function whatsappPedidoHref(prenda: Pick<PrendaTalla, "nombre" | "href" | "precio">, talla: string) {
+  const enlace = prenda.href ? `\n${getSiteUrl()}${prenda.href}` : ` (${formatoPrecio(prenda.precio)}, del catálogo por tallas)`;
+  const mensaje = `¡Hola! Quiero pedir *${prenda.nombre}* en talla *${talla}*.${enlace}`;
   return `https://wa.me/${CONTACT_WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
 }
 

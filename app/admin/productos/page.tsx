@@ -268,7 +268,7 @@ export default function GestionProductosPage() {
               <select 
                 value={filtroStock} 
                 onChange={(e) => setFiltroStock(e.target.value as any)}
-                className="w-full h-full bg-white border border-[#4a1d44]/5 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-[10px] uppercase tracking-widest text-[#4a1d44] cursor-pointer appearance-none hover:border-[#4a1d44]/10 transition-colors"
+                className="w-full h-full bg-white border border-[#4a1d44]/5 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-[12px] uppercase tracking-widest text-[#4a1d44] cursor-pointer appearance-none hover:border-[#4a1d44]/10 transition-colors"
               >
                 <option value="todos">Todos los productos</option>
                 <option value="disponibles">En existencia</option>
@@ -280,7 +280,7 @@ export default function GestionProductosPage() {
             </div>
           </div>
 
-          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-3 bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#5c2454] transition-all active:scale-[0.98] mt-2">
+          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-3 bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#5c2454] transition-all active:scale-[0.98] mt-2">
             <Plus size={18} /> Añadir nueva prenda
           </Link>
         </header>
@@ -334,7 +334,7 @@ export default function GestionProductosPage() {
                       <span className="font-bold text-[#4a1d44] leading-snug line-clamp-2 sm:line-clamp-3 break-words">
                         {producto.nombre}
                       </span>
-                      <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full max-w-full truncate mt-1.5">
+                      <span className="inline-block text-[12px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full max-w-full truncate mt-1.5">
                         {nombreCategoria}
                       </span>
                     </div>
@@ -344,13 +344,13 @@ export default function GestionProductosPage() {
                   <div className="flex w-full flex-col gap-3 pt-3 border-t border-[#4a1d44]/5 items-center md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-4 md:gap-y-2">
                     <div className="flex items-start justify-center gap-6 md:gap-8 shrink-0">
                       <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
-                        <span className="text-[9px] uppercase font-bold text-gray-400">Precio</span>
+                        <span className="text-[12px] uppercase font-bold text-gray-400">Precio</span>
                         <span className="font-black text-[#4a1d44] text-sm tabular-nums">
                           ${Number(producto.precio).toLocaleString('es-CO')}
                         </span>
                       </div>
                       <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
-                        <span className="text-[9px] uppercase font-bold text-gray-400">Stock</span>
+                        <span className="text-[12px] uppercase font-bold text-gray-400">Stock</span>
                         <span className={`font-bold text-sm tabular-nums ${producto.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>
                           {producto.stock} uds.
                         </span>

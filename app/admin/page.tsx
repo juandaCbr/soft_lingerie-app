@@ -132,37 +132,37 @@ export default function AdminDashboard() {
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#4a1d44]/5">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-green-50 rounded-xl text-green-600"><DollarSign size={20} /></div>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas (30d)</span>
+              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Ventas (30d)</span>
             </div>
             <p className="text-2xl font-black">${stats.totalMes.toLocaleString('es-CO')}</p>
-            <p className="text-[10px] mt-1 opacity-50">Ingresos totales brutos del mes.</p>
+            <p className="text-[12px] mt-1 opacity-50">Ingresos totales brutos del mes.</p>
           </div>
 
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#4a1d44]/5">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-blue-50 rounded-xl text-blue-600"><Calendar size={20} /></div>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas (7d)</span>
+              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Ventas (7d)</span>
             </div>
             <p className="text-2xl font-black">${stats.totalSemana.toLocaleString('es-CO')}</p>
-            <p className="text-[10px] mt-1 opacity-50">Flujo de caja de la ultima semana.</p>
+            <p className="text-[12px] mt-1 opacity-50">Flujo de caja de la ultima semana.</p>
           </div>
 
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#4a1d44]/5">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-purple-50 rounded-xl text-purple-600"><TrendingUp size={20} /></div>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ticket Promedio</span>
+              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Ticket Promedio</span>
             </div>
             <p className="text-2xl font-black">${Math.round(stats.ticketPromedio).toLocaleString('es-CO')}</p>
-            <p className="text-[10px] mt-1 opacity-50">Gasto medio por cada clienta.</p>
+            <p className="text-[12px] mt-1 opacity-50">Gasto medio por cada clienta.</p>
           </div>
 
           <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#4a1d44]/5">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-amber-50 rounded-xl text-amber-600"><Award size={20} /></div>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Top Ventas</span>
+              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Top Ventas</span>
             </div>
             <p className="text-sm font-black truncate uppercase">{stats.productoEstrella}</p>
-            <p className="text-[10px] mt-1 opacity-50">Articulo con mayor rotacion.</p>
+            <p className="text-[12px] mt-1 opacity-50">Articulo con mayor rotacion.</p>
           </div>
         </div>
 
@@ -199,7 +199,7 @@ export default function AdminDashboard() {
             </div>
             <h2 className="text-xl font-bold mb-2">Análisis</h2>
             <p className="text-xs text-white/60 mb-4">Graficas de rendimiento y crecimiento.</p>
-            <div className="mt-auto flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-80">
+            <div className="mt-auto flex items-center gap-2 text-[12px] font-black uppercase tracking-widest opacity-80">
               Ver Reportes <ArrowRight size={12} />
             </div>
           </Link>
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
 
         {/* Fila de herramientas del catálogo — espacio para hasta 4 tarjetas en pantallas grandes */}
         <div className="mt-6">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-25 mb-4 ml-1">
+          <p className="text-[12px] font-black uppercase tracking-[0.3em] opacity-25 mb-4 ml-1">
             Configuración del Catálogo
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                 <Palette size={24} strokeWidth={1.5} />
               </div>
               <h2 className="text-base font-bold text-[#4a1d44] mb-1">Colores</h2>
-              <p className="text-[10px] text-[#4a1d44]/50">Crea y gestiona la paleta de colores.</p>
+              <p className="text-[12px] text-[#4a1d44]/50">Crea y gestiona la paleta de colores.</p>
             </Link>
 
             {/* Placeholder futuras opciones */}
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
                 key={i}
                 className="bg-white/40 rounded-[2rem] border border-dashed border-[#4a1d44]/8 flex items-center justify-center min-h-[120px]"
               >
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-15">Próximamente</span>
+                <span className="text-[12px] font-black uppercase tracking-widest opacity-15">Próximamente</span>
               </div>
             ))}
           </div>
@@ -241,11 +241,11 @@ export default function AdminDashboard() {
               <TrendingUp size={28} />
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-40 leading-none mb-1">Total de hoy</p>
+              <p className="text-[12px] font-black uppercase tracking-widest opacity-40 leading-none mb-1">Total de hoy</p>
               <p className="text-3xl font-black text-[#4a1d44]">${stats.ventasHoy.toLocaleString('es-CO')} <span className="text-xs opacity-30">COP</span></p>
             </div>
           </div>
-          <Link href="/admin/pedidos?hoy=1" className="px-8 py-4 bg-[#4a1d44] text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#5c2454] transition-colors shadow-lg">
+          <Link href="/admin/pedidos?hoy=1" className="px-8 py-4 bg-[#4a1d44] text-white rounded-2xl font-bold text-[12px] uppercase tracking-widest hover:bg-[#5c2454] transition-colors shadow-lg">
             Ver pedidos hoy
           </Link>
         </div>

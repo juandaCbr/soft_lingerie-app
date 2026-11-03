@@ -335,7 +335,7 @@ export default function GestionColoresPage() {
                       className="w-14 h-14 rounded-xl shadow-md border-4 border-white ring-2 ring-[#4a1d44]/10 shrink-0"
                       style={{ backgroundColor: hexParaPicker(form.hex, EMPTY_FORM.hex) }}
                     />
-                    <p className="text-[10px] font-bold text-[#4a1d44]/50 leading-snug max-w-[11rem]">
+                    <p className="text-[12px] font-bold text-[#4a1d44]/50 leading-snug max-w-[11rem]">
                       Arrastra en el cuadro y en la franja de colores para afinar el tono.
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function GestionColoresPage() {
                     onChange={(e) => setForm((f) => ({ ...f, hex: e.target.value }))}
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                   />
-                  <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-40 mt-1">
+                  <p className="text-center text-[12px] font-black uppercase tracking-widest opacity-40 mt-1">
                     Elegir color
                   </p>
                 </label>

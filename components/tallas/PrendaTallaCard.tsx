@@ -4,7 +4,7 @@ import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { formatoPrecio, whatsappPedidoHref, type PrendaTalla } from "@/app/lib/catalogo-tallas";
 
 const BOTON_PEDIR =
-  "inline-flex min-h-12 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink text-[13px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:text-sm";
+  "inline-flex min-h-12 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-ink text-[14px] font-bold text-white shadow-lg shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98] sm:text-sm";
 
 /**
  * Botones de WhatsApp de una prenda. Si hay stock en varias tallas del enlace (XS y S), uno por

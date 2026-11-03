@@ -83,7 +83,7 @@ export function CheckoutPaymentNequiFields({ paymentData, onPaymentChange }: Omi
           <img src="https://nequi.com.sv/img/icon.png" alt="Nequi" className="w-10 h-10 object-contain" />
         </div>
         <div className="w-full max-w-[240px]">
-          <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E00075]/60 mb-3 block">
+          <label className="text-[12px] font-black uppercase tracking-[0.2em] text-[#E00075]/60 mb-3 block">
             Celular vinculado a Nequi
           </label>
           <input
@@ -97,7 +97,7 @@ export function CheckoutPaymentNequiFields({ paymentData, onPaymentChange }: Omi
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-[#E00075] rounded-full">
           <Smartphone size={14} className="text-white" />
-          <p className="text-[9px] text-white font-black uppercase tracking-widest">Push dinámico activo</p>
+          <p className="text-[12px] text-white font-black uppercase tracking-widest">Push dinámico activo</p>
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ export function CheckoutPaymentPseInfo() {
       </div>
       <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 mt-4 flex items-center gap-3 text-left">
         <ShieldCheck size={24} className="text-blue-600 shrink-0" />
-        <p className="text-[10px] text-blue-800 font-bold leading-tight italic">
+        <p className="text-[12px] text-blue-800 font-bold leading-tight italic">
           Tu información está protegida por la seguridad bancaria de Wompi.
         </p>
       </div>
@@ -144,7 +144,7 @@ export function CheckoutPaymentBancolombiaInfo() {
         </div>
       </div>
       <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-        <p className="text-[10px] text-amber-800 font-bold leading-tight">
+        <p className="text-[12px] text-amber-800 font-bold leading-tight">
           Serás redirigido al portal seguro de Bancolombia para autorizar tu pago.
         </p>
       </div>

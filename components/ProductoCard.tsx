@@ -246,7 +246,7 @@ export default function ProductoCard({
             className="absolute left-3 top-3 z-40 rounded-full bg-white/90 px-3 py-1 md:left-4 md:top-4"
             suppressHydrationWarning
           >
-            <span className="text-[11px] font-semibold text-ink md:text-xs">
+            <span className="text-[12px] font-semibold text-ink md:text-xs">
               {mounted
                 ? typeof varianteActiva.categoria === "object" && varianteActiva.categoria !== null
                   ? varianteActiva.categoria.nombre ?? "Lencería"
@@ -346,7 +346,7 @@ export default function ProductoCard({
                         backgroundColor: colorHex,
                       }}
                     >
-                      <span className="pointer-events-none absolute -top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover/color:opacity-100">
+                      <span className="pointer-events-none absolute -top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover/color:opacity-100">
                         {colorInfo?.nombre}
                       </span>
                     </button>
@@ -361,7 +361,7 @@ export default function ProductoCard({
                 <p className="text-base font-semibold tabular-nums text-ink md:text-lg">
                   {mounted ? `$${Number(varianteActiva.precio).toLocaleString('es-CO')}` : `$${varianteActiva.precio}`}
                 </p>
-                <span className="text-[11px] font-medium text-ink/45">
+                <span className="text-[12px] font-medium text-ink/45">
                   COP
                 </span>
               </div>
@@ -369,7 +369,7 @@ export default function ProductoCard({
               {/* BENEFICIO DE COMPRA */}
               <div className="mt-1 flex w-full items-center gap-1.5 text-ink/55">
                 <Package size={12} className="shrink-0" />
-                <span className="whitespace-nowrap text-[11px] font-medium md:text-xs">
+                <span className="whitespace-nowrap text-[12px] font-medium md:text-xs">
                   Envío 100% discreto
                 </span>
               </div>

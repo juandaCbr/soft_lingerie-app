@@ -186,12 +186,12 @@ export default function BotonWompi({
 
     if (urlRedireccion) {
         return (
-            <div className="w-full bg-green-600 text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-widest flex flex-col items-center justify-center gap-2 shadow-xl animate-in zoom-in">
+            <div className="w-full bg-green-600 text-white py-6 rounded-2xl font-black text-[12px] uppercase tracking-widest flex flex-col items-center justify-center gap-2 shadow-xl animate-in zoom-in">
                 <div className="flex items-center gap-3">
                     <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                     <ExternalLink size={18} /> REDIRIGIENDO AL PORTAL SEGURO...
                 </div>
-                <p className="text-[8px] opacity-60 normal-case font-medium">No cierres esta ventana</p>
+                <p className="text-[12px] opacity-60 normal-case font-medium">No cierres esta ventana</p>
             </div>
         );
     }
@@ -202,10 +202,10 @@ export default function BotonWompi({
                 <div className="w-10 h-10 border-4 border-[#4a1d44]/10 border-t-[#4a1d44] rounded-full animate-spin mx-auto" />
                 <div>
                     <p className="text-xs font-black uppercase text-[#4a1d44] tracking-widest">Esperando confirmación</p>
-                    <p className="text-[9px] text-[#4a1d44]/60 mt-1">Por favor, confirma el pago en tu App Nequi</p>
+                    <p className="text-[12px] text-[#4a1d44]/60 mt-1">Por favor, confirma el pago en tu App Nequi</p>
                 </div>
                 <div className="pt-2">
-                   <p className="text-[8px] italic opacity-40 italic">Esta ventana se actualizará automáticamente apenas confirmes.</p>
+                   <p className="text-[12px] italic opacity-40 italic">Esta ventana se actualizará automáticamente apenas confirmes.</p>
                 </div>
             </div>
         );

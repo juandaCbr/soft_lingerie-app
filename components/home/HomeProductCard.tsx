@@ -88,7 +88,7 @@ export function HomeProductCard({ prod, etiqueta, variant = "grid" }: HomeProduc
           className="relative aspect-[3/4.2] overflow-hidden rounded-t-full rounded-b-[2rem] bg-white/10 ring-1 ring-white/15"
         >
           {image("(max-width: 768px) 64vw, 300px")}
-          <span className="absolute left-1/2 top-6 z-10 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink backdrop-blur-md">
+          <span className="absolute left-1/2 top-6 z-10 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.2em] text-ink backdrop-blur-md">
             {etiqueta}
           </span>
         </div>
@@ -97,7 +97,7 @@ export function HomeProductCard({ prod, etiqueta, variant = "grid" }: HomeProduc
             <h3 className="truncate font-display text-base font-semibold text-white">{prod.nombre}</h3>
             <p className="mt-0.5 font-display text-sm font-semibold text-white/60 md:text-base">{formatPrecio(prod.precio)}</p>
           </div>
-          <span className="mt-0.5 shrink-0 rounded-full bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-ink transition duration-300 group-hover:bg-brand-accent">
+          <span className="mt-0.5 shrink-0 rounded-full bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-[0.15em] text-ink transition duration-300 group-hover:bg-brand-accent">
             Ver
           </span>
         </div>
@@ -113,7 +113,7 @@ export function HomeProductCard({ prod, etiqueta, variant = "grid" }: HomeProduc
     >
       <div data-cursor className="relative aspect-[3/4] overflow-hidden rounded-[1.5rem] bg-blush/60">
         {image("(max-width: 1024px) 50vw, 25vw")}
-        <span className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-ink backdrop-blur-md md:left-4 md:top-4">
+        <span className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-ink backdrop-blur-md md:left-4 md:top-4">
           {etiqueta}
         </span>
       </div>

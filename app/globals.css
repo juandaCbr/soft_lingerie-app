@@ -7,6 +7,10 @@
   --color-brand-accent: #FFD7F1;
   --color-brand-dark: #64435A;
 
+  /* Letra pequeña legible: text-xs pasa de 12 px a 13 px en todo el sitio (antes costaba leerla) */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+
   /* Tokens de la home (rediseño): mismos tonos que ya usa el sitio */
   --color-ink: #4a1d44;
   --color-cream: #fdf8f6;

@@ -138,6 +138,21 @@ html, body {
   box-sizing: border-box;
 }
 
+/* Celular sin zoom molesto:
+   - touch-action: sin zoom por doble toque (los toques responden al instante).
+   - En pantallas táctiles los campos usan mínimo 16 px: con menos, el iPhone hace zoom solo al
+     tocarlos y no lo quita. Va fuera de @layer para ganarle a las clases text-sm de Tailwind. */
+html {
+  touch-action: manipulation;
+}
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
 /* Ocultar barra de scroll en los filtros horizontales */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

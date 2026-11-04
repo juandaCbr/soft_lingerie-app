@@ -42,6 +42,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Pantalla fija en el celular: sin zoom con dos dedos ni el zoom automático al tocar un campo
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

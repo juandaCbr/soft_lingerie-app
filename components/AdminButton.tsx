@@ -49,7 +49,7 @@ export default function AdminButton() {
   return (
     <Link 
       href="/admin" 
-      className="flex items-center gap-2 bg-[#fdf8f6] text-[#4a1d44] border border-[#4a1d44]/20 px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#4a1d44] hover:text-white transition-all shadow-sm"
+      className="flex min-h-11 items-center gap-2 rounded-full border border-ink/20 bg-cream px-4 font-display text-sm font-semibold text-ink transition-colors hover:bg-ink hover:text-white"
     >
       <Settings size={16} />
       Panel Admin

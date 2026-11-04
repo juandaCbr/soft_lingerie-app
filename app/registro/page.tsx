@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User, Loader2, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CieloRosa } from '@/components/ui/CieloRosa';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -68,24 +69,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-[#fdf8f6]">
-      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-8 md:p-10 border border-[#4a1d44]/5">
+    <CieloRosa variante="pagina" banco="top-[82%]" className="mx-2 mb-4 flex min-h-[calc(100svh-6rem)] items-center justify-center px-4 pb-28 pt-12 font-display text-ink sm:mx-3">
+      <div className="relative z-10 w-full max-w-md rounded-[2rem] bg-white p-7 shadow-2xl shadow-ink/15 md:p-10">
         
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-black font-playfair text-[#4a1d44] tracking-tight">Crear Cuenta</h2>
-          <p className="text-[#4a1d44]/60 mt-2 font-medium">Únete a la comunidad de Soft Lingerie</p>
+          <h2 className="text-4xl font-bold tracking-[-0.04em] text-ink">Crear cuenta</h2>
+          <p className="mt-2 text-base text-ink/60">Únete a la comunidad de Soft Lingerie</p>
         </div>
 
         <form className="space-y-5" onSubmit={handleRegister}>
           <div className="space-y-1">
-            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Nombre Completo</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Nombre Completo</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 type="text" 
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
                 placeholder="Tu nombre completo"
                 required
               />
@@ -93,14 +94,14 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Correo Electrónico</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Correo Electrónico</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
                 placeholder="ejemplo@correo.com"
                 required
                 maxLength={254}
@@ -109,14 +110,14 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Teléfono / WhatsApp</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Teléfono / WhatsApp</label>
             <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 type="tel" 
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
                 placeholder="300 123 4567"
                 required
               />
@@ -124,14 +125,14 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[#4a1d44] font-bold ml-2 text-[10px] uppercase tracking-widest opacity-60">Contraseña</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Contraseña</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-[#fdf8f6] border-none rounded-2xl outline-none text-sm text-[#4a1d44] focus:ring-2 focus:ring-[#4a1d44]/10 transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
@@ -142,16 +143,16 @@ export default function RegisterPage() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold text-sm hover:bg-[#6b2b62] transition-all flex justify-center items-center gap-2 mt-4 shadow-lg shadow-[#4a1d44]/20 active:scale-95 disabled:opacity-70"
+            className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-bold text-white shadow-xl shadow-ink/25 transition-colors hover:bg-brand-dark active:scale-[0.98] disabled:opacity-70"
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : 'Registrarme'}
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-[#4a1d44]/60 pt-6 border-t border-[#4a1d44]/5">
-          ¿Ya tienes cuenta? <Link href="/login" className="text-[#4a1d44] font-black hover:underline">Inicia sesión</Link>
+        <div className="mt-8 border-t border-ink/5 pt-6 text-center text-[15px] text-ink/60">
+          ¿Ya tienes cuenta? <Link href="/login" className="font-semibold text-ink underline decoration-brand-primary decoration-2 underline-offset-4 hover:text-brand-dark">Inicia sesión</Link>
         </div>
       </div>
-    </div>
+    </CieloRosa>
   );
 }

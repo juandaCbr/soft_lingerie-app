@@ -132,7 +132,7 @@ export default function EstadisticasPage() {
 
     if (loading) return (
         <div className="min-h-screen bg-[#fdf8f6] flex items-center justify-center">
-            <div className="animate-pulse text-[#4a1d44] font-black font-playfair uppercase">Procesando metricas...</div>
+            <div className="animate-pulse text-[#4a1d44] font-black font-display uppercase">Procesando metricas...</div>
         </div>
     );
 
@@ -146,19 +146,19 @@ export default function EstadisticasPage() {
                             <ArrowLeft size={20} />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-black font-playfair uppercase italic tracking-tighter">Reportes de Ventas</h1>
-                            <p className="opacity-40 text-[10px] font-black uppercase tracking-widest">Analisis automatico de ingresos</p>
+                            <h1 className="text-3xl font-black font-display uppercase tracking-tighter">Reportes de Ventas</h1>
+                            <p className="opacity-40 text-[12px] font-black uppercase tracking-widest">Analisis automatico de ingresos</p>
                         </div>
                     </div>
 
                     <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-[#4a1d44]/5 flex gap-1">
-                        <button onClick={() => setVistaActual('semana')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${vistaActual === 'semana' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
+                        <button onClick={() => setVistaActual('semana')} className={`px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${vistaActual === 'semana' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
                             Semana
                         </button>
-                        <button onClick={() => setVistaActual('mes')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${vistaActual === 'mes' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
+                        <button onClick={() => setVistaActual('mes')} className={`px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${vistaActual === 'mes' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
                             Mes
                         </button>
-                        <button onClick={() => setVistaActual('año')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${vistaActual === 'año' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
+                        <button onClick={() => setVistaActual('año')} className={`px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${vistaActual === 'año' ? 'bg-[#4a1d44] text-white' : 'opacity-40 hover:bg-gray-50'}`}>
                             Años
                         </button>
                     </div>
@@ -172,7 +172,7 @@ export default function EstadisticasPage() {
                                 <BarChart3 size={20} /> Desglose por {vistaActual}
                             </h2>
                             <div className="text-right">
-                                <p className="text-[9px] font-black opacity-30 uppercase">Recaudacion</p>
+                                <p className="text-[12px] font-black opacity-30 uppercase">Recaudacion</p>
                                 <p className="text-2xl font-black text-green-600">${datosGrafica.reduce((acc, c) => acc + c.total, 0).toLocaleString('es-CO')}</p>
                             </div>
                         </div>
@@ -182,7 +182,7 @@ export default function EstadisticasPage() {
                                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
                                     <div className="w-full relative flex flex-col justify-end h-48">
                                         {d.total > 0 && (
-                                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#4a1d44] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 font-bold shadow-lg">
+                                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#4a1d44] text-white text-[12px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 font-bold shadow-lg">
                                                 ${d.total.toLocaleString()}
                                             </div>
                                         )}
@@ -191,7 +191,7 @@ export default function EstadisticasPage() {
                                             className={`w-full transition-all duration-700 rounded-t-lg ${d.total > 0 ? 'bg-[#4a1d44] cursor-pointer hover:opacity-80' : 'bg-gray-100'}`}
                                         />
                                     </div>
-                                    <span className="text-[8px] font-black opacity-30 uppercase truncate w-full text-center">{d.label}</span>
+                                    <span className="text-[12px] font-black opacity-30 uppercase truncate w-full text-center">{d.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -199,7 +199,7 @@ export default function EstadisticasPage() {
 
                     <div className="space-y-8">
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
-                            <h2 className="text-[10px] font-black mb-6 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
+                            <h2 className="text-[12px] font-black mb-6 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
                                 <PieChart size={14} /> Tasa de Aprobacion
                             </h2>
                             <div className="flex items-center justify-between mb-4">
@@ -207,8 +207,8 @@ export default function EstadisticasPage() {
                                     {Math.round((ventas.filter(v => v.estado_pago?.toUpperCase() === 'APROBADO').length / (ventas.length || 1)) * 100)}%
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[9px] font-black text-green-600 uppercase">Aprobados</p>
-                                    <p className="text-[8px] font-bold opacity-30">Historico</p>
+                                    <p className="text-[12px] font-black text-green-600 uppercase">Aprobados</p>
+                                    <p className="text-[12px] font-bold opacity-30">Historico</p>
                                 </div>
                             </div>
                             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -220,13 +220,13 @@ export default function EstadisticasPage() {
                         </div>
 
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
-                            <h2 className="text-[10px] font-black mb-6 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
+                            <h2 className="text-[12px] font-black mb-6 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
                                 <MapPin size={14} /> Ciudades Top
                             </h2>
                             <div className="space-y-5">
                                 {rankingCiudades.length > 0 ? rankingCiudades.map(([ciudad, monto], idx) => (
                                     <div key={idx} className="flex flex-col gap-1.5">
-                                        <div className="flex justify-between text-[10px] font-black uppercase">
+                                        <div className="flex justify-between text-[12px] font-black uppercase">
                                             <span>{ciudad}</span>
                                             <span className="opacity-40">${Number(monto).toLocaleString()}</span>
                                         </div>
@@ -237,7 +237,7 @@ export default function EstadisticasPage() {
                                             />
                                         </div>
                                     </div>
-                                )) : <p className="text-[10px] opacity-40 italic">Sin datos de ciudad</p>}
+                                )) : <p className="text-[12px] opacity-40 italic">Sin datos de ciudad</p>}
                             </div>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ export default function EstadisticasPage() {
 
                 <div className="mt-12 bg-[#4a1d44] text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-center gap-10">
                     <div className="flex-1">
-                        <h3 className="text-2xl font-black font-playfair mb-3 italic tracking-tight flex items-center gap-3">
+                        <h3 className="text-2xl font-black font-display mb-3 tracking-tight flex items-center gap-3">
                             <TrendingUp className="text-green-400" /> Rendimiento de Soft Lingerie
                         </h3>
                         <p className="text-xs opacity-60 leading-relaxed max-w-2xl font-medium">
@@ -254,7 +254,7 @@ export default function EstadisticasPage() {
                         </p>
                     </div>
                     <div className="bg-white/10 px-8 py-6 rounded-[2rem] border border-white/10 text-center min-w-[200px]">
-                        <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">Ordenes Registradas</p>
+                        <p className="text-[12px] font-black uppercase tracking-widest opacity-60 mb-1">Ordenes Registradas</p>
                         <p className="text-4xl font-black">{ventas.length}</p>
                     </div>
                 </div>

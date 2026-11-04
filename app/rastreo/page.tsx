@@ -2,11 +2,21 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { supabase } from '@/app/lib/supabase';
-import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike, Copy, ClipboardCheck } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle2, ArrowRight, Loader2, MapPin, Bike, Copy, ClipboardCheck, Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { CHECKOUT_ENVIO, esCiudadEnvioLocal } from '@/app/lib/checkout-config';
+import { HomeCloudBank } from '@/components/home/HomeCloud';
+import { CieloRosa } from '@/components/ui/CieloRosa';
+import { contactWhatsAppHref } from '@/app/lib/contacto';
+
+/** Qué puede escribir la clienta en el buscador (solo informativo) */
+const FORMAS_DE_BUSCAR = [
+  { icon: Package, titulo: 'Tu número de pedido', texto: 'Empieza por SOFT- y lo recibiste al finalizar tu compra.' },
+  { icon: Mail, titulo: 'Tu correo', texto: 'El mismo correo que usaste en el checkout.' },
+  { icon: Truck, titulo: 'Tu guía de envío', texto: 'Te la compartimos cuando despachamos tu pedido.' },
+];
 
 function RastreoContent() {
   const [busqueda, setBusqueda] = useState('');
@@ -102,104 +112,110 @@ function RastreoContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fdf8f6] text-[#4a1d44] py-20 px-6">
-      <div className="max-w-2xl mx-auto">
-        
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-black font-playfair italic mb-4 text-[#4a1d44]">Rastrea tu pedido</h1>
-          <p className="opacity-60 text-sm uppercase font-bold tracking-widest">Ingresa tu correo o número de pedido</p>
-        </div>
+    <main className="min-h-screen bg-cream pb-20 font-display text-ink">
+      {/* Encabezado: el cielo rosa de la marca con el buscador flotando sobre las nubes */}
+      <div className="px-2 sm:px-3">
+        <CieloRosa banco="top-[78%]" className="px-6 pb-36 pt-14 text-center md:pb-40 md:pt-20">
+          <p className="relative text-sm font-semibold text-brand-dark">Seguimiento</p>
+          <h1 className="relative mt-2 text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">Rastrea tu pedido</h1>
+          <p className="relative mx-auto mt-4 max-w-md text-base text-ink/70 md:text-lg">Ingresa tu correo, tu número de pedido o tu guía de envío.</p>
+        </CieloRosa>
+      </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); ejecutarBusqueda(busqueda); }} className="relative mb-12">
-          <input 
+      <div className="mx-auto -mt-20 max-w-2xl px-4 sm:px-6">
+        <form onSubmit={(e) => { e.preventDefault(); ejecutarBusqueda(busqueda); }} className="relative z-10 mb-10">
+          <label className="sr-only" htmlFor="busqueda-pedido">Correo, número de pedido o guía</label>
+          <input
+            id="busqueda-pedido"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="ejemplo@correo.com o SOFT-123..."
-            className="w-full p-6 pr-20 rounded-[2rem] bg-white shadow-xl outline-none border-2 border-transparent focus:border-[#4a1d44]/10 transition-all font-medium text-[#4a1d44]"
+            className="w-full rounded-full bg-white py-5 pl-7 pr-20 text-base font-medium text-ink shadow-xl shadow-ink/10 outline-none ring-1 ring-ink/5 transition placeholder:text-ink/40 focus:ring-2 focus:ring-brand-primary"
           />
-          <button 
+          <button
             disabled={loading}
-            className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#4a1d44] text-white p-4 rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"
+            aria-label="Buscar pedido"
+            className="absolute right-2.5 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-ink text-white shadow-lg transition-colors hover:bg-brand-dark active:scale-95"
           >
-            {loading ? <Loader2 className="animate-spin" size={24} /> : <Search size={24} />}
+            {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
           </button>
         </form>
 
-        {error && <p className="text-center text-red-500 font-bold mb-8 animate-bounce">{error}</p>}
+        {error && <p className="mb-8 rounded-[1.5rem] bg-white px-6 py-4 text-center font-medium text-red-600 ring-1 ring-red-100">{error}</p>}
 
         {pedido && (
-          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl animate-in zoom-in duration-500 border border-[#4a1d44]/5">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-ink/10 ring-1 ring-ink/5 animate-in zoom-in duration-500 md:p-10">
+            <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Estado del envío</span>
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#4a1d44] uppercase tracking-tight">
+                <span className="text-sm font-semibold text-brand-dark">Estado del envío</span>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  <h2 className="text-3xl font-bold tracking-[-0.03em]">
                     {pedido.estado_logistico || 'PREPARANDO'}
                   </h2>
                   {pedido.estado_pago === 'PENDIENTE' && (
-                    <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight animate-pulse">
-                      Pago Pendiente
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                      Pago pendiente
                     </span>
                   )}
                 </div>
               </div>
               <div className="text-left md:text-right">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Referencia</span>
-                <p className="font-mono text-sm opacity-60">{pedido.referencia_wompi?.split(' ')[0] || '---'}</p>
+                <span className="text-sm font-semibold text-brand-dark">Referencia</span>
+                <p className="mt-1 text-sm font-medium tabular-nums text-ink/65">{pedido.referencia_wompi?.split(' ')[0] || '---'}</p>
               </div>
             </div>
 
-            <div className="relative h-2 bg-[#fdf8f6] rounded-full mb-12 overflow-hidden">
-              <div 
-                className="absolute top-0 left-0 h-full bg-[#4a1d44] transition-all duration-1000 ease-out"
+            <div className="relative mb-8 h-2 overflow-hidden rounded-full bg-blush">
+              <div
+                className="absolute left-0 top-0 h-full rounded-full bg-ink transition-all duration-1000 ease-out"
                 style={{ width: `${obtenerProgreso(pedido.estado_logistico)}%` }}
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mb-12">
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 33 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><Package size={20} /></div>
-                <span className="text-[8px] font-black uppercase tracking-widest">Preparando</span>
+            <div className="mb-10 grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className={`grid h-12 w-12 place-items-center rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 33 ? 'bg-ink text-white shadow-lg shadow-ink/20' : 'bg-blush text-ink/30'}`}><Package size={20} /></div>
+                <span className="text-sm font-medium">Preparando</span>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 66 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><Truck size={20} /></div>
-                <span className="text-[8px] font-black uppercase tracking-widest">En camino</span>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className={`grid h-12 w-12 place-items-center rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 66 ? 'bg-ink text-white shadow-lg shadow-ink/20' : 'bg-blush text-ink/30'}`}><Truck size={20} /></div>
+                <span className="text-sm font-medium">En camino</span>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className={`p-3 rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 100 ? 'bg-[#4a1d44] text-white shadow-lg' : 'bg-gray-100 opacity-30'}`}><CheckCircle2 size={20} /></div>
-                <span className="text-[8px] font-black uppercase tracking-widest">Entregado</span>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className={`grid h-12 w-12 place-items-center rounded-full ${obtenerProgreso(pedido.estado_logistico) >= 100 ? 'bg-ink text-white shadow-lg shadow-ink/20' : 'bg-blush text-ink/30'}`}><CheckCircle2 size={20} /></div>
+                <span className="text-sm font-medium">Entregado</span>
               </div>
             </div>
 
             {pedido.estado_logistico === 'ENVIADO' && (
-              <div className="bg-[#fdf8f6] p-8 rounded-[2.5rem] border border-[#4a1d44]/5 mb-8">
+              <div className="mb-8 rounded-[1.75rem] bg-cream p-6 md:p-8">
                 {esCiudadEnvioLocal(pedido.ciudad ?? '') ? (
                   <div className="flex items-center gap-5">
-                    <div className="bg-white p-4 rounded-full shadow-sm text-pink-600 animate-bounce"><Bike size={32} /></div>
+                    <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white text-ink shadow-sm"><Bike size={28} /></div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 mb-1">Envío Local Detectado</p>
-                      <p className="font-bold text-[#4a1d44] text-sm leading-relaxed">
+                      <p className="mb-1 text-sm font-semibold text-brand-dark">Envío local</p>
+                      <p className="text-[15px] font-medium leading-relaxed text-ink">
                         ¡Buenas noticias! En breve un domiciliario llevará tu pedido directamente a tu puerta en {CHECKOUT_ENVIO.ciudadLocal}.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-5">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm text-[#4a1d44]"><MapPin size={28} /></div>
+                    <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white text-ink shadow-sm"><MapPin size={26} /></div>
                     <div className="flex-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Transportadora: {pedido.empresa_envio}</p>
-                      <div className="flex items-center gap-3 mt-1 mb-4">
-                        <p className="font-bold text-lg">Guía: {pedido.numero_guia}</p>
-                        <button onClick={() => copiarGuia(pedido.numero_guia)} className="p-1.5 bg-white rounded-lg border border-[#4a1d44]/10 text-[#4a1d44]/40 hover:text-[#4a1d44] transition-all">
+                      <p className="text-sm font-semibold text-brand-dark">Transportadora: {pedido.empresa_envio}</p>
+                      <div className="mb-4 mt-1 flex items-center gap-3">
+                        <p className="text-lg font-semibold tabular-nums">Guía: {pedido.numero_guia}</p>
+                        <button onClick={() => copiarGuia(pedido.numero_guia)} aria-label="Copiar número de guía" className="grid h-9 w-9 place-items-center rounded-full bg-white text-ink/50 ring-1 ring-ink/10 transition-colors hover:text-ink">
                           <Copy size={14} />
                         </button>
                       </div>
-                      <a 
+                      <a
                         href={getLinkTransportadora(pedido.empresa_envio)}
                         target="_blank"
-                        className="inline-flex items-center gap-3 bg-[#4a1d44] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#6b2b62] transition-all shadow-md"
+                        className="inline-flex min-h-12 items-center gap-3 rounded-full bg-ink px-6 text-sm font-bold text-white shadow-md transition-colors hover:bg-brand-dark"
                       >
-                        Ir a rastrear ahora <ArrowRight size={14} />
+                        Ir a rastrear ahora <ArrowRight size={16} />
                       </a>
                     </div>
                   </div>
@@ -207,11 +223,11 @@ function RastreoContent() {
               </div>
             )}
 
-            <div className="border-t border-gray-100 pt-8">
-              <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-center">Resumen de tu pedido</p>
-              <div className="flex flex-wrap justify-center gap-3">
+            <div className="border-t border-ink/5 pt-6">
+              <p className="mb-4 text-center text-sm font-semibold text-ink/60">Resumen de tu pedido</p>
+              <div className="flex flex-wrap justify-center gap-2">
                 {pedido.detalle_compra?.filter((item: any) => !item.es_envio).map((item: any, i: number) => (
-                  <div key={i} className="px-4 py-2 bg-gray-50 rounded-xl text-[10px] font-bold border border-gray-100 text-[#4a1d44]/60">
+                  <div key={i} className="rounded-full bg-cream px-4 py-2 text-sm font-medium text-ink/75">
                     {item.quantity}x {item.nombre} {item.talla && `(Talla: ${item.talla.nombre})`}
                   </div>
                 ))}
@@ -220,8 +236,60 @@ function RastreoContent() {
           </div>
         )}
 
+        {!pedido && !loading && (
+          <div className="space-y-10">
+            <section>
+              <h2 className="mb-5 text-center text-2xl font-bold tracking-[-0.03em] md:text-3xl">¿Con qué puedes buscar?</h2>
+              <ul className="grid gap-3 sm:grid-cols-3">
+                {FORMAS_DE_BUSCAR.map(({ icon: Icono, titulo, texto }) => (
+                  <li key={titulo} className="rounded-[1.75rem] bg-white p-5 text-center shadow-sm ring-1 ring-ink/5">
+                    <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-brand-accent text-ink">
+                      <Icono size={20} aria-hidden />
+                    </div>
+                    <p className="text-base font-semibold">{titulo}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink/60">{texto}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="mb-5 text-center text-2xl font-bold tracking-[-0.03em] md:text-3xl">Así avanza tu pedido</h2>
+              <ol className="grid grid-cols-3 gap-2 rounded-[1.75rem] bg-white p-6 ring-1 ring-ink/5">
+                {[
+                  { icon: Package, titulo: 'Preparando', texto: 'Empacamos tu pedido con cuidado.' },
+                  { icon: Truck, titulo: 'En camino', texto: 'Va con la transportadora o el domiciliario.' },
+                  { icon: CheckCircle2, titulo: 'Entregado', texto: 'Ya está en tus manos.' },
+                ].map(({ icon: Icono, titulo, texto }) => (
+                  <li key={titulo} className="flex flex-col items-center gap-2 text-center">
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-ink text-white"><Icono size={20} aria-hidden /></div>
+                    <span className="text-sm font-semibold">{titulo}</span>
+                    <span className="hidden text-xs leading-snug text-ink/55 sm:block">{texto}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section className="relative overflow-hidden rounded-[2rem] bg-ink px-6 pb-24 pt-10 text-center text-white md:px-10">
+              <div className="relative z-[1]">
+                <h2 className="text-3xl font-bold tracking-[-0.03em]">¿No encuentras tu pedido?</h2>
+                <p className="mx-auto mt-3 max-w-sm text-white/70">Escríbenos y lo buscamos por ti.</p>
+                <a
+                  href={contactWhatsAppHref()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex min-h-[52px] items-center gap-2 rounded-full bg-brand-accent px-8 text-sm font-bold text-ink transition-colors hover:bg-white"
+                >
+                  <MessageCircle size={18} aria-hidden /> Escríbenos por WhatsApp
+                </a>
+              </div>
+              <HomeCloudBank className="inset-x-0 bottom-0 top-[74%]" />
+            </section>
+          </div>
+        )}
+
         <div className="mt-12 text-center">
-          <Link href="/productos" className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all border-b border-[#4a1d44]/20 pb-1 text-[#4a1d44]">
+          <Link href="/productos" className="text-sm font-semibold text-ink/60 underline decoration-brand-primary decoration-2 underline-offset-4 transition-colors hover:text-ink">
             ← Volver a la tienda
           </Link>
         </div>
@@ -232,7 +300,7 @@ function RastreoContent() {
 
 export default function RastreoPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#fdf8f6]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-cream" />}>
       <RastreoContent />
     </Suspense>
   );

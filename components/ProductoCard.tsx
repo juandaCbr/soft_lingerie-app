@@ -117,7 +117,8 @@ export default function ProductoCard({
     const count = getProductoImageCount(varianteActiva);
     const n = Math.max(count, 1);
     return Array.from({ length: n }, (_, i) =>
-      withSupabaseListThumbnailParams(getProductoImage(varianteActiva, i, 'thumb')),
+      // "detail" (700px) y no "thumb" (250px): la miniatura se ve borrosa al tamaño de la tarjeta
+      withSupabaseListThumbnailParams(getProductoImage(varianteActiva, i, 'detail')),
     );
   };
 
@@ -223,29 +224,29 @@ export default function ProductoCard({
       producto.variantes.some((v) => firstColorFromVariante(v) != null));
 
   return (
-    <Link href={productHref} className="block h-full min-w-0">
+    <Link href={productHref} className="block h-full min-w-0 font-display focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink rounded-[1.75rem]">
       <div
-        className={`group bg-white overflow-hidden shadow-sm border border-[#4a1d44]/5 flex flex-col h-full active:scale-[0.98] transition-all duration-500 hover:shadow-xl hover:shadow-[#4a1d44]/5 rounded-[1.5rem] md:rounded-[2.5rem] ${isAgotado ? "opacity-70" : ""}`}
+        className={`group flex h-full flex-col transition-transform duration-500 active:scale-[0.99] ${isAgotado ? "opacity-75" : ""}`}
       >
 
         {/* Contenedor de Imagen */}
-        <div className="relative w-full pt-[125%] overflow-hidden bg-[#fdf8f6] shrink-0">
+        <div className="relative w-full shrink-0 overflow-hidden rounded-[1.5rem] bg-blush/60 pt-[125%] md:rounded-[1.75rem]">
 
           {/* OVERLAY AGOTADO */}
           {isAgotado && (
-            <div className="absolute inset-0 z-40 bg-white/40 backdrop-blur-[2px] flex items-center justify-center p-4">
-              <div className="bg-[#4a1d44] text-white px-6 py-2 rounded-full shadow-2xl transform -rotate-12 border-2 border-white/20">
-                <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em]">Agotado</span>
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-cream/45 p-4">
+              <div className="rounded-full bg-ink px-5 py-2 text-white shadow-xl shadow-ink/30">
+                <span className="text-xs font-semibold md:text-sm">Agotado</span>
               </div>
             </div>
           )}
 
           {/* Tag de Categoría Flotante */}
           <div
-            className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-black/5"
+            className="absolute left-3 top-3 z-40 rounded-full bg-white/90 px-3 py-1 md:left-4 md:top-4"
             suppressHydrationWarning
           >
-            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]">
+            <span className="text-[12px] font-semibold text-ink md:text-xs">
               {mounted
                 ? typeof varianteActiva.categoria === "object" && varianteActiva.categoria !== null
                   ? varianteActiva.categoria.nombre ?? "Lencería"
@@ -272,7 +273,7 @@ export default function ProductoCard({
                     alt={`${varianteActiva.nombre} - ${index}`}
                     fill
                     sizes="(max-width: 768px) 45vw, 280px"
-                    className={`object-cover transition-all duration-1000 ease-in-out transform group-hover:scale-110 ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.6]' : ''}`}
+                    className={`object-cover transition-[opacity,scale] duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06] ${isCurrent ? 'opacity-100' : 'opacity-0'} ${isAgotado ? 'grayscale-[0.6]' : ''}`}
                     priority={priority && index === 0}
                     loading={priority && index === 0 ? 'eager' : 'lazy'}
                     onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
@@ -283,10 +284,10 @@ export default function ProductoCard({
               {imagenes.length > 1 && (
                 <>
                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-2 z-30 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-                    <button onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev - 1 + imagenes.length) % imagenes.length); }} className="p-1.5 bg-white/90 backdrop-blur-md rounded-full text-[#4a1d44] shadow-lg active:scale-90">
+                    <button aria-label="Foto anterior" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev - 1 + imagenes.length) % imagenes.length); }} className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-ink shadow-lg active:scale-90">
                       <ChevronLeft size={16} />
                     </button>
-                    <button onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev + 1) % imagenes.length); }} className="p-1.5 bg-white/90 backdrop-blur-md rounded-full text-[#4a1d44] shadow-lg active:scale-90">
+                    <button aria-label="Foto siguiente" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev + 1) % imagenes.length); }} className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-ink shadow-lg active:scale-90">
                       <ChevronRight size={16} />
                     </button>
                   </div>
@@ -306,16 +307,18 @@ export default function ProductoCard({
         </div>
 
         {/* Información del Producto */}
-        <div className="p-4 md:p-6 text-center grow flex flex-col justify-between bg-white relative z-10 pt-5">
-          <div className="flex flex-col items-center min-w-0 w-full">
+        <div className="relative z-10 flex grow flex-col justify-between px-1 pt-4">
+          <div className="flex w-full min-w-0 flex-col items-start">
 
-            <h3 className="font-bold text-sm md:text-lg text-[#4a1d44] mb-3 md:mb-4 w-full min-w-0 text-balance uppercase tracking-tight leading-snug break-words hyphens-none">
-              {varianteActiva.nombre}
+            <h3 className="mb-2 w-full min-w-0 break-words text-base font-semibold leading-snug text-ink hyphens-none md:text-lg">
+              <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-500 group-hover:bg-[length:100%_1px]">
+                {varianteActiva.nombre}
+              </span>
             </h3>
 
             {/* SELECTOR DE COLORES */}
             {mostrarSelectorColores && (
-              <div className="mb-4 flex w-full max-w-full flex-wrap items-center justify-center gap-2.5 p-1">
+              <div className="mb-3 flex w-full max-w-full flex-wrap items-center gap-2.5 p-1">
                 {(producto.variantes ?? []).map((v) => {
                   const colorInfo = firstColorFromVariante(v);
                   const isSelected = varianteActiva.id === v.id;
@@ -334,15 +337,16 @@ export default function ProductoCard({
                       key={v.id}
                       onClick={(e) => cambiarVariante(e, v)}
                       title={colorInfo?.nombre}
-                      className={`group/color relative w-4 h-4 md:w-5 md:h-5 rounded-full transition-all duration-300 border shadow-inner ${isSelected
-                        ? 'ring-2 ring-offset-2 ring-[#4a1d44] scale-110 border-[#4a1d44]/20'
-                        : 'hover:scale-110 border-black/10'
+                      aria-label={colorInfo?.nombre}
+                      className={`group/color relative h-5 w-5 rounded-full border transition-transform duration-300 ${isSelected
+                        ? 'scale-110 border-ink/20 ring-2 ring-brand-primary ring-offset-2'
+                        : 'border-ink/10 hover:scale-110'
                         }`}
                       style={{
                         backgroundColor: colorHex,
                       }}
                     >
-                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#4a1d44] text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/color:opacity-100 transition-opacity pointer-events-none uppercase font-bold whitespace-nowrap z-50">
+                      <span className="pointer-events-none absolute -top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover/color:opacity-100">
                         {colorInfo?.nombre}
                       </span>
                     </button>
@@ -352,21 +356,21 @@ export default function ProductoCard({
             )}
 
             {/* PRECIO CON COP INTEGRADO Y BENEFICIO */}
-            <div className="flex flex-col items-center mb-4 w-full">
-              <div className="flex items-baseline justify-center gap-1" suppressHydrationWarning>
-                <p className="text-[#4a1d44]/50 text-sm md:text-lg font-black">
+            <div className="mb-4 flex w-full flex-col items-start">
+              <div className="flex items-baseline gap-1" suppressHydrationWarning>
+                <p className="text-base font-semibold tabular-nums text-ink md:text-lg">
                   {mounted ? `$${Number(varianteActiva.precio).toLocaleString('es-CO')}` : `$${varianteActiva.precio}`}
                 </p>
-                <span className="text-[9px] md:text-[10px] font-black opacity-40 tracking-widest uppercase">
+                <span className="text-[12px] font-medium text-ink/45">
                   COP
                 </span>
               </div>
 
               {/* BENEFICIO DE COMPRA */}
-              <div className="flex items-center justify-center gap-1 mt-1.5 opacity-60 w-full">
-                <Package size={11} className="text-[#4a1d44] shrink-0" />
-                <span className="text-[7.5px] md:text-[9px] text-[#4a1d44] font-bold tracking-wider md:tracking-widest uppercase whitespace-nowrap">
-                  Envío 100% Discreto
+              <div className="mt-1 flex w-full items-center gap-1.5 text-ink/55">
+                <Package size={12} className="shrink-0" />
+                <span className="whitespace-nowrap text-[12px] font-medium md:text-xs">
+                  Envío 100% discreto
                 </span>
               </div>
             </div>
@@ -377,15 +381,15 @@ export default function ProductoCard({
           <button
             onClick={handleAddToCart}
             disabled={sinDisponibilidadParaAgregar}
-            className={`w-full py-3 md:py-3.5 rounded-xl flex items-center justify-center gap-1 md:gap-2 px-1 transition-all duration-300 shadow-md z-40 relative text-[8px] md:text-[10px] font-bold md:font-black tracking-wider md:tracking-widest mt-auto overflow-hidden ${
+            className={`relative z-40 mt-auto flex w-full items-center justify-center gap-2 overflow-hidden rounded-full px-2 py-3 text-xs font-semibold transition-colors duration-300 md:text-sm ${
               sinDisponibilidadParaAgregar
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                : 'bg-[#4a1d44] text-white hover:bg-[#5d2555] active:scale-95'
+                ? 'cursor-not-allowed bg-blush text-ink/40'
+                : 'bg-ink text-white hover:bg-brand-dark active:scale-[0.98]'
             }`}
           >
-            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <ShoppingCart className="h-4 w-4 shrink-0" />
             <span className="whitespace-nowrap">
-              {sinDisponibilidadParaAgregar ? 'AGOTADO' : 'AÑADIR AL CARRITO'}
+              {sinDisponibilidadParaAgregar ? 'Agotado' : 'Añadir al carrito'}
             </span>
           </button>
         </div>
@@ -393,7 +397,7 @@ export default function ProductoCard({
       {isSizeModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <div
-            className="absolute inset-0 bg-[#4a1d44]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -402,7 +406,7 @@ export default function ProductoCard({
               setTallaSeleccionadaId(null);
             }}
           />
-          <div className="relative z-[101] bg-[#fdf8f6] w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl border border-[#4a1d44]/10" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div className="relative z-[101] w-full max-w-md rounded-[2rem] bg-cream p-6 font-display text-ink shadow-2xl md:p-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -411,11 +415,13 @@ export default function ProductoCard({
                 setCantidadModal(1);
                 setTallaSeleccionadaId(null);
               }}
-              className="absolute top-4 right-4 p-2 bg-white/80 rounded-full text-[#4a1d44]/50 hover:text-[#4a1d44]"
+              aria-label="Cerrar"
+              className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white text-ink/60 transition-colors hover:text-ink"
             >
               <X size={18} />
             </button>
-            <h4 className="text-lg font-playfair font-black text-[#4a1d44] mb-4">Selecciona tu talla</h4>
+            <h4 className="mb-1 text-2xl font-bold tracking-[-0.03em]">Selecciona tu talla</h4>
+            <p className="mb-5 truncate pr-10 text-sm text-ink/60">{varianteActiva.nombre}</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {tallasVariante.map((t) => {
                 const tallaId = Number(t.tallas?.id ?? 0);
@@ -437,12 +443,12 @@ export default function ProductoCard({
                       setTallaSeleccionadaId(tallaId);
                       setCantidadModal(1);
                     }}
-                    className={`min-w-[52px] px-3 py-2 rounded-lg text-xs font-black border ${
+                    className={`min-w-[52px] rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
                       isSelected
-                        ? 'bg-[#4a1d44] text-white border-[#4a1d44]'
+                        ? 'border-ink bg-ink text-white'
                         : restante <= 0
-                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                          : 'bg-white text-[#4a1d44] border-[#4a1d44]/20'
+                          ? 'cursor-not-allowed border-transparent bg-blush/60 text-ink/30 line-through'
+                          : 'border-ink/15 bg-white text-ink hover:border-ink/40'
                     }`}
                   >
                     {t.tallas?.nombre ?? 'Talla'}
@@ -451,25 +457,25 @@ export default function ProductoCard({
               })}
             </div>
             {modalAvailabilityLabel != null && (
-              <div className="mb-4 text-[11px] font-bold uppercase tracking-wider text-[#4a1d44]/70">
+              <div className="mb-4 text-sm font-medium text-ink/70">
                 {modalAvailabilityLabel}
               </div>
             )}
-            <div className={`flex items-center w-fit border border-[#4a1d44]/15 rounded-xl overflow-hidden mb-5 ${!tallaSeleccionada || restanteTalla <= 0 ? 'opacity-40 pointer-events-none' : ''}`}>
-              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.max(1, prev - 1)); }} className="p-2 text-[#4a1d44]">
+            <div className={`mb-6 flex w-fit items-center overflow-hidden rounded-full border border-ink/15 bg-white ${!tallaSeleccionada || restanteTalla <= 0 ? 'pointer-events-none opacity-40' : ''}`}>
+              <button aria-label="Quitar una" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.max(1, prev - 1)); }} className="grid h-10 w-10 place-items-center text-ink">
                 <Minus size={14} />
               </button>
-              <span className="w-10 text-center font-black text-sm text-[#4a1d44]">{cantidadModal}</span>
-              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.min(restanteTalla || 1, prev + 1)); }} className="p-2 text-[#4a1d44]">
+              <span className="w-8 text-center text-base font-semibold tabular-nums text-ink">{cantidadModal}</span>
+              <button aria-label="Agregar una" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadModal((prev) => Math.min(restanteTalla || 1, prev + 1)); }} className="grid h-10 w-10 place-items-center text-ink">
                 <Plus size={14} />
               </button>
             </div>
             <button
               onClick={handleConfirmAddWithSize}
               disabled={!tallaSeleccionada || restanteTalla <= 0}
-              className="w-full py-3 rounded-xl bg-[#4a1d44] text-white text-[11px] font-black tracking-[0.18em] disabled:bg-gray-200 disabled:text-gray-400"
+              className="w-full rounded-full bg-ink py-3.5 text-sm font-bold text-white transition-colors hover:bg-brand-dark disabled:bg-blush disabled:text-ink/40"
             >
-              AÑADIR AL CARRITO
+              Añadir al carrito
             </button>
           </div>
         </div>

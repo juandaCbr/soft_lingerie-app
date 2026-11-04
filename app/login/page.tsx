@@ -7,6 +7,7 @@ import { Lock, Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useCart } from '@/context/CartContext'; // 1. Importamos el hook del carrito
+import { CieloRosa } from '@/components/ui/CieloRosa';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -68,57 +69,57 @@ function LoginForm() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#fdf8f6] p-6">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-xl shadow-[#4a1d44]/5 p-8 md:p-12 border border-[#4a1d44]/5">
+    <CieloRosa as="main" variante="pagina" banco="top-[82%]" className="mx-2 mb-4 flex min-h-[calc(100svh-6rem)] items-center justify-center px-4 pb-28 pt-12 font-display text-ink sm:mx-3">
+      <div className="relative z-10 w-full max-w-md rounded-[2rem] bg-white p-7 shadow-2xl shadow-ink/15 md:p-10">
         
         {mensajeExito && (
-          <div className="mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in duration-500">
-            <CheckCircle2 className="text-green-600 shrink-0" size={20} />
-            <p className="text-green-800 text-xs font-bold leading-tight">
+          <div className="mb-8 flex items-center gap-3 rounded-[1.25rem] bg-brand-accent/60 p-4 animate-in fade-in zoom-in duration-500">
+            <CheckCircle2 className="shrink-0 text-ink" size={20} />
+            <p className="text-sm font-medium leading-snug text-ink">
               {mensajeExito}
             </p>
           </div>
         )}
 
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-black font-playfair text-[#4a1d44] tracking-tight">Iniciar Sesión</h1>
-          <p className="text-sm text-[#4a1d44]/50 mt-2 font-medium">Gestiona tus pedidos y tu perfil</p>
+          <h1 className="text-4xl font-bold tracking-[-0.04em] text-ink">Iniciar sesión</h1>
+          <p className="mt-2 text-base text-ink/60">Gestiona tus pedidos y tu perfil</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]/40 ml-4">Correo Electrónico</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Correo Electrónico</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 required
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
-                className="w-full bg-[#fdf8f6] border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#4a1d44]/10 outline-none transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4a1d44]/40 ml-4">Contraseña</label>
+            <label className="ml-2 block text-sm font-semibold text-ink/75">Contraseña</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a1d44]/30" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35" size={18} />
               <input 
                 required
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#fdf8f6] border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#4a1d44]/10 outline-none transition-all"
+                className="w-full rounded-2xl bg-cream py-4 pl-12 pr-4 text-[15px] text-ink outline-none ring-1 ring-ink/10 transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
               />
             </div>
           </div>
 
           <button 
             disabled={loading}
-            className="w-full bg-[#4a1d44] text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-[#4a1d44]/20 hover:bg-[#6b2b62] transition-all active:scale-95 flex items-center justify-center gap-2 group"
+            className="group flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-bold text-white shadow-xl shadow-ink/25 transition-colors hover:bg-brand-dark active:scale-[0.98] disabled:opacity-70"
           >
             {loading ? (
               <Loader2 className="animate-spin" size={18} />
@@ -131,24 +132,24 @@ function LoginForm() {
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-gray-50 text-center">
-          <p className="text-sm text-[#4a1d44]/40">
+        <div className="mt-8 border-t border-ink/5 pt-6 text-center">
+          <p className="text-[15px] text-ink/60">
             ¿No tienes cuenta?{' '}
-            <Link href="/registro" className="text-[#4a1d44] font-bold hover:underline">
+            <Link href="/registro" className="font-semibold text-ink underline decoration-brand-primary decoration-2 underline-offset-4 hover:text-brand-dark">
               Regístrate aquí
             </Link>
           </p>
         </div>
       </div>
-    </main>
+    </CieloRosa>
   );
 }
 
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6]">
-        <Loader2 className="animate-spin text-[#4a1d44]" size={40} />
+      <div className="flex min-h-screen items-center justify-center bg-cream">
+        <Loader2 className="animate-spin text-ink" size={40} />
       </div>
     }>
       <LoginForm />

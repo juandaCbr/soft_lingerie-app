@@ -1,4 +1,4 @@
-import { getCatalogoTalla } from "@/app/lib/catalogo-tallas";
+import { getCatalogoTalla, slugRedirigido } from "@/app/lib/catalogo-tallas";
 import { crearPdfCatalogoTalla } from "@/app/lib/pdf-catalogo-tallas";
 
 /**
@@ -9,6 +9,8 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request, { params }: { params: Promise<{ talla: string }> }) {
   const { talla: slug } = await params;
+  const destino = slugRedirigido(slug);
+  if (destino) return Response.redirect(new URL(`/tallas/${destino}/pdf`, request.url), 308);
   const data = await getCatalogoTalla(slug);
   if (!data) return new Response("Talla no encontrada", { status: 404 });
 

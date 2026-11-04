@@ -37,10 +37,26 @@ const SELECT = `
 const ORDEN_TALLAS = ["XS", "S", "M", "L", "XL", "XXL"];
 
 /**
- * Tallas que se muestran juntas en un solo enlace (pedido de Natalia: XS y S van en el mismo).
- * Dentro del enlace cada prenda dice en cuál de las dos hay, y siguen existiendo /tallas/xs y /tallas/s.
+ * Tallas que NO salen en el catálogo por tallas (pedido de Natalia: se quitó XS, queda solo S).
+ * Siguen existiendo en la tienda y en el admin; aquí simplemente no aparecen.
  */
-const TALLAS_JUNTAS = [{ nombre: "XS y S", slug: "xs-s", tallas: ["XS", "S"] }];
+const TALLAS_FUERA_DEL_CATALOGO = ["XS"];
+
+/**
+ * Enlaces viejos que llevan a otra talla (por si alguien guardó o compartió el enlace):
+ * /tallas/xs y /tallas/xs-s (el antiguo "XS y S") abren /tallas/s.
+ */
+const ENLACES_REDIRIGIDOS: Record<string, string> = { xs: "s", "xs-s": "s" };
+
+/** Slug al que hay que redirigir este enlace, o null si no hace falta. */
+export const slugRedirigido = (slug: string) => ENLACES_REDIRIGIDOS[slug.toLowerCase()] ?? null;
+
+/**
+ * Tallas que se muestran juntas en un solo enlace (cada prenda dice en cuál de ellas hay y se puede
+ * filtrar "Ambas / Solo una"). Ej.: { nombre: "XS y S", slug: "xs-s", tallas: ["XS", "S"] }.
+ * Hoy no hay ninguna: Natalia pidió dejar solo S.
+ */
+const TALLAS_JUNTAS: { nombre: string; slug: string; tallas: string[] }[] = [];
 
 export type TallaCatalogo = {
   nombre: string;
@@ -129,7 +145,8 @@ const getTodasLasTallas = cache(async (): Promise<{ tallas: TallaCatalogo[]; jun
   const grupos = agrupar(variantes);
   const contar = (nombres: string[]) =>
     grupos.filter((g) => g.some((v) => nombres.some((n) => tieneStockEnTalla(v, n)))).length;
-  const tallas: TallaCatalogo[] = [...ordenBd.keys()].map((nombre) => ({
+  const enCatalogo = (nombre: string) => !TALLAS_FUERA_DEL_CATALOGO.includes(nombre.toUpperCase());
+  const tallas: TallaCatalogo[] = [...ordenBd.keys()].filter(enCatalogo).map((nombre) => ({
     nombre,
     slug: slugify(nombre),
     tallas: [nombre],
@@ -145,7 +162,7 @@ const getTodasLasTallas = cache(async (): Promise<{ tallas: TallaCatalogo[]; jun
   // Enlaces combinados (solo con las tallas que existen en la BD)
   const juntas: TallaCatalogo[] = TALLAS_JUNTAS.map((j) => ({
     ...j,
-    tallas: j.tallas.filter((n) => ordenBd.has(n)),
+    tallas: j.tallas.filter((n) => ordenBd.has(n) && enCatalogo(n)),
   }))
     .filter((j) => j.tallas.length > 0)
     .map((j) => ({ ...j, cantidad: contar(j.tallas) }));

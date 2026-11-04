@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { CieloRosa } from "@/components/ui/CieloRosa";
 import { TallaTitulo } from "@/components/tallas/TallaTitulo";
 import { FiltroTallasJuntas, SelectorTallas } from "@/components/tallas/SelectorTallas";
 import { PrendaTallaCard } from "@/components/tallas/PrendaTallaCard";
 import { TallaVacia } from "@/components/tallas/TallaVacia";
-import { getCatalogoTalla, getTallasDisponibles } from "@/app/lib/catalogo-tallas";
+import { getCatalogoTalla, getTallasDisponibles, slugRedirigido } from "@/app/lib/catalogo-tallas";
 import { getSiteUrl } from "@/app/lib/site-url";
 
 /** Igual que el catálogo: se regenera cada 60 s, así lo que cambie en el panel aparece solo. */
@@ -47,6 +47,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function CatalogoTallaPage({ params }: Params) {
   const { talla: slug } = await params;
+  // Enlaces viejos (/tallas/xs, /tallas/xs-s) llevan a la talla que los reemplaza
+  const destino = slugRedirigido(slug);
+  if (destino) permanentRedirect(`/tallas/${destino}`);
   const [data, tallas] = await Promise.all([getCatalogoTalla(slug), getTallasDisponibles()]);
   if (!data) notFound();
   const { talla, prendas, junta } = data;

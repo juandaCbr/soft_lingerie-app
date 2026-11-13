@@ -2,27 +2,24 @@
 
 import { RefObject } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { HomeProducto } from "@/app/lib/home-types";
 import { HomeProductCard } from "./HomeProductCard";
 import { HomeOrnament } from "./HomeOrnament";
+import { FlechasCarrusel } from "@/components/ui/FlechasCarrusel";
 
 type HomeNovedadesSectionProps = {
   novedades: HomeProducto[];
   scrollRef: RefObject<HTMLDivElement | null>;
-  onScroll: (direction: "left" | "right") => void;
 };
-
-const arrowClass =
-  "grid h-12 w-12 place-items-center rounded-full border border-white/25 text-white transition hover:bg-white hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
 /**
  * Panel vino: título con contador a la izquierda y prendas en arco a la derecha.
  * En escritorio (con movimiento) el panel se fija y las prendas avanzan en horizontal con el
- * scroll; si no, es un carrusel nativo con flechas. Se fija un div interno (no la <section>)
+ * scroll; si no, es un carrusel nativo con flechas a los lados. Se fija un div interno (no la <section>)
  * para que React siga siendo dueño de los nodos que monta.
  */
-export function HomeNovedadesSection({ novedades, scrollRef, onScroll }: HomeNovedadesSectionProps) {
+export function HomeNovedadesSection({ novedades, scrollRef }: HomeNovedadesSectionProps) {
   const total = String(novedades.length).padStart(2, "0");
 
   return (
@@ -75,27 +72,12 @@ export function HomeNovedadesSection({ novedades, scrollRef, onScroll }: HomeNov
                 Ver todo
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
               </Link>
-              <button
-                type="button"
-                onClick={() => onScroll("left")}
-                className={`hidden md:grid group-data-[hscroll=on]/home:md:hidden ${arrowClass}`}
-                aria-label="Desplazar novedades a la izquierda"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                type="button"
-                onClick={() => onScroll("right")}
-                className={`hidden md:grid group-data-[hscroll=on]/home:md:hidden ${arrowClass}`}
-                aria-label="Desplazar novedades a la derecha"
-              >
-                <ChevronRight size={20} />
-              </button>
             </div>
           </div>
 
           {/* Pista de prendas */}
           <div className="relative z-[3] mt-12 lg:col-span-8 lg:mt-0">
+            <FlechasCarrusel scrollRef={scrollRef} tono="oscuro" etiqueta="novedades" className="group-data-[hscroll=on]/home:hidden" />
             <div
               ref={scrollRef}
               data-hscroll-viewport

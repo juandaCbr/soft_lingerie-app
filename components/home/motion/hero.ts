@@ -13,6 +13,7 @@ export const heroScroll: Efecto = ({ gsap, root }) => {
     scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: 0.25 },
   });
   tl.to(layer("sky"), { yPercent: 18 }, 0)
+    .to(layer("photo"), { yPercent: 14, scale: 1.04 }, 0)
     .to(layer("word"), { yPercent: 55, opacity: 0.35 }, 0)
     .to(layer("back"), { yPercent: -10 }, 0)
     .to(layer("front"), { yPercent: -45, scale: 1.15 }, 0)

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CieloRosa } from "@/components/ui/CieloRosa";
+import { LogoMarca } from "@/components/ui/LogoMarca";
 import { getTallasDisponibles } from "@/app/lib/catalogo-tallas";
 
 export const revalidate = 60;
@@ -19,6 +20,7 @@ export default async function TallasPage() {
   return (
     <main className="px-2 pb-6 font-display text-ink sm:px-3">
       <CieloRosa variante="pagina" banco="top-[82%]" className="flex min-h-[calc(100svh-6rem)] flex-col items-center justify-center px-5 pb-36 pt-14 text-center">
+        <LogoMarca className="mb-4" />
         <p className="text-sm font-semibold text-brand-dark">Soft Lingerie</p>
         <h1 className="mt-2 text-5xl font-bold leading-[0.95] tracking-[-0.04em] md:text-7xl">Catálogo por tallas</h1>
         <p className="mx-auto mt-4 max-w-md text-base text-ink/70 md:text-lg">

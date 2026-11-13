@@ -283,12 +283,12 @@ export default function ProductoCard({
 
               {imagenes.length > 1 && (
                 <>
-                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-2 z-30 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-                    <button aria-label="Foto anterior" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev - 1 + imagenes.length) % imagenes.length); }} className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-ink shadow-lg active:scale-90">
-                      <ChevronLeft size={16} />
+                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-2 z-30 md:opacity-80 md:group-hover:opacity-100 transition-opacity duration-300">
+                    <button aria-label="Foto anterior" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev - 1 + imagenes.length) % imagenes.length); }} className="grid h-10 w-10 place-items-center rounded-full bg-white/95 text-ink shadow-lg ring-1 ring-ink/10 active:scale-90">
+                      <ChevronLeft size={20} />
                     </button>
-                    <button aria-label="Foto siguiente" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev + 1) % imagenes.length); }} className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-ink shadow-lg active:scale-90">
-                      <ChevronRight size={16} />
+                    <button aria-label="Foto siguiente" onClick={(e) => { e.preventDefault(); setCurrentImg((prev) => (prev + 1) % imagenes.length); }} className="grid h-10 w-10 place-items-center rounded-full bg-white/95 text-ink shadow-lg ring-1 ring-ink/10 active:scale-90">
+                      <ChevronRight size={20} />
                     </button>
                   </div>
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 z-30">

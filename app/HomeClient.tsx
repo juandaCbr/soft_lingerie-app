@@ -150,31 +150,23 @@ export default function HomeClient({ productosIniciales, ventasIniciales }: Home
     return [...porCategoria.values()].sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
   }, [productosAgrupados]);
 
-  const scrollHorizontal = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
-    if (ref.current) {
-      const { scrollLeft, clientWidth } = ref.current;
-      const scrollTo = direction === "left" ? scrollLeft - clientWidth : scrollLeft + clientWidth;
-      ref.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
-  };
-
   return (
     <div ref={motionScope} className="group/home min-h-screen w-full overflow-x-clip bg-cream font-display">
       <HomeScrollProgress />
       <HomeCursor />
       <HomeHero />
       <HomeMarquee />
-      <HomeManifesto productos={novedades.slice(1, 3)} />
       <HomeCategorias categorias={categorias} />
       <HomeNovedadesSection
         novedades={novedades}
         scrollRef={scrollNovedades}
-        onScroll={(dir) => scrollHorizontal(scrollNovedades, dir)}
       />
       <HomeFavoritosSection
         favoritos={favoritos}
       />
       <HomePageClosing />
+      {/* "Nuestra esencia" cierra la página, justo antes del footer */}
+      <HomeManifesto productos={novedades.slice(1, 3)} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { ShoppingCart, ArrowLeft, Check, ChevronLeft, ChevronRight, ChevronDown,
 import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import ProductoCard from '@/components/ProductoCard';
+import { FlechasCarrusel } from '@/components/ui/FlechasCarrusel';
 import SizeGuideModal from '@/components/SizeGuideModal';
 import {
   getProductoImage,
@@ -148,14 +149,6 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
     }
   };
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = clientWidth * 0.8;
-      const scrollTo = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
-    }
-  };
 
   const handleBack = () => {
     // Historial típico: catálogo filtrado → producto (atrás restaura URL y scroll).
@@ -525,11 +518,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
               <p className="text-sm font-semibold text-brand-dark">Para completar tu look</p>
               <h2 className="mt-2 text-4xl font-bold leading-[0.95] tracking-[-0.04em] md:text-5xl">También te puede gustar</h2>
             </div>
-            <div className="relative flex gap-2">
-              <button aria-label="Anteriores" onClick={() => scroll('left')} className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink shadow-sm ring-1 ring-ink/10 transition-colors hover:bg-ink hover:text-white active:scale-90"><ChevronLeft size={18} /></button>
-              <button aria-label="Siguientes" onClick={() => scroll('right')} className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink shadow-sm ring-1 ring-ink/10 transition-colors hover:bg-ink hover:text-white active:scale-90"><ChevronRight size={18} /></button>
-            </div>
           </div>
+          <div className="relative">
           <div
             ref={scrollRef}
             className="flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto pb-6 scrollbar-hide md:gap-6"
@@ -543,6 +533,8 @@ export default function ProductClient({ producto, variantesIniciales, relacionad
                 />
               </div>
             ))}
+          </div>
+          <FlechasCarrusel scrollRef={scrollRef} />
           </div>
         </section>
       )}

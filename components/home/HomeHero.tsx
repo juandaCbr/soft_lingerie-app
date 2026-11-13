@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { HomeCloud, HomeCloudBank } from "./HomeCloud";
@@ -6,8 +7,8 @@ import { HomeOrnament } from "./HomeOrnament";
 const WORD = "SOFT";
 
 /**
- * Hero en escenario: un cielo rosa con la marca al centro (SOFT gigante y LINGERIE debajo)
- * entre bancos de nubes. Entrada en CSS (corre desde el primer pintado); parallax con el
+ * Hero en escenario: un cielo rosa con una foto central que se funde con el rosado, la marca
+ * encima (SOFT gigante y LINGERIE debajo) y bancos de nubes. Entrada en CSS (corre desde el primer pintado); parallax con el
  * mouse y con el scroll los añade useHomeMotion sobre los data-attributes.
  */
 export function HomeHero() {
@@ -22,6 +23,24 @@ export function HomeHero() {
           <div data-depth="0.45" className="absolute inset-0">
             <HomeCloud fade sizes="20vw" className="left-[-6%] top-[5%] aspect-[2/1] w-[30%] opacity-60 md:w-[13%]" />
             <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[3%] aspect-[2/1] w-[26%] opacity-50 md:w-[11%]" />
+          </div>
+        </div>
+
+        {/* Foto central: el rosado "se la come" (bordes difuminados y multiplicada sobre el cielo).
+            Más contraste en la prenda para que SOFT (blanco) resalte encima. */}
+        <div data-hero-layer="photo" aria-hidden className="absolute inset-0 z-0">
+          <div
+            data-depth="0.25"
+            className="absolute inset-x-[-6%] bottom-[14%] top-[-18%] [mask-image:radial-gradient(ellipse_52%_54%_at_50%_44%,black_40%,transparent_100%)] md:inset-x-[12%] md:bottom-[8%] md:top-[-2%]"
+          >
+            <Image
+              src="/images/hero-modelo-2k.webp"
+              alt=""
+              fill
+              preload
+              sizes="(max-width: 768px) 112vw, 76vw"
+              className="object-cover object-[42%_22%] opacity-90 mix-blend-multiply [filter:contrast(1.12)_saturate(0.95)] motion-safe:animate-fade-up"
+            />
           </div>
         </div>
 
@@ -46,12 +65,12 @@ export function HomeHero() {
               {/* pl igual al tracking: compensa el espacio que queda tras la última letra y la centra */}
               <span
                 aria-hidden
-                className="mt-[clamp(0.5rem,1.2vw,1.25rem)] pl-[0.42em] font-accent text-[clamp(1.4rem,min(5vw,6.5svh),5rem)] font-semibold uppercase leading-none tracking-[0.42em] text-ink motion-safe:animate-fade-up"
+                className="mt-[clamp(0.5rem,1.2vw,1.25rem)] pl-[0.42em] font-accent text-[clamp(1.4rem,min(5vw,6.5svh),5rem)] font-semibold uppercase leading-none tracking-[0.42em] text-ink [text-shadow:0_0_14px_rgb(253_240_246),0_0_34px_rgb(246_214_233)] motion-safe:animate-fade-up"
                 style={{ animationDelay: "450ms" }}
               >
                 Lingerie
               </span>
-              <HomeOrnament className="mt-[clamp(1rem,2vw,2rem)] text-ink motion-safe:animate-fade-up" />
+              <HomeOrnament className="mt-[clamp(1rem,2vw,2rem)] text-ink [filter:drop-shadow(0_0_8px_rgb(253_240_246))] motion-safe:animate-fade-up" />
             </h1>
           </div>
 
@@ -83,13 +102,13 @@ export function HomeHero() {
         {/* Texto y acciones */}
         <div className="pointer-events-none absolute inset-0 z-[4] mx-auto flex max-w-[96rem] flex-col justify-end px-5 pb-6 pt-6 sm:px-8 md:px-[6%] md:pb-9 md:pt-9">
           <div className="flex flex-col items-center gap-4 md:grid md:grid-cols-3 md:items-end">
-            <p
-              // Visible también en celular: Google indexa sobre todo la versión móvil y aquí está "Lencería en Valledupar"
+            <h2
+              // Título (h2) y visible también en celular: Google indexa sobre todo la versión móvil y aquí está "Lencería en Valledupar"
               className="max-w-[20rem] text-center text-sm font-semibold leading-relaxed text-ink/85 motion-safe:animate-fade-up md:max-w-[24rem] md:text-left md:text-base md:font-medium md:text-ink/80"
               style={{ animationDelay: "800ms" }}
             >
               Lencería en Valledupar: encaje, satín y tul en diseños exclusivos, con envíos a toda Colombia.
-            </p>
+            </h2>
 
             <a
               href="#novedades"

@@ -1,9 +1,13 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { getProductoImage } from "@/app/lib/image-helper";
 import type { HomeProducto } from "@/app/lib/home-types";
 import { HomeSectionHeader } from "./HomeSectionHeader";
+import { FlechasCarrusel } from "@/components/ui/FlechasCarrusel";
 
 export type HomeCategoria = {
   nombre: string;
@@ -13,9 +17,10 @@ export type HomeCategoria = {
 
 /**
  * Accesos por categoría hacia el catálogo filtrado (/productos?cat=...): enlazado interno.
- * Escritorio: paneles en arco que se expanden al pasar el mouse. Móvil: carrusel deslizable.
+ * Escritorio: paneles en arco que se expanden al pasar el mouse. Móvil: carrusel con flechas a los lados.
  */
 export function HomeCategorias({ categorias }: { categorias: HomeCategoria[] }) {
+  const carrusel = useRef<HTMLUListElement>(null);
   if (categorias.length < 2) return null;
 
   return (
@@ -38,7 +43,8 @@ export function HomeCategorias({ categorias }: { categorias: HomeCategoria[] }) 
           }
         />
 
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 lg:mx-0 lg:h-[36rem] lg:overflow-visible lg:px-0">
+        <div className="relative">
+        <ul ref={carrusel} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 lg:mx-0 lg:h-[36rem] lg:overflow-visible lg:px-0">
           {categorias.map((cat) => (
             <li
               key={cat.nombre}
@@ -71,6 +77,8 @@ export function HomeCategorias({ categorias }: { categorias: HomeCategoria[] }) 
             </li>
           ))}
         </ul>
+        <FlechasCarrusel scrollRef={carrusel} etiqueta="categorías" className="lg:hidden" />
+        </div>
       </div>
     </section>
   );

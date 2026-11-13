@@ -45,6 +45,9 @@ if (process.env.NEXT_PUBLIC_SITE_URL) {
 }
 
 const nextConfig: NextConfig = {
+  // Solo para `npm run dev`: permite abrir el servidor de desarrollo desde el celular en la misma
+  // red Wi-Fi (http://<IP-del-PC>:3000). No tiene efecto en el build ni en producción.
+  allowedDevOrigins: ['192.168.0.198', '192.168.*.*'],
   images: {
     remotePatterns,
     localPatterns: [

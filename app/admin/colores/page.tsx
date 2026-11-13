@@ -292,7 +292,7 @@ export default function GestionColoresPage() {
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="text-2xl font-black font-playfair italic uppercase leading-tight">
+              <h1 className="text-2xl font-black font-display uppercase leading-tight">
                 Gestión de Colores
               </h1>
               <p className="text-xs opacity-40 font-bold uppercase tracking-widest mt-0.5">
@@ -335,7 +335,7 @@ export default function GestionColoresPage() {
                       className="w-14 h-14 rounded-xl shadow-md border-4 border-white ring-2 ring-[#4a1d44]/10 shrink-0"
                       style={{ backgroundColor: hexParaPicker(form.hex, EMPTY_FORM.hex) }}
                     />
-                    <p className="text-[10px] font-bold text-[#4a1d44]/50 leading-snug max-w-[11rem]">
+                    <p className="text-[12px] font-bold text-[#4a1d44]/50 leading-snug max-w-[11rem]">
                       Arrastra en el cuadro y en la franja de colores para afinar el tono.
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function GestionColoresPage() {
                     onChange={(e) => setForm((f) => ({ ...f, hex: e.target.value }))}
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                   />
-                  <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-40 mt-1">
+                  <p className="text-center text-[12px] font-black uppercase tracking-widest opacity-40 mt-1">
                     Elegir color
                   </p>
                 </label>
@@ -540,7 +540,7 @@ export default function GestionColoresPage() {
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
                 <AlertTriangle size={32} />
               </div>
-              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-playfair uppercase italic">
+              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-display uppercase">
                 Confirmar acción
               </h2>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">

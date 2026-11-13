@@ -9,6 +9,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase';
+import { EtiquetaSoloCatalogo } from '@/components/admin/SoloCatalogo';
 import Link from 'next/link';
 import { ArrowLeft, Package, Eye, EyeOff, Loader2, Plus, Edit3, Search, X, Trash2, AlertTriangle, ChevronDown, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -28,6 +29,8 @@ type Producto = {
   imagenes_urls?: string[];
   imagenes_locales?: { thumb: string; detail: string }[] | null;
   activo: boolean;
+  /** Solo sale en el catálogo por tallas (columna nueva; puede no existir) */
+  solo_catalogo?: boolean;
 };
 
 export default function GestionProductosPage() {
@@ -243,7 +246,7 @@ export default function GestionProductosPage() {
             <Link href="/admin" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10 text-[#4a1d44] hover:bg-[#f2e1d9] transition-colors">
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-2xl font-black font-playfair text-[#4a1d44]">Inventario</h1>
+            <h1 className="text-2xl font-black font-display text-[#4a1d44]">Inventario</h1>
             <div className="w-10" />
           </div>
 
@@ -268,7 +271,7 @@ export default function GestionProductosPage() {
               <select 
                 value={filtroStock} 
                 onChange={(e) => setFiltroStock(e.target.value as any)}
-                className="w-full h-full bg-white border border-[#4a1d44]/5 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-[10px] uppercase tracking-widest text-[#4a1d44] cursor-pointer appearance-none hover:border-[#4a1d44]/10 transition-colors"
+                className="w-full h-full bg-white border border-[#4a1d44]/5 py-4 px-6 rounded-2xl shadow-sm outline-none font-bold text-[12px] uppercase tracking-widest text-[#4a1d44] cursor-pointer appearance-none hover:border-[#4a1d44]/10 transition-colors"
               >
                 <option value="todos">Todos los productos</option>
                 <option value="disponibles">En existencia</option>
@@ -280,7 +283,7 @@ export default function GestionProductosPage() {
             </div>
           </div>
 
-          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-3 bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#5c2454] transition-all active:scale-[0.98] mt-2">
+          <Link href="/admin/productos/nuevo" className="w-full flex items-center justify-center gap-3 bg-[#4a1d44] text-white py-5 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#5c2454] transition-all active:scale-[0.98] mt-2">
             <Plus size={18} /> Añadir nueva prenda
           </Link>
         </header>
@@ -324,7 +327,7 @@ export default function GestionProductosPage() {
                       />
                       {producto.stock <= 0 && (
                         <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
-                          <div className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                          <div className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
                             SIN STOCK
                           </div>
                         </div>
@@ -334,7 +337,7 @@ export default function GestionProductosPage() {
                       <span className="font-bold text-[#4a1d44] leading-snug line-clamp-2 sm:line-clamp-3 break-words">
                         {producto.nombre}
                       </span>
-                      <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full max-w-full truncate mt-1.5">
+                      <span className="inline-block text-[12px] font-black uppercase tracking-widest text-[#4a1d44]/40 bg-[#f2e1d9] px-2 py-0.5 rounded-full max-w-full truncate mt-1.5">
                         {nombreCategoria}
                       </span>
                     </div>
@@ -344,13 +347,13 @@ export default function GestionProductosPage() {
                   <div className="flex w-full flex-col gap-3 pt-3 border-t border-[#4a1d44]/5 items-center md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-4 md:gap-y-2">
                     <div className="flex items-start justify-center gap-6 md:gap-8 shrink-0">
                       <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
-                        <span className="text-[9px] uppercase font-bold text-gray-400">Precio</span>
+                        <span className="text-[12px] uppercase font-bold text-gray-400">Precio</span>
                         <span className="font-black text-[#4a1d44] text-sm tabular-nums">
                           ${Number(producto.precio).toLocaleString('es-CO')}
                         </span>
                       </div>
                       <div className="flex flex-col items-center md:items-start min-w-[4.5rem]">
-                        <span className="text-[9px] uppercase font-bold text-gray-400">Stock</span>
+                        <span className="text-[12px] uppercase font-bold text-gray-400">Stock</span>
                         <span className={`font-bold text-sm tabular-nums ${producto.stock > 0 ? 'text-green-600' : 'text-red-400'}`}>
                           {producto.stock} uds.
                         </span>
@@ -358,13 +361,17 @@ export default function GestionProductosPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 md:justify-end md:ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => toggleActivo(producto.id, producto.activo)}
-                        className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 py-2.5 px-4 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
-                      >
-                        {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
-                      </button>
+                      {producto.solo_catalogo ? (
+                        <EtiquetaSoloCatalogo />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleActivo(producto.id, producto.activo)}
+                          className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 py-2.5 px-4 rounded-2xl text-xs font-bold transition-all ${producto.activo ? 'bg-[#4a1d44] text-white shadow-md' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+                        >
+                          {producto.activo ? <><Eye size={16} /> Visible</> : <><EyeOff size={16} /> Oculto</>}
+                        </button>
+                      )}
 
                       <Link
                         href={`/admin/productos/editar/${producto.id}`}
@@ -427,7 +434,7 @@ export default function GestionProductosPage() {
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
                 <AlertTriangle size={32} />
               </div>
-              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-playfair uppercase italic">Confirmar accion</h2>
+              <h2 className="text-xl font-black text-[#4a1d44] mb-2 font-display uppercase">Confirmar accion</h2>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">
                 ¿Deseas eliminar permanentemente <span className="font-bold text-[#4a1d44]">"{productoAEliminar?.nombre}"</span>? Esta accion no se puede deshacer.
               </p>

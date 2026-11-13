@@ -14,6 +14,9 @@ import {
   ArrowUp,
 } from "lucide-react";
 import ProductoCard from "@/components/ProductoCard";
+import { HomeCloud } from "@/components/home/HomeCloud";
+import { CieloRosa } from "@/components/ui/CieloRosa";
+import { LogoMarca } from "@/components/ui/LogoMarca";
 import type {
   ProductoCatalogoGrupo,
   ProductoCatalogoVariante,
@@ -263,48 +266,57 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
 
   if (isLoading && productos.length === 0) return <CatalogoSkeleton />;
 
+  const hayFiltrosActivos =
+    !!busquedaLive.trim() ||
+    categoriaSeleccionada !== "Todas" ||
+    colorSeleccionado !== "Todos" ||
+    tallaSeleccionada !== "Todas" ||
+    mostrarAgotados;
+
+  const chip = (activo: boolean) =>
+    `rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+      activo ? "bg-ink text-white" : "bg-cream text-ink/75 hover:bg-brand-accent/60 hover:text-ink"
+    }`;
+
+  const tituloFiltro =
+    "flex w-full items-center justify-between py-1 text-base font-semibold text-ink transition-colors hover:text-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 text-[#4a1d44] min-h-screen relative">
+    <main className="relative min-h-screen font-display text-ink">
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-8 right-8 z-50 p-4 bg-[#4a1d44] text-white rounded-full shadow-2xl transition-all hover:scale-110 active:scale-90"
+          aria-label="Volver arriba"
+          className="fixed bottom-8 right-8 z-50 grid h-12 w-12 place-items-center rounded-full bg-ink text-white shadow-2xl shadow-ink/30 transition-transform hover:-translate-y-0.5 active:scale-95"
         >
           <ArrowUp size={20} />
         </button>
       )}
 
-      <header className="text-center mb-16">
-        <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[#4a1d44]/20 mb-4 block">
-          Colecciones de Lujo
-        </span>
-        <h1 className="text-5xl md:text-7xl font-black font-playfair uppercase italic leading-none">
-          Catálogo Soft
-        </h1>
-        <div className="h-[2px] w-16 bg-[#4a1d44]/10 mx-auto mt-8" />
+      {/* Encabezado: el mismo cielo rosa del hero, con la palabra grande y nubes al pie */}
+      <header className="px-2 sm:px-3">
+        <CieloRosa banco="top-[78%]" className="px-6 pb-28 pt-14 text-center md:pb-36 md:pt-20">
+          <LogoMarca className="relative mb-4" />
+          <p className="relative text-sm font-semibold text-brand-dark">Colección Soft Lingerie</p>
+          <h1 className="text-wordmark relative mx-auto -mb-[0.16em] mt-2 w-max max-w-full px-[0.12em] pb-[0.16em] text-[clamp(3.75rem,13vw,10rem)] font-extrabold leading-[0.85] tracking-[-0.06em]">
+            Catálogo
+          </h1>
+          <p className="relative mt-4 font-accent text-[clamp(0.95rem,1.6vw,1.25rem)] font-semibold uppercase tracking-[0.32em] text-ink">
+            {productosFinales.length} diseños disponibles
+          </p>
+        </CieloRosa>
       </header>
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white/40 p-6 rounded-[2.5rem] border border-[#4a1d44]/5 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-[#fdf8f6] rounded-2xl">
-            <SlidersHorizontal size={18} className="opacity-40" />
-          </div>
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-widest block opacity-30">
-              Disponibilidad
-            </span>
-            <span className="text-xs font-black uppercase tracking-widest">
-              {productosFinales.length} Diseños Disponibles
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-grow md:min-w-[280px]">
+      <div className="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">
+        {/* Barra de búsqueda y orden */}
+        <div className="relative z-10 -mt-8 mb-10 flex flex-col gap-3 rounded-[1.75rem] bg-white p-3 shadow-xl shadow-ink/10 sm:flex-row sm:items-center md:-mt-10 md:mb-14">
+          <label className="relative flex-1">
+            <span className="sr-only">Buscar en el catálogo</span>
+            <Search size={18} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-ink/40" />
             <input
               type="text"
-              placeholder="Buscar..."
-              className="w-full bg-white py-4 pl-6 pr-14 rounded-2xl outline-none text-xs font-bold border border-[#4a1d44]/5 focus:border-[#4a1d44]/20 transition-all shadow-sm"
+              placeholder="Buscar conjuntos, bodies, babydolls…"
+              className="w-full rounded-full bg-cream py-3.5 pl-12 pr-5 text-[15px] font-medium text-ink outline-none transition placeholder:text-ink/40 focus:bg-white focus:ring-2 focus:ring-brand-primary"
               value={busquedaLive}
               onChange={(e) => {
                 const v = e.target.value;
@@ -312,219 +324,215 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
                 patchFiltros({ q: v });
               }}
             />
-            <Search size={18} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20" />
-          </div>
+          </label>
 
-          <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-2xl border border-[#4a1d44]/5 shadow-sm">
-            <ArrowUpDown size={14} className="opacity-30" />
+          <label className="flex items-center gap-2 rounded-full bg-cream px-5 py-3.5">
+            <ArrowUpDown size={16} className="text-ink/45" aria-hidden />
+            <span className="sr-only">Ordenar por</span>
             <select
               value={ordenarPor}
               onChange={(e) => patchFiltros({ ordenarPor: e.target.value })}
-              className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer"
+              className="cursor-pointer bg-transparent text-[15px] font-semibold text-ink outline-none"
             >
               <option value="novedades">Novedades</option>
-              <option value="precio-menor">Menor Precio</option>
-              <option value="precio-mayor">Mayor Precio</option>
+              <option value="precio-menor">Menor precio</option>
+              <option value="precio-mayor">Mayor precio</option>
             </select>
-          </div>
+          </label>
         </div>
-      </div>
 
-      <div className="flex flex-col lg:flex-row gap-10 items-start relative mb-24">
-        <aside className="w-full lg:w-[260px] lg:sticky lg:top-24 space-y-6">
-          <div className="bg-white rounded-[2.5rem] border border-[#4a1d44]/10 p-8 shadow-sm">
-            <div className="mb-10">
-              <button
-                onClick={() => setIsCatFilterOpen(!isCatFilterOpen)}
-                className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all"
-              >
-                Categoría <ChevronDown size={14} className={isCatFilterOpen ? "rotate-180" : ""} />
-              </button>
-              {isCatFilterOpen && (
-                <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <button
-                    onClick={() => patchFiltros({ categoriaSeleccionada: "Todas" })}
-                    className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === "Todas" ? "bg-[#4a1d44] text-white font-bold" : "hover:bg-[#fdf8f6]"}`}
-                  >
-                    Ver Todo
-                  </button>
-                  {categoriasDisponibles.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => patchFiltros({ categoriaSeleccionada: cat })}
-                      className={`text-left px-4 py-2.5 rounded-xl text-xs transition-all ${categoriaSeleccionada === cat ? "bg-[#4a1d44] text-white font-bold" : "hover:bg-[#fdf8f6]"}`}
-                    >
-                      {cat}
+        <div className="relative mb-24 flex flex-col items-start gap-8 lg:flex-row lg:gap-10">
+          {/* Filtros */}
+          <aside className="w-full lg:sticky lg:top-28 lg:w-[270px]">
+            <div className="rounded-[1.75rem] bg-white p-6 shadow-sm ring-1 ring-ink/5">
+              <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-brand-dark">
+                <SlidersHorizontal size={16} aria-hidden /> Filtrar
+              </div>
+
+              <div className="border-t border-ink/5 py-4">
+                <button onClick={() => setIsCatFilterOpen(!isCatFilterOpen)} aria-expanded={isCatFilterOpen} className={tituloFiltro}>
+                  Categoría <ChevronDown size={18} className={`transition-transform duration-300 ${isCatFilterOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isCatFilterOpen && (
+                  <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <button onClick={() => patchFiltros({ categoriaSeleccionada: "Todas" })} className={chip(categoriaSeleccionada === "Todas")}>
+                      Ver todo
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                    {categoriasDisponibles.map((cat) => (
+                      <button key={cat} onClick={() => patchFiltros({ categoriaSeleccionada: cat })} className={chip(categoriaSeleccionada === cat)}>
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <div className="mb-10">
-              <button
-                onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)}
-                className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all"
-              >
-                Talla <ChevronDown size={14} className={isTallaFilterOpen ? "rotate-180" : ""} />
-              </button>
-              {isTallaFilterOpen && (
-                <div className="grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-                  <button
-                    onClick={() => patchFiltros({ tallaSeleccionada: "Todas" })}
-                    className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === "Todas" ? "bg-[#4a1d44] text-white border-[#4a1d44]" : "bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30"}`}
-                  >
-                    ALL
-                  </button>
-                  {tallasDisponibles.map((t) => (
-                    <button
-                      key={t.nombre}
-                      onClick={() => patchFiltros({ tallaSeleccionada: t.nombre })}
-                      className={`py-3 rounded-xl text-[9px] font-black border transition-all ${tallaSeleccionada === t.nombre ? "bg-[#4a1d44] text-white border-[#4a1d44]" : "bg-white border-[#4a1d44]/10 hover:border-[#4a1d44]/30"}`}
-                    >
-                      {t.nombre}
+              <div className="border-t border-ink/5 py-4">
+                <button onClick={() => setIsTallaFilterOpen(!isTallaFilterOpen)} aria-expanded={isTallaFilterOpen} className={tituloFiltro}>
+                  Talla <ChevronDown size={18} className={`transition-transform duration-300 ${isTallaFilterOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isTallaFilterOpen && (
+                  <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <button onClick={() => patchFiltros({ tallaSeleccionada: "Todas" })} className={chip(tallaSeleccionada === "Todas")}>
+                      Todas
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                    {tallasDisponibles.map((t) => (
+                      <button key={t.nombre} onClick={() => patchFiltros({ tallaSeleccionada: t.nombre })} className={chip(tallaSeleccionada === t.nombre)}>
+                        {t.nombre}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <div className="mb-6">
-              <button
-                onClick={() => setIsColorFilterOpen(!isColorFilterOpen)}
-                className="w-full flex justify-between items-center text-[12px] font-black uppercase tracking-widest mb-6 opacity-60 hover:opacity-100 transition-all"
-              >
-                Color <ChevronDown size={14} className={isColorFilterOpen ? "rotate-180" : ""} />
-              </button>
-              {isColorFilterOpen && (
-                <div className="grid grid-cols-4 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-500">
-                  <button
-                    onClick={() => patchFiltros({ colorSeleccionado: "Todos" })}
-                    className={`w-10 h-10 rounded-full border text-[8px] font-black flex items-center justify-center border-[#4a1d44]/10 ${colorSeleccionado === "Todos" ? "bg-[#4a1d44] text-white" : "bg-white"}`}
-                  >
-                    TODO
-                  </button>
-                  {coloresDisponibles.map((col) => {
-                    let colorHex = col.hex;
-                    const nombreBajo = col.nombre.toLowerCase();
-                    if (nombreBajo.includes("vino tinto")) colorHex = "#6B1324";
-                    if (nombreBajo === "amarillo") colorHex = "#FDE047";
-                    if (nombreBajo === "azul celeste") colorHex = "#BAE6FD";
-                    if (nombreBajo === "lila") colorHex = "#D8B4FE";
-                    if (nombreBajo === "amarillo pastel") colorHex = "#FEF9C3";
+              <div className="border-t border-ink/5 py-4">
+                <button onClick={() => setIsColorFilterOpen(!isColorFilterOpen)} aria-expanded={isColorFilterOpen} className={tituloFiltro}>
+                  Color <ChevronDown size={18} className={`transition-transform duration-300 ${isColorFilterOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isColorFilterOpen && (
+                  <div className="mt-4 flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <button onClick={() => patchFiltros({ colorSeleccionado: "Todos" })} className={chip(colorSeleccionado === "Todos")}>
+                      Todos
+                    </button>
+                    {coloresDisponibles.map((col) => {
+                      let colorHex = col.hex;
+                      const nombreBajo = col.nombre.toLowerCase();
+                      if (nombreBajo.includes("vino tinto")) colorHex = "#6B1324";
+                      if (nombreBajo === "amarillo") colorHex = "#FDE047";
+                      if (nombreBajo === "azul celeste") colorHex = "#BAE6FD";
+                      if (nombreBajo === "lila") colorHex = "#D8B4FE";
+                      if (nombreBajo === "amarillo pastel") colorHex = "#FEF9C3";
 
-                    return (
-                      <button
-                        key={col.nombre}
-                        title={col.nombre}
-                        onClick={() => patchFiltros({ colorSeleccionado: col.nombre })}
-                        className={`w-10 h-10 rounded-full border transition-all hover:scale-110 ${colorSeleccionado === col.nombre ? "border-[#4a1d44] ring-2 ring-offset-2 ring-[#4a1d44]/20 scale-110" : "border-black/10"}`}
-                        style={{ backgroundColor: colorHex }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      return (
+                        <button
+                          key={col.nombre}
+                          title={col.nombre}
+                          aria-label={col.nombre}
+                          onClick={() => patchFiltros({ colorSeleccionado: col.nombre })}
+                          className={`h-9 w-9 rounded-full border transition-transform hover:scale-110 ${colorSeleccionado === col.nombre ? "scale-110 border-ink ring-2 ring-brand-primary ring-offset-2" : "border-ink/10"}`}
+                          style={{ backgroundColor: colorHex }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
-            <div className="pt-6 border-t border-[#4a1d44]/5 mt-2">
-              <button
-                type="button"
-                onClick={() => patchFiltros({ mostrarAgotados: !mostrarAgotados })}
-                className="w-full flex items-center justify-between gap-3 group"
-              >
-                <span className="text-[12px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all">
-                  Ver agotados
-                </span>
-                <div
-                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${mostrarAgotados ? "bg-[#4a1d44]" : "bg-[#4a1d44]/10"}`}
+              <div className="border-t border-ink/5 pt-4">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={mostrarAgotados}
+                  onClick={() => patchFiltros({ mostrarAgotados: !mostrarAgotados })}
+                  className="group flex w-full items-center justify-between gap-3"
                 >
-                  <div
-                    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${mostrarAgotados ? "left-5" : "left-0.5"}`}
-                  />
-                </div>
-              </button>
-            </div>
+                  <span className="text-base font-semibold text-ink">Ver agotados</span>
+                  <span className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${mostrarAgotados ? "bg-ink" : "bg-brand-primary/50"}`}>
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-[left] duration-300 ${mostrarAgotados ? "left-[1.375rem]" : "left-0.5"}`} />
+                  </span>
+                </button>
+              </div>
 
-            {(busquedaLive.trim() ||
-              categoriaSeleccionada !== "Todas" ||
-              colorSeleccionado !== "Todos" ||
-              tallaSeleccionada !== "Todas" ||
-              mostrarAgotados) && (
-              <button
-                onClick={() => router.replace(pathname, { scroll: false })}
-                className="mt-6 w-full py-4 text-[12px] font-black uppercase tracking-widest bg-red-50 text-red-400 border border-red-100 rounded-2xl hover:bg-red-100 transition-all"
-              >
-                Limpiar
-              </button>
+              {hayFiltrosActivos && (
+                <button
+                  onClick={() => router.replace(pathname, { scroll: false })}
+                  className="mt-6 w-full rounded-full border border-ink/20 py-3 text-sm font-semibold text-ink transition-colors hover:bg-ink hover:text-white"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          </aside>
+
+          {/* Prendas */}
+          <div className="w-full flex-1">
+            {productosFinales.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-[1.75rem] bg-white px-6 py-32 text-center">
+                <Heart size={40} className="mb-5 text-brand-primary" aria-hidden />
+                <p className="text-xl font-semibold text-ink">No encontramos prendas con esos filtros</p>
+                <p className="mt-2 text-ink/60">Prueba con otra talla, color o categoría.</p>
+                {hayFiltrosActivos && (
+                  <button
+                    onClick={() => router.replace(pathname, { scroll: false })}
+                    className="mt-6 rounded-full bg-ink px-7 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-dark"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12 lg:grid-cols-3 2xl:grid-cols-4">
+                  {productosFinales.slice(0, productosVisibles).map((prod) => (
+                    <ProductoCard
+                      key={prod.id}
+                      producto={prod}
+                      colorFiltro={colorSeleccionado}
+                      priority={productosFinales.indexOf(prod) < 4}
+                      returnCatalogQuery={searchParams.toString() || undefined}
+                    />
+                  ))}
+                </div>
+                {productosVisibles < productosFinales.length && (
+                  <div className="mt-16 flex flex-col items-center gap-3">
+                    <p className="text-sm text-ink/55">
+                      Viendo {Math.min(productosVisibles, productosFinales.length)} de {productosFinales.length}
+                    </p>
+                    <button
+                      onClick={() => setProductosVisibles((prev) => prev + 12)}
+                      className="rounded-full bg-ink px-9 py-4 text-sm font-bold text-white shadow-xl shadow-ink/20 transition-colors hover:bg-brand-dark active:scale-[0.98]"
+                    >
+                      Ver más diseños
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
-        </aside>
+        </div>
 
-        <div className="flex-1 w-full">
-          {productosFinales.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-40 opacity-40">
-              <Heart size={44} className="mb-5" />
-              <p className="text-[10px] font-black uppercase tracking-widest">No hay resultados</p>
+        {/* Asesoría: mismo cierre vino con nubes que la home */}
+        <section className="relative mb-4 overflow-hidden rounded-[2rem] bg-ink px-6 pb-32 pt-14 text-white md:rounded-[3rem] md:px-16 md:pb-44 md:pt-20">
+          <div className="relative z-[1] flex flex-col items-center gap-8 text-center md:flex-row md:justify-between md:text-left">
+            <div className="max-w-xl">
+              <p className="text-sm font-semibold text-brand-accent">Asesoría personalizada</p>
+              <h2 className="mt-3 text-4xl font-bold leading-[0.95] tracking-[-0.04em] md:text-6xl">¿Dudas con tu talla?</h2>
+              <p className="mt-4 text-white/70">Te acompañamos por WhatsApp a encontrar la prenda perfecta.</p>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:gap-x-6 md:gap-y-12 lg:gap-x-7 lg:gap-y-14 xl:gap-x-8 xl:gap-y-16">
-                {productosFinales.slice(0, productosVisibles).map((prod) => (
-                  <ProductoCard
-                    key={prod.id}
-                    producto={prod}
-                    colorFiltro={colorSeleccionado}
-                    priority={productosFinales.indexOf(prod) < 4}
-                    returnCatalogQuery={searchParams.toString() || undefined}
-                  />
-                ))}
-              </div>
-              {productosVisibles < productosFinales.length && (
-                <div className="mt-20 flex justify-center">
-                  <button
-                    onClick={() => setProductosVisibles((prev) => prev + 12)}
-                    className="px-10 py-4 bg-white border border-[#4a1d44]/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#4a1d44] hover:text-white transition-all shadow-sm"
-                  >
-                    Ver más diseños
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            <a
+              href={`https://wa.me/${numeroWhatsApp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[56px] shrink-0 items-center gap-3 rounded-full bg-brand-accent px-9 text-sm font-bold text-ink transition-colors hover:bg-white"
+            >
+              <MessageCircle size={18} aria-hidden /> Chatear ahora
+            </a>
+          </div>
+          <HomeCloud sizes="(max-width: 1280px) 100vw, 1280px" className="inset-x-[-30%] -bottom-[18%] h-[50%] md:inset-x-[-6%] md:-bottom-[30%] md:h-[70%]" />
+        </section>
       </div>
-
-      <section className="bg-[#4a1d44] text-white p-10 md:p-16 rounded-[3.5rem] flex flex-col md:flex-row items-center justify-between gap-10">
-        <div className="max-w-xl">
-          <h2 className="text-3xl md:text-5xl font-black font-playfair italic mb-4">¿Dudas con tu talla?</h2>
-          <p className="opacity-70">Asesoría personalizada por WhatsApp.</p>
-        </div>
-        <a
-          href={`https://wa.me/${numeroWhatsApp}`}
-          target="_blank"
-          className="flex items-center gap-4 bg-white text-[#4a1d44] px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#f2e1d9] transition-all"
-        >
-          <MessageCircle /> Chatear ahora
-        </a>
-      </section>
     </main>
   );
 }
 
 export function CatalogoSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 animate-pulse">
-      <div className="h-16 w-80 bg-gray-100 rounded-full mx-auto mb-20" />
-      <div className="flex flex-col lg:flex-row gap-12">
-        <div className="w-full lg:w-[260px] h-96 bg-gray-50 rounded-[2.5rem]" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-10 flex-1">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="space-y-6">
-              <div className="aspect-[3/4] bg-gray-100 rounded-[2.5rem]" />
-              <div className="h-4 w-3/4 bg-gray-100 rounded-lg" />
-            </div>
-          ))}
+    <div className="animate-pulse">
+      <div className="px-2 sm:px-3">
+        <div className="h-[22rem] rounded-[1.75rem] bg-brand-primary/40 md:h-[26rem] md:rounded-[2.75rem]" />
+      </div>
+      <div className="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">
+        <div className="-mt-10 mb-14 h-[4.5rem] rounded-[1.75rem] bg-white" />
+        <div className="flex flex-col gap-10 lg:flex-row">
+          <div className="h-96 w-full rounded-[1.75rem] bg-white lg:w-[270px]" />
+          <div className="grid flex-1 grid-cols-2 gap-6 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="space-y-4">
+                <div className="aspect-[4/5] rounded-[1.75rem] bg-blush/70" />
+                <div className="h-4 w-3/4 rounded-full bg-blush/70" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

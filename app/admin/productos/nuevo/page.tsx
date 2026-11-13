@@ -7,6 +7,10 @@ import { Upload, Loader2, Tag, ArrowLeft, X, Palette, Hash, DollarSign, List, Ru
 import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { slugify } from '@/app/lib/utils';
+import CrearCategoriaInline, { agregarCategoria } from '@/components/admin/CrearCategoriaInline';
+import { camposSoloCatalogo, SoloCatalogoSelector, useSoloCatalogoDisponible } from '@/components/admin/SoloCatalogo';
+
+/** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
 
 export default function NuevoProductoPage() {
   const router = useRouter();
@@ -30,7 +34,9 @@ export default function NuevoProductoPage() {
     categoria: '',
     grupo_id: '',
     destacado_home: false,
+    solo_catalogo: false,
   });
+  const soloCatalogoDisponible = useSoloCatalogoDisponible();
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -69,6 +75,7 @@ export default function NuevoProductoPage() {
       categoria: '',
       grupo_id: '',
       destacado_home: false,
+      solo_catalogo: false,
     });
     setArchivosImagenes([]);
     setPrevisualizaciones([]);
@@ -218,6 +225,7 @@ const handleTallaToggle = (id: string) => {
           categoria: formData.categoria,
           grupo_id: formData.grupo_id.trim() || null,
           destacado_home: formData.destacado_home,
+          ...camposSoloCatalogo({ disponible: soloCatalogoDisponible, solo: formData.solo_catalogo }),
           imagenes_urls: [],
           imagenes_locales: [],
         }])
@@ -325,15 +333,15 @@ const handleTallaToggle = (id: string) => {
           <div className="p-2 bg-white rounded-full shadow-sm group-hover:shadow-md transition-all">
             <ArrowLeft size={18} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Volver al Panel</span>
+          <span className="text-[12px] font-black uppercase tracking-widest opacity-50">Volver al Panel</span>
         </button>
 
         <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-[#4a1d44]/5">
-          <h1 className="text-3xl font-black font-playfair mb-8 text-[#4a1d44]">Nuevo Producto</h1>
+          <h1 className="text-3xl font-black font-display mb-8 text-[#4a1d44]">Nuevo Producto</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Fotos del Producto</label>
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Fotos del Producto</label>
               <div className="grid grid-cols-3 gap-4">
                 {previsualizaciones.map((url, i) => (
                   <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-[#4a1d44]/10">
@@ -345,7 +353,7 @@ const handleTallaToggle = (id: string) => {
                 ))}
                 <label className="aspect-square rounded-2xl border-2 border-dashed border-[#4a1d44]/20 flex flex-col items-center justify-center cursor-pointer hover:bg-[#fdf8f6] transition-colors">
                   <Upload size={24} className="opacity-30" />
-                  <span className="text-[9px] font-bold mt-2 uppercase">Añadir</span>
+                  <span className="text-[12px] font-bold mt-2 uppercase">Añadir</span>
                   <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                 </label>
               </div>
@@ -353,7 +361,7 @@ const handleTallaToggle = (id: string) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de Grupo (Agrupar colores)</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de Grupo (Agrupar colores)</label>
                 <div className="relative">
                   <Hash className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <input 
@@ -367,7 +375,7 @@ const handleTallaToggle = (id: string) => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
+                <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
                 <div className="relative">
                   <Palette className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <select 
@@ -385,8 +393,17 @@ const handleTallaToggle = (id: string) => {
               </div>
             </div>
 
+            {soloCatalogoDisponible && (
+              <SoloCatalogoSelector
+                solo={formData.solo_catalogo}
+                onChange={(solo) => setFormData((prev) => ({ ...prev, solo_catalogo: solo }))}
+              />
+            )}
+
+            {/* Destacar en la home solo aplica a lo que se vende en la tienda */}
+            {!formData.solo_catalogo && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">
                 ¿Producto destacado?
               </label>
               <button
@@ -413,9 +430,10 @@ const handleTallaToggle = (id: string) => {
                 </span>
               </button>
             </div>
+            )}
 
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
                 <Ruler size={14} /> Gestión de Inventario por Talla
               </label>
               
@@ -438,7 +456,7 @@ const handleTallaToggle = (id: string) => {
                       {isSelected && (
                         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[#4a1d44]/10 shadow-sm">
                           <Hash size={12} className="opacity-30" />
-                          <span className="text-[10px] font-bold uppercase opacity-40">Stock:</span>
+                          <span className="text-[12px] font-bold uppercase opacity-40">Stock:</span>
                           <input
                             type="number"
                             min="0"
@@ -455,7 +473,7 @@ const handleTallaToggle = (id: string) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nombre del Producto</label>
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Nombre del Producto</label>
               <div className="relative">
                 <Tag className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                 <input 
@@ -471,7 +489,7 @@ const handleTallaToggle = (id: string) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Precio</label>
+                <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Precio</label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <input 
@@ -486,7 +504,7 @@ const handleTallaToggle = (id: string) => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Categoría</label>
+                <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Categoría</label>
                 <div className="relative">
                   <List className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <select 
@@ -501,11 +519,17 @@ const handleTallaToggle = (id: string) => {
                     ))}
                   </select>
                 </div>
+                <CrearCategoriaInline
+                  onCreada={(c) => {
+                    setCategoriasDB((prev) => agregarCategoria(prev, c));
+                    setFormData((prev) => ({ ...prev, categoria: c.nombre }));
+                  }}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Descripción</label>
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Descripción</label>
               <textarea 
                 required 
                 className="w-full px-4 py-3.5 bg-[#fdf8f6] rounded-2xl outline-none text-sm min-h-[120px] resize-none border border-transparent focus:border-[#4a1d44]/10 transition-colors" 

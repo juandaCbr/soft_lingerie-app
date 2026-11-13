@@ -9,6 +9,10 @@ import toast from 'react-hot-toast';
 import { uploadConReintento } from '@/app/lib/upload-with-retry';
 import { normalizeImagenesLocales } from '@/app/lib/image-helper';
 import { slugify } from '@/app/lib/utils';
+import CrearCategoriaInline, { agregarCategoria } from '@/components/admin/CrearCategoriaInline';
+import { camposSoloCatalogo, SoloCatalogoSelector } from '@/components/admin/SoloCatalogo';
+
+/** Agrega una categoría recién creada a la lista del selector, en orden alfabético */
 
 export default function EditarProductoPage() {
   const params = useParams();
@@ -40,6 +44,10 @@ export default function EditarProductoPage() {
   const [coloresDB, setColoresDB] = useState<any[]>([]);
   const [colorSeleccionado, setColorSeleccionado] = useState<string>("");
   const [destacadoHome, setDestacadoHome] = useState(false);
+  // "Solo catálogo por tallas": disponible solo si la columna ya existe en la BD
+  const [soloCatalogoDisponible, setSoloCatalogoDisponible] = useState(false);
+  const [soloCatalogo, setSoloCatalogo] = useState(false);
+  const [soloCatalogoAntes, setSoloCatalogoAntes] = useState(false);
 
   const cargarProducto = useCallback(async () => {
     if (!idProducto) {
@@ -76,6 +84,9 @@ export default function EditarProductoPage() {
         setRotasLocales(new Set());
         setGrupoId(data.grupo_id != null && data.grupo_id !== '' ? String(data.grupo_id) : '');
         setDestacadoHome(data.destacado_home === true);
+        setSoloCatalogoDisponible('solo_catalogo' in data);
+        setSoloCatalogo(data.solo_catalogo === true);
+        setSoloCatalogoAntes(data.solo_catalogo === true);
         
         if (data.categoria && !currentCats.includes(data.categoria)) {
           setEsCategoriaManual(true);
@@ -290,6 +301,7 @@ export default function EditarProductoPage() {
         descripcion,
         grupo_id: grupoId.trim() || null,
         destacado_home: destacadoHome,
+        ...camposSoloCatalogo({ disponible: soloCatalogoDisponible, solo: soloCatalogo, antes: soloCatalogoAntes }),
         imagenes_urls: listaFinalUrls,
         imagenes_locales: localesMut.length > 0 ? localesMut : null,
       }).eq('id', cleanId);
@@ -425,12 +437,12 @@ export default function EditarProductoPage() {
       <div className="max-w-2xl mx-auto">
         <header className="flex items-center gap-4 mb-8">
           <Link href="/admin/productos" className="p-3 bg-white rounded-2xl shadow-sm border border-[#4a1d44]/10"><ArrowLeft size={20} /></Link>
-          <h1 className="text-2xl font-black font-playfair italic uppercase">Editar Prenda</h1>
+          <h1 className="text-2xl font-black font-display uppercase">Editar Prenda</h1>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5">
-            <h2 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Fotos</h2>
+            <h2 className="text-[12px] font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Fotos</h2>
 
             {/* Banner de advertencia cuando hay imágenes no disponibles en este equipo */}
             {rotasLocales.size > 0 && (
@@ -440,7 +452,7 @@ export default function EditarProductoPage() {
                   <p className="text-xs font-bold text-amber-700">
                     {rotasLocales.size} {rotasLocales.size === 1 ? 'imagen no disponible' : 'imágenes no disponibles'} en este dispositivo
                   </p>
-                  <p className="text-[10px] text-amber-600 mt-0.5">
+                  <p className="text-[12px] text-amber-600 mt-0.5">
                     Elimínalas con la ✕ y sube las fotos nuevamente para que queden guardadas aquí.
                   </p>
                 </div>
@@ -451,7 +463,7 @@ export default function EditarProductoPage() {
                     setImagenesLocales(prev => prev.filter((_, i) => !rotasLocales.has(i)));
                     setRotasLocales(new Set());
                   }}
-                  className="text-[9px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap shrink-0"
+                  className="text-[12px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap shrink-0"
                 >
                   Limpiar rotas
                 </button>
@@ -475,7 +487,7 @@ export default function EditarProductoPage() {
                     />
                     {rota && (
                       <div className="absolute inset-0 flex items-end justify-center pb-2 pointer-events-none rounded-2xl bg-amber-400/10">
-                        <span className="text-[8px] font-black uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-[12px] font-black uppercase tracking-wider bg-amber-500 text-white px-2 py-0.5 rounded-full">
                           No disponible
                         </span>
                       </div>
@@ -519,12 +531,12 @@ export default function EditarProductoPage() {
 
           <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#4a1d44]/5 space-y-6">
             <div>
-              <label className="text-[10px] font-black uppercase opacity-30 ml-2">Nombre del Artículo</label>
+              <label className="text-[12px] font-black uppercase opacity-30 ml-2">Nombre del Artículo</label>
               <input value={nombre} onChange={e => setNombre(e.target.value)} className="w-full bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold mt-1 shadow-inner focus:ring-2 focus:ring-[#4a1d44]/5 transition-all" />
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase opacity-30 ml-2">Precio</label>
+              <label className="text-[12px] font-black uppercase opacity-30 ml-2">Precio</label>
               <input 
                 type="number" 
                 value={precio} 
@@ -536,7 +548,7 @@ export default function EditarProductoPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de grupo (variantes por color)</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-pink-600 ml-2">ID de grupo (variantes por color)</label>
                 <div className="relative">
                   <Hash className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <input
@@ -549,7 +561,7 @@ export default function EditarProductoPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
+                <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">Color</label>
                 <div className="relative">
                   <Palette className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
                   <select
@@ -569,8 +581,12 @@ export default function EditarProductoPage() {
               </div>
             </div>
 
+            {soloCatalogoDisponible && <SoloCatalogoSelector solo={soloCatalogo} onChange={setSoloCatalogo} />}
+
+            {/* Destacar en la home solo aplica a lo que se vende en la tienda */}
+            {!soloCatalogo && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2">
                 ¿Producto destacado?
               </label>
               <button
@@ -595,10 +611,11 @@ export default function EditarProductoPage() {
                 </span>
               </button>
             </div>
+            )}
 
             {/* TALLAS Y STOCKS ESPECÍFICOS */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
+              <label className="text-[12px] font-black uppercase tracking-widest opacity-40 ml-2 flex items-center gap-2">
                 <Ruler size={14} /> Gestión de Inventario por Talla
               </label>
               
@@ -621,7 +638,7 @@ export default function EditarProductoPage() {
                       {isSelected && (
                         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[#4a1d44]/10 shadow-sm">
                           <Hash size={12} className="opacity-30" />
-                          <span className="text-[10px] font-bold uppercase opacity-40">Stock:</span>
+                          <span className="text-[12px] font-bold uppercase opacity-40">Stock:</span>
                           <input
                             type="number"
                             min="0"
@@ -638,7 +655,7 @@ export default function EditarProductoPage() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Tipo de Prenda</label>
+              <label className="text-[12px] font-black uppercase opacity-30 ml-2 tracking-widest">Tipo de Prenda</label>
               {!esCategoriaManual ? (
                 <div className="relative mt-1">
                     <select 
@@ -668,13 +685,21 @@ export default function EditarProductoPage() {
                     onChange={e => setCategoria(e.target.value)}
                     className="flex-1 bg-[#fdf8f6] p-4 rounded-2xl outline-none font-bold shadow-inner"
                   />
-                  <button type="button" onClick={() => { setEsCategoriaManual(false); setCategoria(""); }} className="bg-gray-100 px-5 rounded-2xl font-black text-[10px]">X</button>
+                  <button type="button" onClick={() => { setEsCategoriaManual(false); setCategoria(""); }} className="bg-gray-100 px-5 rounded-2xl font-black text-[12px]">X</button>
                 </div>
+              )}
+              {!esCategoriaManual && (
+                <CrearCategoriaInline
+                  onCreada={(c) => {
+                    setCategoriasDB((prev) => agregarCategoria(prev, c));
+                    setCategoria(c.nombre);
+                  }}
+                />
               )}
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase opacity-30 ml-2 tracking-widest">Descripción / Material</label>
+              <label className="text-[12px] font-black uppercase opacity-30 ml-2 tracking-widest">Descripción / Material</label>
               <textarea 
                 value={descripcion} 
                 onChange={e => setDescripcion(e.target.value)} 

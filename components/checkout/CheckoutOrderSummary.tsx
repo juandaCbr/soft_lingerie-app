@@ -15,9 +15,9 @@ export function CheckoutOrderSummary({
   totalConEnvio,
 }: CheckoutOrderSummaryProps) {
   return (
-    <div className="space-y-8 lg:sticky lg:top-10 h-fit">
-      <h2 className="text-xl font-bold font-playfair uppercase tracking-widest">Tu selección</h2>
-      <div className="bg-white p-8 rounded-[2.5rem] border border-[#4a1d44]/5">
+    <div className="h-fit space-y-5 lg:sticky lg:top-28">
+      <h2 className="text-2xl font-bold tracking-[-0.03em]">Tu selección</h2>
+      <div className="rounded-[2rem] bg-white p-6 ring-1 ring-ink/5 md:p-8">
         <div className="space-y-6 mb-8">
           {cart.map((item) => {
             const imgPrincipal = withSupabaseListThumbnailParams(getProductoImage(item, 0, "thumb"));
@@ -25,20 +25,20 @@ export function CheckoutOrderSummary({
             return (
               <div key={`${item.id}-${item.talla_id ?? ""}`} className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-20 bg-white rounded-2xl overflow-hidden border border-[#4a1d44]/10 shrink-0 shadow-sm">
-                    <img src={imgPrincipal} alt={item.nombre} className="w-full h-full object-cover" />
-                    <div className="absolute top-0 right-0 bg-[#4a1d44] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-bl-xl font-bold">
+                  <div className="relative h-20 w-16 shrink-0 overflow-visible rounded-2xl bg-blush">
+                    <img src={imgPrincipal} alt={item.nombre} className="h-full w-full rounded-2xl object-cover" />
+                    <div className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-ink text-xs font-bold text-white ring-2 ring-white">
                       {item.quantity}
                     </div>
                   </div>
                   <div>
-                    <p className="text-lg font-bold leading-tight text-[#4a1d44]">{item.nombre}</p>
-                    <div className="flex gap-2 mt-1">
-                      <p className="text-[9px] font-black opacity-60 uppercase tracking-widest">
+                    <p className="text-base font-semibold leading-tight text-ink md:text-lg">{item.nombre}</p>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      <p className="text-sm text-ink/60">
                         ${Number(item.precio).toLocaleString("es-CO")} c/u
                       </p>
                       {item.talla && (
-                        <p className="text-[9px] font-black text-pink-600 uppercase tracking-widest">
+                        <p className="text-sm font-semibold text-brand-dark">
                           Talla: {item.talla.nombre}
                         </p>
                       )}
@@ -46,7 +46,7 @@ export function CheckoutOrderSummary({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-base text-[#4a1d44]">
+                  <p className="text-base font-semibold tabular-nums text-ink">
                     ${(item.precio * item.quantity).toLocaleString("es-CO")}
                   </p>
                 </div>
@@ -55,20 +55,20 @@ export function CheckoutOrderSummary({
           })}
         </div>
 
-        <div className="pt-8 border-t-2 border-dashed border-[#4a1d44]/10 space-y-4">
-          <div className="flex justify-between items-center text-sm">
-            <span className="opacity-70">Subtotal</span>
-            <span className="font-bold">${totalPrice.toLocaleString("es-CO")}</span>
+        <div className="space-y-3 border-t border-ink/10 pt-6">
+          <div className="flex items-center justify-between text-[15px]">
+            <span className="text-ink/65">Subtotal</span>
+            <span className="font-semibold tabular-nums">${totalPrice.toLocaleString("es-CO")}</span>
           </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="opacity-70 flex items-center gap-2">Envío</span>
-            <span className="font-bold">${costoEnvio.toLocaleString("es-CO")}</span>
+          <div className="flex items-center justify-between text-[15px]">
+            <span className="flex items-center gap-2 text-ink/65">Envío</span>
+            <span className="font-semibold tabular-nums">${costoEnvio.toLocaleString("es-CO")}</span>
           </div>
-          <div className="pt-4 border-t border-[#4a1d44]/5">
-            <p className="text-[12px] font-black uppercase tracking-[0.2em] opacity-60 mb-2">Total a pagar ahora</p>
+          <div className="mt-2 rounded-[1.5rem] bg-ink p-5 text-white">
+            <p className="mb-1 text-sm font-semibold text-brand-accent">Total a pagar ahora</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-[#4a1d44]">${totalConEnvio.toLocaleString("es-CO")}</span>
-              <span className="text-sm font-black opacity-60 tracking-[0.1em]">COP</span>
+              <span className="text-4xl font-bold tabular-nums tracking-[-0.03em]">${totalConEnvio.toLocaleString("es-CO")}</span>
+              <span className="text-sm font-medium text-white/60">COP</span>
             </div>
           </div>
         </div>

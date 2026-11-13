@@ -39,8 +39,8 @@ export function CieloRosa({
   const nubes = ESQUINAS[variante];
   return (
     <Tag className={`relative isolate overflow-hidden rounded-[1.75rem] bg-cielo md:rounded-[2.75rem] ${className}`}>
-      <HomeCloud fade sizes="20vw" className={nubes.izquierda} />
-      <HomeCloud fade flip sizes="16vw" className={nubes.derecha} />
+      <HomeCloud fade className={nubes.izquierda} />
+      <HomeCloud fade flip className={nubes.derecha} />
       {children}
       <HomeCloudBank className={`inset-x-0 bottom-0 ${banco} ${nubes.banco}`} />
     </Tag>

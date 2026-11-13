@@ -264,9 +264,10 @@ export default function Navbar() {
           src="/images/nube-rosa.webp"
           alt=""
           aria-hidden
-          width={2400}
-          height={1227}
-          sizes="200vw"
+          width={1600}
+          height={818}
+          // Ya optimizada (ver HomeCloud): se sirve tal cual, sin pasar por el optimizador
+          unoptimized
           className="pointer-events-none absolute -bottom-[30%] left-1/2 h-[55%] w-auto max-w-none -translate-x-1/2 opacity-90"
         />
       </div>

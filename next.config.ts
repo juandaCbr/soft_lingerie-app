@@ -49,6 +49,8 @@ const nextConfig: NextConfig = {
   // red Wi-Fi (http://<IP-del-PC>:3000). No tiene efecto en el build ni en producción.
   allowedDevOrigins: ['192.168.0.198', '192.168.*.*'],
   images: {
+    // AVIF primero (pesa ~20-30 % menos que WebP en las fotos de productos); WebP para navegadores viejos
+    formats: ['image/avif', 'image/webp'],
     remotePatterns,
     localPatterns: [
       { pathname: '/images/**', search: '' },

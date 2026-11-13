@@ -508,7 +508,7 @@ export default function CatalogoClient({ rawDataInicial }: CatalogoClientProps) 
               <MessageCircle size={18} aria-hidden /> Chatear ahora
             </a>
           </div>
-          <HomeCloud sizes="(max-width: 1280px) 100vw, 1280px" className="inset-x-[-30%] -bottom-[18%] h-[50%] md:inset-x-[-6%] md:-bottom-[30%] md:h-[70%]" />
+          <HomeCloud className="inset-x-[-30%] -bottom-[18%] h-[50%] md:inset-x-[-6%] md:-bottom-[30%] md:h-[70%]" />
         </section>
       </div>
     </main>

@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { slugify } from './lib/utils'
 import { getSiteUrl } from './lib/site-url'
+import { getTallasDisponibles } from './lib/catalogo-tallas'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,15 +12,18 @@ const supabaseAdmin = createClient(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl()
 
-  // 1. Obtener todos los productos activos para generar sus URLs
-  const { data: productos } = await supabaseAdmin
+  // 1. Obtener todos los productos activos para generar sus URLs.
+  // Ojo: `productos` no tiene columna updated_at; pedirla hacía fallar la consulta y el sitemap
+  // quedaba sin ningún producto. Se usa created_at.
+  const { data: productos, error } = await supabaseAdmin
     .from('productos')
-    .select('id, nombre, updated_at')
+    .select('id, nombre, created_at')
     .eq('activo', true)
+  if (error) console.error('[sitemap] productos:', error.message)
 
   const productUrls = (productos || []).map((prod) => ({
     url: `${baseUrl}/productos/${slugify(prod.nombre)}-${prod.id}`,
-    lastModified: new Date(prod.updated_at || new Date()),
+    lastModified: new Date(prod.created_at || new Date()),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }))
@@ -52,5 +56,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  return [...staticUrls, ...productUrls]
+  // 3. Catálogo por tallas: /tallas y una página por talla con prendas disponibles
+  const tallas = await getTallasDisponibles().catch(() => [])
+  const tallaUrls = [
+    { url: `${baseUrl}/tallas`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.7 },
+    ...tallas.map((t) => ({
+      url: `${baseUrl}/tallas/${t.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.6,
+    })),
+  ]
+
+  return [...staticUrls, ...tallaUrls, ...productUrls]
 }

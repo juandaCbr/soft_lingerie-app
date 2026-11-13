@@ -95,6 +95,13 @@ html.lenis body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* Variante del hero: el mismo blanco que se desvanece, pero más opaco abajo para que SOFT se lea sobre la foto */
+.text-wordmark-hero {
+  background-image: linear-gradient(180deg, #ffffff 0%, rgb(255 255 255 / 0.97) 50%, rgb(255 255 255 / 0.66) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 /* Variante para fondos claros: rosa de marca que se desvanece */
 .text-wordmark-blush {
   background-image: linear-gradient(180deg, #e5bed7 0%, rgb(229 190 215 / 0.75) 50%, rgb(229 190 215 / 0) 100%);

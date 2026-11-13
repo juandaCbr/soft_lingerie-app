@@ -20,7 +20,7 @@ export function HomePageClosing() {
           SOFT
         </span>
         <div data-speed="-12" className="absolute inset-x-[-30%] -bottom-[10%] h-[34%] md:inset-x-[-6%] md:-bottom-[20%] md:h-[48%]">
-          <HomeCloud sizes="(max-width: 1280px) 100vw, 1280px" className="inset-0" />
+          <HomeCloud className="inset-0" />
         </div>
 
         <div className="relative z-[3] flex flex-col items-center gap-12 text-center md:flex-row md:justify-between md:text-left">

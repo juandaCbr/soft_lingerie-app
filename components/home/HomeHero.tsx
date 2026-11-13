@@ -21,8 +21,8 @@ export function HomeHero() {
         {/* Cielo: nubes lejanas que se mueven poco */}
         <div data-hero-layer="sky" className="absolute inset-0 -z-10">
           <div data-depth="0.45" className="absolute inset-0">
-            <HomeCloud fade sizes="20vw" className="left-[-6%] top-[5%] aspect-[2/1] w-[30%] opacity-60 md:w-[13%]" />
-            <HomeCloud fade flip sizes="16vw" className="right-[-4%] top-[3%] aspect-[2/1] w-[26%] opacity-50 md:w-[11%]" />
+            <HomeCloud fade className="left-[-6%] top-[5%] aspect-[2/1] w-[30%] opacity-60 md:w-[13%]" />
+            <HomeCloud fade flip className="right-[-4%] top-[3%] aspect-[2/1] w-[26%] opacity-50 md:w-[11%]" />
           </div>
         </div>
 
@@ -47,15 +47,16 @@ export function HomeHero() {
         {/* Marca: SOFT gigante y LINGERIE debajo, centrados sobre las nubes */}
         <div data-hero-layer="word" className="absolute inset-0 z-[2] flex flex-col items-center justify-center pb-[18%] will-change-transform md:pb-[10%]">
           <div data-depth="-0.2">
-            <h1 className="flex flex-col items-center font-display">
-              <span className="sr-only">Soft Lingerie, lencería en Valledupar</span>
-              <span aria-hidden className="flex overflow-hidden px-[0.1em] pb-[0.06em] pt-[0.14em] text-[clamp(6rem,min(33vw,40svh),34rem)] font-extrabold leading-[0.8] tracking-[-0.06em]">
+            {/* Logotipo (el H1 es la frase de abajo, con las palabras que la gente busca) */}
+            <div className="flex flex-col items-center font-display">
+              <span className="sr-only">Soft Lingerie</span>
+              <span aria-hidden className="flex overflow-hidden px-[0.1em] pb-[0.06em] pt-[0.14em] text-[clamp(6rem,min(33vw,40svh),34rem)] font-extrabold leading-[0.8] tracking-[-0.06em] [filter:drop-shadow(0_6px_26px_rgb(74_29_68/0.3))]">
                 {WORD.split("").map((letter, i) => (
                   <span
                     key={letter}
                     // El degradado del texto solo pinta dentro de la caja de cada letra: el padding (con margen
                     // negativo para no mover nada) agranda la caja para que la letra no se corte
-                    className="text-wordmark -mx-[0.08em] -mt-[0.14em] inline-block px-[0.08em] pt-[0.14em] motion-safe:animate-letter-rise"
+                    className="text-wordmark-hero -mx-[0.08em] -mt-[0.14em] inline-block px-[0.08em] pt-[0.14em] motion-safe:animate-letter-rise"
                     style={{ animationDelay: `${120 + i * 70}ms` }}
                   >
                     {letter}
@@ -72,7 +73,7 @@ export function HomeHero() {
                 Lingerie
               </span>
               <HomeOrnament className="mt-[clamp(1rem,2vw,2rem)] text-ink [filter:drop-shadow(0_0_8px_rgb(253_240_246))] motion-safe:animate-fade-up" />
-            </h1>
+            </div>
           </div>
 
           {/* Acción principal, centrada bajo el logo para que se vea de inmediato (pedido de la clienta) */}
@@ -103,13 +104,13 @@ export function HomeHero() {
         {/* Texto y acciones */}
         <div className="pointer-events-none absolute inset-0 z-[4] mx-auto flex max-w-[96rem] flex-col justify-end px-5 pb-6 pt-6 sm:px-8 md:px-[6%] md:pb-9 md:pt-9">
           <div className="flex flex-col items-center gap-4 md:grid md:grid-cols-3 md:items-end">
-            <h2
-              // Título (h2) y visible también en celular: Google indexa sobre todo la versión móvil y aquí está "Lencería en Valledupar"
+            <h1
+              // H1 de la página, visible también en celular: Google indexa sobre todo la versión móvil y aquí está "Lencería en Valledupar"
               className="max-w-[20rem] text-center text-sm font-semibold leading-relaxed text-ink/85 motion-safe:animate-fade-up md:max-w-[24rem] md:text-left md:text-base md:font-medium md:text-ink/80"
               style={{ animationDelay: "800ms" }}
             >
               Lencería en Valledupar: encaje, satín y tul en diseños exclusivos, con envíos a toda Colombia.
-            </h2>
+            </h1>
 
             <a
               href="#novedades"

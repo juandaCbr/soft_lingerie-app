@@ -4,6 +4,7 @@ import { cache } from "react";
 import HomeClient from "./HomeClient";
 import { getProductoImage, toAbsolutePublicUrl } from "./lib/image-helper";
 import { getSiteUrl } from "./lib/site-url";
+import { CONTACT_EMAIL, CONTACT_INSTAGRAM_URL, CONTACT_WHATSAPP_NUMBER } from "./lib/contacto";
 import type { HomeProducto, VentaDetalleHome } from "./lib/home-types";
 
 /** @id estable en JSON-LD para enlazar Organization ↔ WebSite (mismo sitio que en schema.org). */
@@ -144,6 +145,17 @@ export default async function HomePage() {
         description:
           "Boutique de lencería en Valledupar con envíos a toda Colombia.",
         areaServed: { "@type": "Country", name: "Colombia" },
+        logo: `${site}/logo.jpg`,
+        image: `${site}/logo.jpg`,
+        sameAs: [CONTACT_INSTAGRAM_URL],
+        address: { "@type": "PostalAddress", addressLocality: "Valledupar", addressRegion: "Cesar", addressCountry: "CO" },
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: `+${CONTACT_WHATSAPP_NUMBER}`,
+          email: CONTACT_EMAIL,
+          contactType: "customer service",
+          availableLanguage: "es",
+        },
       },
       {
         "@type": "WebSite",

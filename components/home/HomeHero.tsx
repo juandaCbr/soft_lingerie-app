@@ -26,20 +26,20 @@ export function HomeHero() {
           </div>
         </div>
 
-        {/* Foto central: el rosado "se la come" (bordes difuminados y multiplicada sobre el cielo).
-            Más contraste en la prenda para que SOFT (blanco) resalte encima. */}
-        <div data-hero-layer="photo" aria-hidden className="absolute inset-0 z-0">
+        {/* Foto central (la del hero original, public/home.jpg, llevada a 2K): el rosado "se la come"
+            (bordes difuminados y multiplicada sobre el cielo). Más contraste en la prenda para que SOFT resalte. */}
+        <div data-hero-layer="photo" className="absolute inset-0 z-0">
           <div
             data-depth="0.25"
-            className="absolute inset-x-[-6%] bottom-[14%] top-[-18%] [mask-image:radial-gradient(ellipse_52%_54%_at_50%_44%,black_40%,transparent_100%)] md:inset-x-[12%] md:bottom-[8%] md:top-[-2%]"
+            className="absolute inset-x-[-14%] bottom-[6%] top-[-4%] [mask-image:radial-gradient(ellipse_48%_56%_at_50%_46%,black_42%,transparent_100%)] md:inset-x-[8%] md:bottom-[2%] md:top-[-4%]"
           >
             <Image
-              src="/images/hero-modelo-2k.webp"
-              alt=""
+              src="/images/hero-lenceria-2k.webp"
+              alt="Soft Lingerie Valledupar - Lencería Exclusiva"
               fill
               preload
               sizes="(max-width: 768px) 112vw, 76vw"
-              className="object-cover object-[42%_22%] opacity-90 mix-blend-multiply [filter:contrast(1.12)_saturate(0.95)] motion-safe:animate-fade-up"
+              className="object-cover object-[50%_46%] opacity-90 mix-blend-multiply [filter:contrast(1.12)_saturate(0.95)] motion-safe:animate-fade-up"
             />
           </div>
         </div>
@@ -62,10 +62,11 @@ export function HomeHero() {
                   </span>
                 ))}
               </span>
-              {/* pl igual al tracking: compensa el espacio que queda tras la última letra y la centra */}
+              {/* Franja rosada translúcida: LINGERIE (vino) se lee sobre la foto. pl mayor que pr: compensa el
+                  espacio del tracking tras la última letra para que quede centrada */}
               <span
                 aria-hidden
-                className="mt-[clamp(0.5rem,1.2vw,1.25rem)] pl-[0.42em] font-accent text-[clamp(1.4rem,min(5vw,6.5svh),5rem)] font-semibold uppercase leading-none tracking-[0.42em] text-ink [text-shadow:0_0_14px_rgb(253_240_246),0_0_34px_rgb(246_214_233)] motion-safe:animate-fade-up"
+                className="mt-[clamp(0.5rem,1.2vw,1.25rem)] rounded-full bg-[#f6d6e9]/75 py-[0.28em] pl-[0.9em] pr-[0.48em] font-accent text-[clamp(1.4rem,min(5vw,6.5svh),5rem)] font-semibold uppercase leading-none tracking-[0.42em] text-ink shadow-lg shadow-ink/10 backdrop-blur-md motion-safe:animate-fade-up"
                 style={{ animationDelay: "450ms" }}
               >
                 Lingerie
